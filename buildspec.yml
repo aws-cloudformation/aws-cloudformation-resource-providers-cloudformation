@@ -12,3 +12,9 @@ phases:
       - pre-commit run --all-files
       # install cloudformation-cli dependencies
       - pip install cloudformation-cli cloudformation-cli-java-plugin
+      # end-to-end test child repo(s)
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-cloudformation-type
+      - mvn clean verify --no-transfer-progress
+    finally:
+      - cat "$CODEBUILD_SRC_DIR/aws-cloudformation-type/rpdk.log"
