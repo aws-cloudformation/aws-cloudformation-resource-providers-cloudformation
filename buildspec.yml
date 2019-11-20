@@ -1,0 +1,14 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+        java: openjdk8
+        python: 3.7
+    commands:
+        pip install pre-commit
+  build:
+    commands:
+      # pre-build check for commit hooks
+      - pre-commit run --all-files
+      # install cloudformation-cli dependencies
+      - pip install cloudformation-cli cloudformation-cli-java-plugin
