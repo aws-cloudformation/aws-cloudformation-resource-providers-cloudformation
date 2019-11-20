@@ -78,10 +78,6 @@ Resources:
         ReportBuildStatus: true
         GitCloneDepth: 1
         BuildSpec: buildspec.yml
-      SecondarySources:
-          - Type: S3
-            Location: !Sub "${CFNSDKBucket}/"
-            SourceIdentifier: SDK
       ServiceRole: !GetAtt AWSCloudFormationResourceProviderCIRole.Arn
       Triggers:
         Webhook: true
