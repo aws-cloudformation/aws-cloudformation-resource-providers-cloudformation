@@ -1,12 +1,11 @@
-package software.amazon.cloudformation.type;
+package software.amazon.cloudformation.typeversion;
 
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-public class UpdateHandler extends BaseHandler<CallbackContext> {
+public class CreateHandler extends BaseHandler<CallbackContext> {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -15,13 +14,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        final ResourceModel model = request.getDesiredResourceState();
-
-        // TODO : put your code here
-
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(model)
-            .status(OperationStatus.SUCCESS)
-            .build();
+        // all provisioning actions for this Type can be fulfilled by the Update handler
+        return new UpdateHandler().handleRequest(proxy, request, callbackContext, logger);
     }
 }

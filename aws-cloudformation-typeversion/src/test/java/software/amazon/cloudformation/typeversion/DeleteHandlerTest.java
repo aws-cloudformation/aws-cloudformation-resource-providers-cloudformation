@@ -1,7 +1,5 @@
-package software.amazon.cloudformation.type;
+package software.amazon.cloudformation.typeversion;
 
-import org.mockito.ArgumentMatchers;
-import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -14,13 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
-public class ReadHandlerTest {
-
-    ReadHandler handler;
+public class DeleteHandlerTest {
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -30,42 +25,18 @@ public class ReadHandlerTest {
 
     @BeforeEach
     public void setup() {
-        handler = new ReadHandler();
+        proxy = mock(AmazonWebServicesClientProxy.class);
+        logger = mock(Logger.class);
     }
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .typeName("AWS::Demo::Resource")
-            .type("RESOURCE")
-            .visibility("PRIVATE")
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .deprecatedStatus("LIVE")
-            .build();
+        final DeleteHandler handler = new DeleteHandler();
 
-        doReturn(describeTypeResponse)
-            .when(proxy)
-            .injectCredentialsAndInvokeV2(
-                ArgumentMatchers.any(),
-                ArgumentMatchers.any()
-            );
-
-        final ResourceModel inModel = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
-            .type("RESOURCE")
-            .build();
-
-        final ResourceModel outModel = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
-            .type("RESOURCE")
-            .visibility("PRIVATE")
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .deprecatedStatus("LIVE")
-            .build();
-
+        final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(inModel)
+            .desiredResourceState(model)
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
@@ -75,7 +46,7 @@ public class ReadHandlerTest {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(outModel);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();

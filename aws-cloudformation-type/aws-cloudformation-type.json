@@ -31,7 +31,7 @@
             "type": "string"
         },
         "DefaultVersionId": {
-            "description": "The ID of the default version of the type. The default version is used when the type version is not specified.",
+            "description": "The ID of the default version of the type.",
             "maxLength": 128,
             "minLength": 1,
             "pattern": "^[A-Za-z0-9-]+$",
@@ -110,10 +110,6 @@
             "pattern": "^[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}$",
             "type": "string"
         },
-        "TypeVersionArn": {
-            "description": "The Amazon Resource Name (ARN) of this specific version of the type being registered.",
-            "type": "string"
-        },
         "Visibility": {
             "description": "The scope at which the type is visible and usable in CloudFormation operations.\n\nValid values include:\n\nPRIVATE: The type is only visible and usable within the account in which it is registered. Currently, AWS CloudFormation marks any types you register as PRIVATE.\n\nPUBLIC: The type is publically visible and usable within any Amazon account.",
             "enum": [
@@ -130,7 +126,6 @@
     ],
     "readOnlyProperties": [
         "/properties/Arn",
-        "/properties/TypeVersionArn",
         "/properties/DefaultVersionId",
         "/properties/Description",
         "/properties/DeprecatedStatus",
@@ -142,6 +137,9 @@
         "/properties/LastUpdated",
         "/properties/TimeCreated"
     ],
+    "writeOnlyProperties": [
+        "/properties/SchemaHandlerPackage"
+    ],
     "primaryIdentifier": [
         "/properties/Type",
         "/properties/TypeName"
@@ -149,17 +147,14 @@
     "additionalIdentifiers": [
         [
             "/properties/Arn"
-        ],
-        [
-            "/properties/TypeVersionArn"
         ]
     ],
     "handlers": {
         "create": {
             "permissions": [
-                "cloudformation:RegisterType",
+                "cloudformation:DescribeType",
                 "cloudformation:DescribeTypeRegistration",
-                "cloudformation:SetTypeDefaultVersion"
+                "cloudformation:RegisterType"
             ]
         },
         "read": {

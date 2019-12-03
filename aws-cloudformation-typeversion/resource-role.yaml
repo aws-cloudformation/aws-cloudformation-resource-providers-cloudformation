@@ -23,11 +23,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - "cloudformation:DeregisterType"
                 - "cloudformation:DescribeType"
-                - "cloudformation:DescribeTypeRegistration"
-                - "cloudformation:ListTypes"
-                - "cloudformation:RegisterType"
+                - "cloudformation:SetTypeDefaultVersion"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

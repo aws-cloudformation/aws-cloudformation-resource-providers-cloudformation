@@ -1,0 +1,15 @@
+{
+    "typeName": "AWS::CloudFormation::TypeVersion",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.cloudformation.typeversion.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.cloudformation.typeversion.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "cloudformation",
+            "typeversion"
+        ]
+    }
+}

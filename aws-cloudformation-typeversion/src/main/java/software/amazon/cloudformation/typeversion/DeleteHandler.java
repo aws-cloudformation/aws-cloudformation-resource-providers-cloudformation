@@ -1,13 +1,12 @@
-package software.amazon.cloudformation.type;
+package software.amazon.cloudformation.typeversion;
 
-import software.amazon.awssdk.services.cloudformation.model.ListTypesResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-public class ListHandler extends BaseHandler<CallbackContext> {
+public class DeleteHandler extends BaseHandler<CallbackContext> {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -16,14 +15,13 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        final ListTypesResponse response =
-            proxy.injectCredentialsAndInvokeV2(Translator.translateToListRequest(request.getNextToken()),
-                ClientBuilder.getClient()::listTypes);
+        final ResourceModel model = request.getDesiredResourceState();
+
+        // Delete is a no-op for this resource type as a default version must always exist for a type
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
+            .resourceModel(model)
             .status(OperationStatus.SUCCESS)
-            .resourceModels(Translator.translateForList(response))
-            .nextToken(response.nextToken())
             .build();
     }
 }

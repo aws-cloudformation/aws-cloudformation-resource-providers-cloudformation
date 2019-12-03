@@ -1,9 +1,7 @@
-package software.amazon.cloudformation.type;
+package software.amazon.cloudformation.typeversion;
 
-import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
-import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -28,25 +26,18 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         this.request = request;
         this.logger = logger;
 
-        return fetchTypeAndAssertExists();
+        return fetchTypeVersionAndAssertExists();
     }
 
-    private ProgressEvent<ResourceModel, CallbackContext> fetchTypeAndAssertExists() {
+    private ProgressEvent<ResourceModel, CallbackContext> fetchTypeVersionAndAssertExists() {
         final ResourceModel model = request.getDesiredResourceState();
-
-        if (model == null ||
-            (model.getTypeName() == null && model.getArn() == null)) {
-            throwNotFoundException(model);
-        }
 
         DescribeTypeResponse response = null;
         try {
             response = proxy.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(model),
                 ClientBuilder.getClient()::describeType);
-        } catch (final TypeNotFoundException e) {
+        } catch (final ResourceNotFoundException e) {
             throwNotFoundException(model);
-        } catch (final CfnRegistryException e) {
-            throw new CfnGeneralServiceException(e);
         }
 
         final ResourceModel modelFromReadResult = Translator.translateForRead(response);

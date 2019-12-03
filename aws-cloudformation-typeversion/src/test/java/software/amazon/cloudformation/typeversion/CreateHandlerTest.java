@@ -1,28 +1,20 @@
-package software.amazon.cloudformation.type;
+package software.amazon.cloudformation.typeversion;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
-import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationResponse;
-import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
-import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse;
-import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
-import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
-import software.amazon.awssdk.services.cloudwatchlogs.model.PutRetentionPolicyResponse;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
@@ -41,26 +33,18 @@ public class CreateHandlerTest {
 
     @Test
     public void handleRequest_Success() {
-        final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder().build();
+        final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder().build();
         final ResourceModel resourceModel = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
             .type("RESOURCE")
-            .visibility("PRIVATE")
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .deprecatedStatus("LIVE")
             .build();
 
-        final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
-            .progressStatus(RegistrationStatus.COMPLETE)
-            .build();
-
-        when(proxy.injectCredentialsAndInvokeV2(
-            ArgumentMatchers.any(),
-            ArgumentMatchers.any())
-        )
-            .thenThrow(TypeNotFoundException.builder().message("Some error").build())
-            .thenReturn(registerTypeResponse)
-            .thenReturn(describeTypeRegistrationResponse);
+        doReturn(setTypeDefaultVersionResponse)
+            .when(proxy)
+            .injectCredentialsAndInvokeV2(
+                ArgumentMatchers.any(),
+                ArgumentMatchers.any()
+            );
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(resourceModel)

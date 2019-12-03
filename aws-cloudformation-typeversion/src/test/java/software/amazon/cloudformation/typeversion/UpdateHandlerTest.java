@@ -1,4 +1,4 @@
-package software.amazon.cloudformation.type;
+package software.amazon.cloudformation.typeversion;
 
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
