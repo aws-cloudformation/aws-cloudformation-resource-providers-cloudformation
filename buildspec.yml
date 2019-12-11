@@ -16,5 +16,9 @@ phases:
       - cd "$CODEBUILD_SRC_DIR"
       - cd aws-cloudformation-type
       - mvn clean verify --no-transfer-progress
+      - cd "$CODEBUILD_SRC_DIR"
+      - cd aws-cloudformation-typeversion
+      - mvn clean verify --no-transfer-progress
     finally:
       - cat "$CODEBUILD_SRC_DIR/aws-cloudformation-type/rpdk.log"
+      - cat "$CODEBUILD_SRC_DIR/aws-cloudformation-typeversion/rpdk.log"
