@@ -32,12 +32,14 @@ public class Translator {
 
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
         return DescribeTypeRequest.builder()
+            .type(model.getType())
             .typeName(model.getTypeName())
             .build();
     }
 
     static DeregisterTypeRequest translateToDeleteRequest(@NonNull final ResourceModel model) {
         return DeregisterTypeRequest.builder()
+            .type(model.getType())
             .typeName(model.getTypeName())
             .build();
     }

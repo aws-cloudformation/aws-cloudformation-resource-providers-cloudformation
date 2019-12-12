@@ -3,6 +3,7 @@ package software.amazon.cloudformation.type;
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationResponse;
+import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
@@ -78,14 +79,25 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         return ProgressEvent.defaultSuccessHandler(model);
     }
 
-    private void registerType(final ResourceModel model,
-                              final CallbackContext callbackContext) {
+    private RegisterTypeResponse registerType(
+        final ResourceModel model,
+        final CallbackContext callbackContext) {
+
+        final RegisterTypeResponse response;
+
         try {
-            proxy.injectCredentialsAndInvokeV2(Translator.translateToCreateRequest(model),
+            response = proxy.injectCredentialsAndInvokeV2(Translator.translateToCreateRequest(model),
                 ClientBuilder.getClient()::registerType);
+            logger.log(String.format("%s registration successfully initiated [%s].",
+                ResourceModel.TYPE_NAME, response.registrationToken()));
         } catch (final CfnRegistryException e) {
             throw new CfnGeneralServiceException(e);
         }
+
+        callbackContext.setCreateStarted(true);
+        callbackContext.setRegistrationToken(response.registrationToken());
+
+        return response;
     }
 
     private DescribeTypeRegistrationResponse checkTypeRegistrationCompletion(final CallbackContext callbackContext) {
