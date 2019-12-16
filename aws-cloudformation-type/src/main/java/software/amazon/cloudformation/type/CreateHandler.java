@@ -5,15 +5,14 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistra
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
-import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.ResourceAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.Objects;
@@ -49,39 +48,17 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     " does not exist; creating the resource.");
             }
 
-            registerType(model, context);
+            registerType(proxy, model, context, logger);
         }
 
-        if (!context.isCreateStabilized()) {
-            try {
-                final DescribeTypeRegistrationResponse response = checkTypeRegistrationCompletion(context);
-                if (response.progressStatus().equals(RegistrationStatus.COMPLETE)) {
-                    context.setCreateStabilized(true);
-                } else if (response.progressStatus().equals(RegistrationStatus.FAILED)) {
-                    throw new CfnGeneralServiceException(response.progressStatusAsString());
-                }
-            } catch (CfnNotFoundException e) {
-                logger.log(request.getDesiredResourceState().getPrimaryIdentifier() +
-                    " does not exist; retrying stabilization.");
-                return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .callbackContext(context)
-                    .callbackDelaySeconds(5)
-                    .status(OperationStatus.IN_PROGRESS)
-                    .resourceModel(request.getDesiredResourceState())
-                    .build();
-            }
-        }
-
-        final String createMessage = String.format("%s [%s] successfully created.",
-            ResourceModel.TYPE_NAME, model.getTypeName());
-        logger.log(createMessage);
-
-        return ProgressEvent.defaultSuccessHandler(model);
+        return checkTypeRegistrationCompletion(proxy, model, context, logger);
     }
 
-    private RegisterTypeResponse registerType(
+    RegisterTypeResponse registerType(
+        final AmazonWebServicesClientProxy proxy,
         final ResourceModel model,
-        final CallbackContext callbackContext) {
+        final CallbackContext callbackContext,
+        final Logger logger) {
 
         final RegisterTypeResponse response;
 
@@ -100,16 +77,46 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         return response;
     }
 
-    private DescribeTypeRegistrationResponse checkTypeRegistrationCompletion(final CallbackContext callbackContext) {
-        final DescribeTypeRegistrationRequest request = DescribeTypeRegistrationRequest.builder()
-            .registrationToken(callbackContext.getRegistrationToken())
-            .build();
+    ProgressEvent<ResourceModel, CallbackContext> checkTypeRegistrationCompletion(
+        final AmazonWebServicesClientProxy proxy,
+        final ResourceModel model,
+        final CallbackContext callbackContext,
+        final Logger logger) {
+
 
         try {
-            return proxy.injectCredentialsAndInvokeV2(request,
+            final DescribeTypeRegistrationRequest request = DescribeTypeRegistrationRequest.builder()
+                .registrationToken(callbackContext.getRegistrationToken())
+                .build();
+            final DescribeTypeRegistrationResponse response = proxy.injectCredentialsAndInvokeV2(request,
                 ClientBuilder.getClient()::describeTypeRegistration);
+
+            if (response.progressStatus().equals(RegistrationStatus.COMPLETE)) {
+                logger.log(String.format("%s registration successfully completed [%s].",
+                    ResourceModel.TYPE_NAME, response.typeVersionArn()));
+
+                model.setArn(response.typeVersionArn());
+                model.setVersionId(response.typeVersionArn().substring(response.typeVersionArn().lastIndexOf('/') + 1));
+            } else if (response.progressStatus().equals(RegistrationStatus.FAILED)) {
+                throw new CfnGeneralServiceException(response.progressStatusAsString());
+            } else {
+                return ProgressEvent.<ResourceModel, CallbackContext>builder()
+                    .callbackContext(callbackContext)
+                    .callbackDelaySeconds(3)
+                    .status(OperationStatus.IN_PROGRESS)
+                    .resourceModel(model)
+                    .build();
+            }
+        } catch (CfnNotFoundException e) {
+            logger.log(request.getDesiredResourceState().getPrimaryIdentifier() +
+                " does not exist; stabilization failed.");
+            return ProgressEvent.defaultFailureHandler(e, HandlerErrorCode.NotStabilized);
         } catch (final CfnRegistryException e) {
             throw new CfnGeneralServiceException(e);
         }
+
+        callbackContext.setCreateStabilized(true);
+
+        return ProgressEvent.defaultSuccessHandler(model);
     }
 }

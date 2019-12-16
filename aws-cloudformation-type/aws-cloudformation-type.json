@@ -30,21 +30,6 @@
             "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/.+$",
             "type": "string"
         },
-        "DefaultVersionId": {
-            "description": "The ID of the default version of the type.",
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[A-Za-z0-9-]+$",
-            "type": "string"
-        },
-        "DeprecatedStatus": {
-            "description": "The deprecation status of the type.",
-            "enum": [
-                "LIVE",
-                "DEPRECATED"
-            ],
-            "type": "string"
-        },
         "Description": {
             "description": "The description of the registered type.",
             "maxLength": 1024,
@@ -59,6 +44,10 @@
         "ExecutionRoleArn": {
             "description": "The Amazon Resource Name (ARN) of the IAM execution role to use to register the type. If your resource type calls AWS APIs in any of its handlers, you must create an IAM execution role that includes the necessary permissions to call those AWS APIs, and provision that execution role in your account. CloudFormation then assumes that execution role to provide your resource type with the appropriate credentials.",
             "type": "string"
+        },
+        "IsDefaultVersion": {
+            "description": "Indicates if this type version is the current default version",
+            "type": "boolean"
         },
         "LastUpdated": {
             "description": "When the specified type version was registered.",
@@ -110,6 +99,13 @@
             "pattern": "^[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}$",
             "type": "string"
         },
+        "VersionId": {
+            "description": "The ID of the version of the type represented by this resource instance.",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9-]+$",
+            "type": "string"
+        },
         "Visibility": {
             "description": "The scope at which the type is visible and usable in CloudFormation operations.\n\nValid values include:\n\nPRIVATE: The type is only visible and usable within the account in which it is registered. Currently, AWS CloudFormation marks any types you register as PRIVATE.\n\nPUBLIC: The type is publically visible and usable within any Amazon account.",
             "enum": [
@@ -128,7 +124,7 @@
         "/properties/Arn",
         "/properties/DefaultVersionId",
         "/properties/Description",
-        "/properties/DeprecatedStatus",
+        "/properties/IsDefaultVersion",
         "/properties/Schema",
         "/properties/ProvisioningType",
         "/properties/Visibility",
@@ -141,13 +137,7 @@
         "/properties/SchemaHandlerPackage"
     ],
     "primaryIdentifier": [
-        "/properties/Type",
-        "/properties/TypeName"
-    ],
-    "additionalIdentifiers": [
-        [
-            "/properties/Arn"
-        ]
+        "/properties/Arn"
     ],
     "handlers": {
         "create": {
@@ -164,7 +154,8 @@
         },
         "delete": {
             "permissions": [
-                "cloudformation:DeregisterType"
+                "cloudformation:DeregisterType",
+                "cloudformation:DescribeType"
             ]
         },
         "list": {

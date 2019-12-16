@@ -1,6 +1,7 @@
 package software.amazon.cloudformation.type;
 
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
+import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
@@ -9,6 +10,7 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class ReadHandler extends BaseHandler<CallbackContext> {
@@ -36,16 +38,22 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
         if (model == null ||
             (model.getTypeName() == null && model.getArn() == null)) {
-            throwNotFoundException(model);
+            throw nullSafeNotFoundException(model);
         }
 
         DescribeTypeResponse response = null;
         try {
             response = proxy.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(model),
                 ClientBuilder.getClient()::describeType);
+
+            // if the type is deprecated, this will be treated as non-existent for the purposes of CloudFormation
+            if (response.deprecatedStatus() == DeprecatedStatus.DEPRECATED) {
+                throw nullSafeNotFoundException(model);
+            }
         } catch (final TypeNotFoundException e) {
-            throwNotFoundException(model);
+            throw nullSafeNotFoundException(model);
         } catch (final CfnRegistryException e) {
+            logger.log(Arrays.toString(e.getStackTrace()));
             throw new CfnGeneralServiceException(e);
         }
 
@@ -54,9 +62,9 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         return ProgressEvent.defaultSuccessHandler(modelFromReadResult);
     }
 
-    private void throwNotFoundException(final ResourceModel model) {
+    private software.amazon.cloudformation.exceptions.ResourceNotFoundException nullSafeNotFoundException(final ResourceModel model) {
         final ResourceModel nullSafeModel = model == null ? ResourceModel.builder().build() : model;
-        throw new software.amazon.cloudformation.exceptions.ResourceNotFoundException(ResourceModel.TYPE_NAME,
+        return new software.amazon.cloudformation.exceptions.ResourceNotFoundException(ResourceModel.TYPE_NAME,
             Objects.toString(nullSafeModel.getPrimaryIdentifier()));
     }
 }

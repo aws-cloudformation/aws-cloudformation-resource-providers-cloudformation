@@ -14,6 +14,8 @@ import java.util.List;
 public class CallbackContext {
     private boolean createStarted;
     private boolean createStabilized;
+    private boolean updateStarted;
+    private boolean updateStabilized;
     private boolean deleteStarted;
     private String registrationToken;
 

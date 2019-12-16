@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.awssdk.services.cloudwatchlogs.model.PutRetentionPolicyResponse;
+import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -19,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -47,11 +49,11 @@ public class CreateHandlerTest {
             .type("RESOURCE")
             .visibility("PRIVATE")
             .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .deprecatedStatus("LIVE")
             .build();
 
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
             .progressStatus(RegistrationStatus.COMPLETE)
+            .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
             .build();
 
         when(proxy.injectCredentialsAndInvokeV2(
@@ -77,5 +79,4 @@ public class CreateHandlerTest {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
-
 }

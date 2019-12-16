@@ -1,5 +1,6 @@
 package software.amazon.cloudformation.type;
 
+import com.amazonaws.util.StringUtils;
 import lombok.NonNull;
 import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
@@ -27,21 +28,33 @@ public class Translator {
             builder.loggingConfig(translateToSDK(model.getLoggingConfig()));
         }
 
-         return builder.build();
+        return builder.build();
     }
 
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
-        return DescribeTypeRequest.builder()
-            .type(model.getType())
-            .typeName(model.getTypeName())
-            .build();
+        if (StringUtils.isNullOrEmpty(model.getArn())) {
+            return DescribeTypeRequest.builder()
+                .type(model.getType())
+                .typeName(model.getTypeName())
+                .build();
+        } else {
+            return DescribeTypeRequest.builder()
+                .arn(model.getArn())
+                .build();
+        }
     }
 
     static DeregisterTypeRequest translateToDeleteRequest(@NonNull final ResourceModel model) {
-        return DeregisterTypeRequest.builder()
-            .type(model.getType())
-            .typeName(model.getTypeName())
-            .build();
+        if (model.getIsDefaultVersion()) {
+            return DeregisterTypeRequest.builder()
+                .type(model.getType())
+                .typeName(model.getTypeName())
+                .build();
+        } else {
+            return DeregisterTypeRequest.builder()
+                .arn(model.getArn())
+                .build();
+        }
     }
 
     static ListTypesRequest translateToListRequest(final String nextToken) {
@@ -52,18 +65,21 @@ public class Translator {
     }
 
     static ResourceModel translateForRead(@NonNull final DescribeTypeResponse response) {
+
+        final String versionId = response.arn().substring(response.arn().lastIndexOf('/') + 1);
+
         final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
             .arn(response.arn())
-            .defaultVersionId(response.defaultVersionId())
-            .deprecatedStatus(response.deprecatedStatusAsString())
             .description(response.description())
             .documentationUrl(response.documentationUrl())
             .executionRoleArn(response.executionRoleArn())
+            .isDefaultVersion(response.defaultVersionId().equals(versionId))
             .provisioningType(response.provisioningTypeAsString())
             .schema(response.schema())
             .sourceUrl(response.sourceUrl())
             .type(response.typeAsString())
             .typeName(response.typeName())
+            .versionId(versionId)
             .visibility(response.visibilityAsString());
 
         if (response.lastUpdated() != null) {
