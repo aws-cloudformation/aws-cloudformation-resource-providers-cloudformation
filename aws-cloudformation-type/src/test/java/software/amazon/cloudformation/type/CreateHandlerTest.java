@@ -60,7 +60,6 @@ public class CreateHandlerTest {
             ArgumentMatchers.any(),
             ArgumentMatchers.any())
         )
-            .thenThrow(TypeNotFoundException.builder().message("Some error").build())
             .thenReturn(registerTypeResponse)
             .thenReturn(describeTypeRegistrationResponse);
 

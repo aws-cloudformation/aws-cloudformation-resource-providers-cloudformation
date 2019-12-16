@@ -5,7 +5,6 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistra
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -14,8 +13,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import java.util.Objects;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
@@ -38,16 +35,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         final ResourceModel model = request.getDesiredResourceState();
 
         if (!context.isCreateStarted()) {
-            try {
-                request.getDesiredResourceState().setTypeName(model.getTypeName());
-                new ReadHandler().handleRequest(proxy, request, context, logger);
-                throw new CfnAlreadyExistsException(ResourceModel.TYPE_NAME,
-                    Objects.toString(model.getPrimaryIdentifier()));
-            } catch (CfnNotFoundException e) {
-                logger.log(request.getDesiredResourceState().getPrimaryIdentifier() +
-                    " does not exist; creating the resource.");
-            }
-
             registerType(proxy, model, context, logger);
         }
 

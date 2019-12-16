@@ -16,7 +16,6 @@ public class CallbackContext {
     private boolean createStabilized;
     private boolean updateStarted;
     private boolean updateStabilized;
-    private boolean deleteStarted;
     private String registrationToken;
 
     @JsonPOJOBuilder(withPrefix = "")

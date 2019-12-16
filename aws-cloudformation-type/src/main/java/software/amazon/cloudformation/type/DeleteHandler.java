@@ -30,19 +30,15 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         this.request = request;
         this.logger = logger;
 
-
-        if (!context.isDeleteStarted()) {
-            ProgressEvent<ResourceModel, CallbackContext> readResult;
-            try {
-                readResult = new ReadHandler().handleRequest(proxy, request, context, logger);
-            } catch (CfnNotFoundException e) {
-                throw nullSafeNotFoundException(request.getDesiredResourceState());
-            }
-
-            final ResourceModel model = readResult.getResourceModel();
-            deregisterType(proxy, model, context, logger);
+        ProgressEvent<ResourceModel, CallbackContext> readResult;
+        try {
+            readResult = new ReadHandler().handleRequest(proxy, request, context, logger);
+        } catch (CfnNotFoundException e) {
+            throw nullSafeNotFoundException(request.getDesiredResourceState());
         }
 
+        final ResourceModel model = readResult.getResourceModel();
+        deregisterType(proxy, model, context, logger);
 
         return ProgressEvent.defaultSuccessHandler(null);
     }

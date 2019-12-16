@@ -1,6 +1,5 @@
 package software.amazon.cloudformation.type;
 
-import com.amazonaws.util.StringUtils;
 import lombok.NonNull;
 import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
@@ -32,16 +31,10 @@ public class Translator {
     }
 
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
-        if (StringUtils.isNullOrEmpty(model.getArn())) {
             return DescribeTypeRequest.builder()
                 .type(model.getType())
                 .typeName(model.getTypeName())
                 .build();
-        } else {
-            return DescribeTypeRequest.builder()
-                .arn(model.getArn())
-                .build();
-        }
     }
 
     static DeregisterTypeRequest translateToDeleteRequest(@NonNull final ResourceModel model) {
