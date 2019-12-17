@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -85,7 +86,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 model.setArn(response.typeVersionArn());
                 model.setVersionId(response.typeVersionArn().substring(response.typeVersionArn().lastIndexOf('/') + 1));
             } else if (response.progressStatus().equals(RegistrationStatus.FAILED)) {
-                throw new CfnGeneralServiceException(response.progressStatusAsString());
+                logger.log(String.format("Registration request %s failed with '%s'", callbackContext.getRegistrationToken(), response.description()));
+                throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, model.getArn());
             } else {
                 return ProgressEvent.<ResourceModel, CallbackContext>builder()
                     .callbackContext(callbackContext)

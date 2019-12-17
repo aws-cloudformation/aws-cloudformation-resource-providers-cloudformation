@@ -38,6 +38,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         }
 
         final ResourceModel model = readResult.getResourceModel();
+
         deregisterType(proxy, model, context, logger);
 
         return ProgressEvent.defaultSuccessHandler(null);
@@ -52,7 +53,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         DeregisterTypeResponse response;
 
         try {
-            response = proxy.injectCredentialsAndInvokeV2(Translator.translateToDeleteRequest(model),
+            response = proxy.injectCredentialsAndInvokeV2(Translator.translateToDeleteRequest(model, logger),
                 ClientBuilder.getClient()::deregisterType);
             logger.log(String.format("%s [%s] successfully deleted.",
                 ResourceModel.TYPE_NAME, model.getPrimaryIdentifier()));

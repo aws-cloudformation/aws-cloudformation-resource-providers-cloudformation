@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse
 import software.amazon.awssdk.services.cloudformation.model.ListTypesRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListTypesResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
+import software.amazon.cloudformation.proxy.Logger;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,19 +32,22 @@ public class Translator {
     }
 
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
-            return DescribeTypeRequest.builder()
-                .type(model.getType())
-                .typeName(model.getTypeName())
-                .build();
+        return DescribeTypeRequest.builder()
+            .type(model.getType())
+            .typeName(model.getTypeName())
+            .build();
     }
 
-    static DeregisterTypeRequest translateToDeleteRequest(@NonNull final ResourceModel model) {
+    static DeregisterTypeRequest translateToDeleteRequest(@NonNull final ResourceModel model,
+                                                          final Logger logger) {
         if (model.getIsDefaultVersion()) {
+            logger.log("De-registering default version");
             return DeregisterTypeRequest.builder()
                 .type(model.getType())
                 .typeName(model.getTypeName())
                 .build();
         } else {
+            logger.log("De-registering version");
             return DeregisterTypeRequest.builder()
                 .arn(model.getArn())
                 .build();
@@ -59,20 +63,15 @@ public class Translator {
 
     static ResourceModel translateForRead(@NonNull final DescribeTypeResponse response) {
 
-        final String versionId = response.arn().substring(response.arn().lastIndexOf('/') + 1);
-
         final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
-            .arn(response.arn())
             .description(response.description())
             .documentationUrl(response.documentationUrl())
             .executionRoleArn(response.executionRoleArn())
-            .isDefaultVersion(response.defaultVersionId().equals(versionId))
             .provisioningType(response.provisioningTypeAsString())
             .schema(response.schema())
             .sourceUrl(response.sourceUrl())
             .type(response.typeAsString())
             .typeName(response.typeName())
-            .versionId(versionId)
             .visibility(response.visibilityAsString());
 
         if (response.lastUpdated() != null) {

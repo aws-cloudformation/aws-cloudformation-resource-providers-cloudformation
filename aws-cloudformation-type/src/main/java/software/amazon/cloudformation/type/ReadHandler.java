@@ -41,7 +41,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
             throw nullSafeNotFoundException(model);
         }
 
-        DescribeTypeResponse response = null;
+        DescribeTypeResponse response;
         try {
             response = proxy.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(model),
                 ClientBuilder.getClient()::describeType);
@@ -58,6 +58,13 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         }
 
         final ResourceModel modelFromReadResult = Translator.translateForRead(response);
+
+        // set the version and defaultVersion from the model ARN, not the Read response, which
+        // will uses the Type details, rather than the specific version details
+        final String versionId = model.getArn().substring(response.arn().lastIndexOf('/') + 1);
+        modelFromReadResult.setArn(model.getArn());
+        modelFromReadResult.setIsDefaultVersion(versionId.equals(response.defaultVersionId()));
+        modelFromReadResult.setVersionId(versionId);
 
         return ProgressEvent.defaultSuccessHandler(modelFromReadResult);
     }

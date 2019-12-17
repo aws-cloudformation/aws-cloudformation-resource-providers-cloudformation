@@ -55,6 +55,7 @@ public class ReadHandlerTest {
             );
 
         final ResourceModel inModel = ResourceModel.builder()
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
             .typeName("AWS::Demo::Resource")
             .type("RESOURCE")
             .build();
