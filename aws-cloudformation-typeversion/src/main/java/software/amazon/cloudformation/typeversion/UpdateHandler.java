@@ -1,6 +1,5 @@
 package software.amazon.cloudformation.typeversion;
 
-import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionRequest;
 import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -29,25 +28,24 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         this.logger = logger;
 
         final ResourceModel model = request.getDesiredResourceState();
-        final SetTypeDefaultVersionRequest setTypeDefaultVersionRequest =
-            Translator.translateToUpdateRequest(model);
+
         try {
-            proxy.injectCredentialsAndInvokeV2(setTypeDefaultVersionRequest,
+            proxy.injectCredentialsAndInvokeV2(Translator.translateToUpdateRequest(model),
                 ClientBuilder.getClient()::setTypeDefaultVersion);
         } catch (final ResourceNotFoundException e) {
-            throwNotFoundException(model);
+            throw nullSafeNotFoundException(model);
         }
 
-        final String message =
-            String.format("%s successfully set default version to %s.",
-                ResourceModel.TYPE_NAME, model.getArn());
+        final String message = String.format("%s successfully set default version to %s.",
+            ResourceModel.TYPE_NAME, model.getArn());
         logger.log(message);
 
         return ProgressEvent.defaultSuccessHandler(model);
     }
 
-    private void throwNotFoundException(final ResourceModel model) {
-        throw new software.amazon.cloudformation.exceptions.ResourceNotFoundException(ResourceModel.TYPE_NAME,
-            Objects.toString(model.getPrimaryIdentifier()));
+    private software.amazon.cloudformation.exceptions.ResourceNotFoundException nullSafeNotFoundException(final ResourceModel model) {
+        final ResourceModel nullSafeModel = model == null ? ResourceModel.builder().build() : model;
+        return new software.amazon.cloudformation.exceptions.ResourceNotFoundException(ResourceModel.TYPE_NAME,
+            Objects.toString(nullSafeModel.getPrimaryIdentifier()));
     }
 }

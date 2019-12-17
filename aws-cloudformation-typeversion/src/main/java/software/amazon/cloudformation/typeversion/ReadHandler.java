@@ -32,12 +32,12 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
     private ProgressEvent<ResourceModel, CallbackContext> fetchTypeVersionAndAssertExists() {
         final ResourceModel model = request.getDesiredResourceState();
 
-        DescribeTypeResponse response = null;
+        DescribeTypeResponse response;
         try {
             response = proxy.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(model),
                 ClientBuilder.getClient()::describeType);
         } catch (final ResourceNotFoundException e) {
-            throwNotFoundException(model);
+            throw nullSafeNotFoundException(model);
         }
 
         final ResourceModel modelFromReadResult = Translator.translateForRead(response);
@@ -45,9 +45,9 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         return ProgressEvent.defaultSuccessHandler(modelFromReadResult);
     }
 
-    private void throwNotFoundException(final ResourceModel model) {
+    private software.amazon.cloudformation.exceptions.ResourceNotFoundException nullSafeNotFoundException(final ResourceModel model) {
         final ResourceModel nullSafeModel = model == null ? ResourceModel.builder().build() : model;
-        throw new software.amazon.cloudformation.exceptions.ResourceNotFoundException(ResourceModel.TYPE_NAME,
+        return new software.amazon.cloudformation.exceptions.ResourceNotFoundException(ResourceModel.TYPE_NAME,
             Objects.toString(nullSafeModel.getPrimaryIdentifier()));
     }
 }

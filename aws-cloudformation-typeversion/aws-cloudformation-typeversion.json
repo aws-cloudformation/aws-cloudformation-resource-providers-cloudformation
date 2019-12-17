@@ -30,6 +30,21 @@
             "type": "string"
         }
     },
+    "oneOf": [
+        {
+            "required": [
+                "DefaultVersionId",
+                "Arn"
+            ]
+        },
+        {
+            "required": [
+                "DefaultVersionId",
+                "Type",
+                "TypeName"
+            ]
+        }
+    ],
     "required": [
         "DefaultVersionId",
         "Type",
@@ -58,7 +73,9 @@
             ]
         },
         "delete": {
-            "permissions": []
+            "permissions": [
+                ""
+            ]
         }
     },
     "additionalProperties": false

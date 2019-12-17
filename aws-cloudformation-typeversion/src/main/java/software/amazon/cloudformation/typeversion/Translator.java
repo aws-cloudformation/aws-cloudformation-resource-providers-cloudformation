@@ -7,11 +7,18 @@ import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersio
 public class Translator {
 
     static SetTypeDefaultVersionRequest translateToUpdateRequest(final ResourceModel model) {
-        return SetTypeDefaultVersionRequest.builder()
-            .type(model.getType())
-            .typeName(model.getTypeName())
-            .versionId(model.getDefaultVersionId())
-            .build();
+        if (model.getArn() != null) {
+            return SetTypeDefaultVersionRequest.builder()
+                .arn(model.getArn())
+                .versionId(model.getDefaultVersionId())
+                .build();
+        } else {
+            return SetTypeDefaultVersionRequest.builder()
+                .type(model.getType())
+                .typeName(model.getTypeName())
+                .versionId(model.getDefaultVersionId())
+                .build();
+        }
     }
 
     static DescribeTypeRequest translateToReadRequest(final ResourceModel model) {
