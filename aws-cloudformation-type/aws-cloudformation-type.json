@@ -122,7 +122,6 @@
     ],
     "readOnlyProperties": [
         "/properties/Arn",
-        "/properties/DefaultVersionId",
         "/properties/Description",
         "/properties/IsDefaultVersion",
         "/properties/Schema",
@@ -131,7 +130,8 @@
         "/properties/SourceUrl",
         "/properties/DocumentationUrl",
         "/properties/LastUpdated",
-        "/properties/TimeCreated"
+        "/properties/TimeCreated",
+        "/properties/VersionId"
     ],
     "writeOnlyProperties": [
         "/properties/SchemaHandlerPackage"
