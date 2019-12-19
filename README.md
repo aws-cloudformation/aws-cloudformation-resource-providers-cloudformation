@@ -2,6 +2,8 @@
 
 This repository contains AWS-owned resource providers for the `AWS::CloudFormation::*` namespace.
 
+[![Build Status](https://travis-ci.com/aws-cloudformation/aws-cloudformation-resource-providers-cloudformation.svg?branch=master)](https://travis-ci.com/aws-cloudformation/aws-cloudformation-resource-providers-cloudformation)
+
 Usage
 -----
 
