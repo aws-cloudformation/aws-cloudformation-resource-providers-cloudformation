@@ -3,7 +3,7 @@ dist: bionic
 jdk: openjdk11
 env:
   global:
-    - PYENV_VERSION=3.7.1
+    - PYENV_VERSION=3.7
     - AWS_REGION="us-east-1"
     - AWS_DEFAULT_REGION=$AWS_REGION
 install:
