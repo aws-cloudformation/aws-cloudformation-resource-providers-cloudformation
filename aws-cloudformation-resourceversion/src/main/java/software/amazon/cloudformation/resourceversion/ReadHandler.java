@@ -36,8 +36,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
     private ProgressEvent<ResourceModel, CallbackContext> fetchTypeAndAssertExists() {
         final ResourceModel model = request.getDesiredResourceState();
 
-        if (model == null ||
-            (model.getTypeName() == null && model.getArn() == null)) {
+        if (model == null || model.getArn() == null) {
             throw nullSafeNotFoundException(model);
         }
 

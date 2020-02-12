@@ -1,5 +1,6 @@
 package software.amazon.cloudformation.resourceversionalias;
 
+import lombok.NonNull;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistryType;
@@ -7,7 +8,7 @@ import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersio
 
 public class Translator {
 
-    static SetTypeDefaultVersionRequest translateToUpdateRequest(final ResourceModel model) {
+    static SetTypeDefaultVersionRequest translateToUpdateRequest(@NonNull final ResourceModel model) {
         if (model.getArn() != null) {
             return SetTypeDefaultVersionRequest.builder()
                 .arn(model.getArn())
@@ -22,7 +23,7 @@ public class Translator {
         }
     }
 
-    static DescribeTypeRequest translateToReadRequest(final ResourceModel model) {
+    static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
         return DescribeTypeRequest.builder()
             .type(RegistryType.RESOURCE)
             .typeName(model.getTypeName())
@@ -30,7 +31,7 @@ public class Translator {
             .build();
     }
 
-    static ResourceModel translateForRead(final DescribeTypeResponse response) {
+    static ResourceModel translateForRead(@NonNull final DescribeTypeResponse response) {
         return ResourceModel.builder()
             .arn(response.arn())
             .defaultVersionId(response.defaultVersionId())

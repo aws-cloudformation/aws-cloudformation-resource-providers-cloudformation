@@ -6,7 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
+import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -15,8 +18,10 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest {
@@ -55,7 +60,6 @@ public class ReadHandlerTest {
 
         final ResourceModel inModel = ResourceModel.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .typeName("AWS::Demo::Resource")
             .build();
 
         final ResourceModel outModel = ResourceModel.builder()
@@ -104,7 +108,7 @@ public class ReadHandlerTest {
             );
 
         final ResourceModel model = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
             .build();
 
 
@@ -114,5 +118,77 @@ public class ReadHandlerTest {
 
         assertThrows(ResourceNotFoundException.class,
             () -> handler.handleRequest(proxy, request, null, logger));
+    }
+
+    @Test
+    public void handleRequest_GeneralError() {
+        final ResourceModel resourceModel = ResourceModel.builder()
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+            .typeName("AWS::Demo::Resource")
+            .build();
+
+        when(proxy.injectCredentialsAndInvokeV2(
+            ArgumentMatchers.any(),
+            ArgumentMatchers.any())
+        )
+            .thenThrow(CfnRegistryException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(resourceModel)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, logger))
+            .hasCauseExactlyInstanceOf(CfnRegistryException.class)
+            .hasMessage(null)
+            .isExactlyInstanceOf(CfnGeneralServiceException.class);
+    }
+
+    @Test
+    public void handleRequest_NotFound() {
+        final ResourceModel resourceModel = ResourceModel.builder()
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+            .typeName("AWS::Demo::Resource")
+            .build();
+
+        when(proxy.injectCredentialsAndInvokeV2(
+            ArgumentMatchers.any(),
+            ArgumentMatchers.any())
+        )
+            .thenThrow(TypeNotFoundException.builder().build());
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(resourceModel)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, logger))
+            .hasNoCause()
+            .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier '{\"/properties/Arn\":\"arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001\"}' was not found.")
+            .isExactlyInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    public void handleRequest_BadInput_NoModel() {
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, logger))
+            .hasNoCause()
+            .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier 'null' was not found.")
+            .isExactlyInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    public void handleRequest_BadInput_EmptyModel() {
+        final ResourceModel resourceModel = ResourceModel.builder()
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(resourceModel)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, logger))
+            .hasNoCause()
+            .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier 'null' was not found.")
+            .isExactlyInstanceOf(ResourceNotFoundException.class);
     }
 }

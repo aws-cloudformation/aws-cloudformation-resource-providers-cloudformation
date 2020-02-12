@@ -24,22 +24,21 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         final ResourceHandlerRequest<ResourceModel> request,
         final CallbackContext callbackContext,
         final Logger logger) {
-        final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
-
         this.proxy = proxy;
         this.request = request;
         this.logger = logger;
 
         ProgressEvent<ResourceModel, CallbackContext> readResult;
         try {
-            readResult = new ReadHandler().handleRequest(proxy, request, context, logger);
+            // read first to get additional read-only metadata required for correct delete action
+            readResult = new ReadHandler().handleRequest(proxy, request, null, logger);
         } catch (CfnNotFoundException e) {
             throw nullSafeNotFoundException(request.getDesiredResourceState());
         }
 
         final ResourceModel model = readResult.getResourceModel();
 
-        deregisterType(proxy, model, context, logger);
+        deregisterType(proxy, model, logger);
 
         return ProgressEvent.defaultSuccessHandler(null);
     }
@@ -47,7 +46,6 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
     DeregisterTypeResponse deregisterType(
         final AmazonWebServicesClientProxy proxy,
         final ResourceModel model,
-        final CallbackContext callbackContext,
         final Logger logger) {
 
         DeregisterTypeResponse response;

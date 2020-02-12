@@ -65,6 +65,7 @@ class Translator {
     static ResourceModel translateForRead(@NonNull final DescribeTypeResponse response) {
 
         final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
+//            .isDefaultVersion(response.isDefaultVersion())
             .description(response.description())
             .documentationUrl(response.documentationUrl())
             .executionRoleArn(response.executionRoleArn())
