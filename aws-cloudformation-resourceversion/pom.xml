@@ -18,13 +18,6 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>http://central.maven.org/maven2</url>
-        </repository>
-    </repositories>
-
     <dependencies>
 	<!-- https://mvnrepository.com/artifact/software.amazon.cloudformation/aws-cloudformation-rpdk-java-plugin -->
         <dependency>
