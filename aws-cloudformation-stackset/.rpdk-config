@@ -1,0 +1,15 @@
+{
+    "typeName": "AWS::CloudFormation::StackSet",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.cloudformation.stackset.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.cloudformation.stackset.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "cloudformation",
+            "stackset"
+        ]
+    }
+}

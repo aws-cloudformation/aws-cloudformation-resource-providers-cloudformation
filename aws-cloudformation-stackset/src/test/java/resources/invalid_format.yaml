@@ -1,0 +1,6 @@
+Resources:
+    DNS:
+        Type: Test::Test::Example
+        Properties:
+            Name: "test.com"
+Error

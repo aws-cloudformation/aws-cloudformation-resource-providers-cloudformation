@@ -1,0 +1,11 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "MyStack" : {
+            "Type" : "AWS::CloudFormation::StackSet",
+            "Properties" : {
+                "TemplateURL" : "test.url"
+            }
+        }
+    }
+}
