@@ -10,17 +10,17 @@ import static software.amazon.cloudformation.stackset.translator.PropertyTransla
 public class PropertyTranslatorTest {
 
     @Test
-    public void testNull_translateFromSdkParameters_isNull() {
+    public void test_translateFromSdkParameters_IfIsNull() {
         assertThat(translateFromSdkParameters(null)).isNull();
     }
 
     @Test
-    public void test_translateToSdkTags_isNull() {
+    public void test_translateToSdkTags_IfIsNull() {
         assertThat(translateToSdkTags(null)).isNull();
     }
 
     @Test
-    public void test_translateFromSdkTags_isNull() {
+    public void test_translateFromSdkTags_IfIsNull() {
         assertThat(translateFromSdkTags(null)).isNull();
     }
 }

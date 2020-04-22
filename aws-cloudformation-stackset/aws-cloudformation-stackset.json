@@ -74,6 +74,58 @@
                 }
             },
             "additionalProperties": false
+        },
+        "StackInstances": {
+            "description": "Stack instances in some specific accounts and Regions.",
+            "type": "object",
+            "properties": {
+                "DeploymentTargets": {
+                    "description": " The AWS OrganizationalUnitIds or Accounts for which to create stack instances in the specified Regions.",
+                    "type": "object",
+                    "properties": {
+                        "Accounts": {
+                            "description": "AWS accounts that you want to create stack instances in the specified Region(s) for.",
+                            "type": "array",
+                            "uniqueItems": true,
+                            "insertionOrder": false,
+                            "items": {
+                                "$ref": "#/definitions/Account"
+                            }
+                        },
+                        "OrganizationalUnitIds": {
+                            "description": "The organization root ID or organizational unit (OU) IDs to which StackSets deploys.",
+                            "type": "array",
+                            "uniqueItems": true,
+                            "insertionOrder": false,
+                            "items": {
+                                "$ref": "#/definitions/OrganizationalUnitId"
+                            }
+                        }
+                    }
+                },
+                "Regions": {
+                    "description": "The names of one or more Regions where you want to create stack instances using the specified AWS account(s).",
+                    "type": "array",
+                    "uniqueItems": true,
+                    "insertionOrder": false,
+                    "items": {
+                        "$ref": "#/definitions/Region"
+                    }
+                },
+                "ParameterOverrides": {
+                    "description": "A list of stack set parameters whose values you want to override in the selected stack instances.",
+                    "type": "array",
+                    "uniqueItems": true,
+                    "insertionOrder": false,
+                    "items": {
+                        "$ref": "#/definitions/Parameter"
+                    }
+                }
+            },
+            "required": [
+                "DeploymentTargets",
+                "Regions"
+            ]
         }
     },
     "properties": {
@@ -98,30 +150,6 @@
             "insertionOrder": false,
             "items": {
                 "$ref": "#/definitions/Capability"
-            }
-        },
-        "DeploymentTargets": {
-            "description": "",
-            "type": "object",
-            "properties": {
-                "Accounts" : {
-                    "description": "AWS accounts that you want to create stack instances in the specified Region(s) for.",
-                    "type": "array",
-                    "uniqueItems": true,
-                    "insertionOrder": false,
-                    "items": {
-                        "$ref": "#/definitions/Account"
-                    }
-                },
-                "OrganizationalUnitIds": {
-                    "description": "The organization root ID or organizational unit (OU) IDs to which StackSets deploys.",
-                    "type": "array",
-                    "uniqueItems": true,
-                    "insertionOrder": false,
-                    "items": {
-                        "$ref": "#/definitions/OrganizationalUnitId"
-                    }
-                }
             }
         },
         "Description": {
@@ -166,6 +194,15 @@
                 }
             }
         },
+        "StackInstancesGroup": {
+            "description": "",
+            "type": "array",
+            "uniqueItems": true,
+            "insertionOrder": false,
+            "items": {
+                "$ref": "#/definitions/StackInstances"
+            }
+        },
         "Parameters": {
             "description": "The input parameters for the stack set template.",
             "type": "array",
@@ -182,15 +219,6 @@
                 "SERVICE_MANAGED",
                 "SELF_MANAGED"
             ]
-        },
-        "Regions": {
-            "description": "The names of one or more Regions where you want to create stack instances using the specified AWS account(s).",
-            "type": "array",
-            "uniqueItems": true,
-            "insertionOrder": false,
-            "items": {
-                "$ref": "#/definitions/Region"
-            }
         },
         "Tags": {
             "description": "The key-value pairs to associate with this stack set and the stacks created from it. AWS CloudFormation also propagates these tags to supported resources that are created in the stacks. A maximum number of 50 tags can be specified.",
@@ -216,8 +244,7 @@
         }
     },
     "required": [
-        "PermissionModel",
-        "Regions"
+        "PermissionModel"
     ],
     "additionalProperties": false,
     "createOnlyProperties": [

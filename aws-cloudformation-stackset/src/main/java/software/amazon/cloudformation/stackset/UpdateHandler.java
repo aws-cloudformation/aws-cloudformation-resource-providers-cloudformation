@@ -4,127 +4,77 @@ import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.stackset.util.ClientBuilder;
-import software.amazon.cloudformation.stackset.util.OperationOperator;
-import software.amazon.cloudformation.stackset.util.Stabilizer;
-import software.amazon.cloudformation.stackset.util.UpdatePlaceholder;
+import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
 import software.amazon.cloudformation.stackset.util.Validator;
 
-import java.util.Set;
+import static software.amazon.cloudformation.stackset.translator.RequestTranslator.updateStackSetRequest;
 
-import static software.amazon.cloudformation.stackset.util.Comparator.isAddingStackInstances;
-import static software.amazon.cloudformation.stackset.util.Comparator.isDeletingStackInstances;
-import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
-import static software.amazon.cloudformation.stackset.util.Comparator.isUpdatingStackInstances;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.ADD_INSTANCES_BY_REGIONS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.ADD_INSTANCES_BY_TARGETS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.DELETE_INSTANCES_BY_REGIONS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.DELETE_INSTANCES_BY_TARGETS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.STACK_SET_CONFIGS;
-import static software.amazon.cloudformation.stackset.util.Stabilizer.getDelaySeconds;
-import static software.amazon.cloudformation.stackset.util.Stabilizer.isPreviousOperationDone;
-import static software.amazon.cloudformation.stackset.util.Stabilizer.isUpdateStabilized;
+public class UpdateHandler extends BaseHandlerStd {
 
+    private Logger logger;
 
-public class UpdateHandler extends BaseHandler<CallbackContext> {
-
-    private Validator validator;
-
-    public UpdateHandler() {
-        this.validator = new Validator();
-    }
-
-    public UpdateHandler(Validator validator) {
-        this.validator = validator;
-    }
-
-    @Override
-    public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
+    protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
             final ResourceHandlerRequest<ResourceModel> request,
             final CallbackContext callbackContext,
+            final ProxyClient<CloudFormationClient> proxyClient,
             final Logger logger) {
 
-        final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
-        final CloudFormationClient client = ClientBuilder.getClient();
+        this.logger = logger;
+
+        final ResourceModel model = request.getDesiredResourceState();
         final ResourceModel previousModel = request.getPreviousResourceState();
-        final ResourceModel desiredModel = request.getDesiredResourceState();
-        final Stabilizer stabilizer = Stabilizer.builder().proxy(proxy).client(client).logger(logger).build();
-        final OperationOperator operator = OperationOperator.builder()
-                .client(client).desiredModel(desiredModel).previousModel(previousModel)
-                .logger(logger).proxy(proxy).context(context)
-                .build();
+        analyzeTemplate(proxy, previousModel, model, callbackContext);
 
-        final boolean isStackSetUpdating = !isStackSetConfigEquals(previousModel, desiredModel);
-        final boolean isPerformingStackSetUpdate = stabilizer.isPerformingOperation(isStackSetUpdating,
-                context.isUpdateStackSetStarted(), null, STACK_SET_CONFIGS, desiredModel, context);
-
-        if (isPerformingStackSetUpdate) {
-            if (previousModel.getTemplateURL() != desiredModel.getTemplateURL()) {
-                validator.validateTemplate(
-                        proxy, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), logger);
-            }
-            operator.updateStackSet(STACK_SET_CONFIGS,null, null);
-        }
-
-        final boolean isPerformingStackInstancesUpdate = isPreviousOperationDone(context, STACK_SET_CONFIGS) &&
-                isUpdatingStackInstances(previousModel, desiredModel, context);
-
-        if (isPerformingStackInstancesUpdate) {
-
-            final UpdatePlaceholder updateTable = new UpdatePlaceholder(previousModel, desiredModel);
-            final Set<String> regionsToAdd = updateTable.getRegionsToAdd();
-            final Set<String> targetsToAdd = updateTable.getTargetsToAdd();
-            final Set<String> regionsToDelete = updateTable.getRegionsToDelete();
-            final Set<String> targetsToDelete = updateTable.getTargetsToDelete();
-
-            if (isDeletingStackInstances(regionsToDelete, targetsToDelete, context)) {
-
-                if (stabilizer.isPerformingOperation(
-                        !regionsToDelete.isEmpty(), context.isDeleteStacksByRegionsStarted(),
-                        STACK_SET_CONFIGS, DELETE_INSTANCES_BY_REGIONS, desiredModel, context)) {
-
-                    operator.updateStackSet(DELETE_INSTANCES_BY_REGIONS, regionsToDelete, null);
-                }
-
-                if (stabilizer.isPerformingOperation(
-                                !targetsToDelete.isEmpty(), context.isDeleteStacksByTargetsStarted(),
-                                DELETE_INSTANCES_BY_REGIONS, DELETE_INSTANCES_BY_TARGETS, desiredModel, context)) {
-
-                    operator.updateStackSet(DELETE_INSTANCES_BY_TARGETS, regionsToDelete, targetsToDelete);
-                }
-            }
-
-            if (isAddingStackInstances(regionsToAdd, targetsToAdd, context)) {
-
-                if (stabilizer.isPerformingOperation(
-                                !regionsToAdd.isEmpty(), context.isAddStacksByRegionsStarted(),
-                                DELETE_INSTANCES_BY_TARGETS, ADD_INSTANCES_BY_REGIONS, desiredModel, context)) {
-
-                    operator.updateStackSet(ADD_INSTANCES_BY_REGIONS, regionsToAdd, null);
-                }
-
-                if (stabilizer.isPerformingOperation(
-                                !targetsToAdd.isEmpty(), context.isAddStacksByTargetsStarted(),
-                                ADD_INSTANCES_BY_REGIONS, ADD_INSTANCES_BY_TARGETS, desiredModel, context)) {
-
-                    operator.updateStackSet(ADD_INSTANCES_BY_TARGETS, regionsToAdd, targetsToAdd);
-                }
-            }
-        }
-
-        if (isUpdateStabilized(context)) {
-            return ProgressEvent.defaultSuccessHandler(desiredModel);
-
-        } else {
-            return ProgressEvent.defaultInProgressHandler(
-                    context,
-                    getDelaySeconds(context),
-                    desiredModel);
-        }
-
+        return updateStackSet(proxy, proxyClient, model, callbackContext)
+                .then(progress -> deleteStackInstances(proxy, proxyClient, progress, logger))
+                .then(progress -> createStackInstances(proxy, proxyClient, progress, logger))
+                .then(progress -> updateStackInstances(proxy, proxyClient, progress, logger));
     }
 
-}
+    /**
+     * Implement client invocation of the update request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     *
+     * @param proxy {@link AmazonWebServicesClientProxy} to initiate proxy chain
+     * @param client the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
+     * @param model {@link ResourceModel}
+     * @param callbackContext {@link CallbackContext}
+     * @return progressEvent indicating success, in progress with delay callback or failed state
+     */
+    protected ProgressEvent<ResourceModel, CallbackContext> updateStackSet(
+            final AmazonWebServicesClientProxy proxy,
+            final ProxyClient<CloudFormationClient> client,
+            final ResourceModel model,
+            final CallbackContext callbackContext) {
 
+        return proxy.initiate("AWS-CloudFormation-StackSet::UpdateStackSet", client, model, callbackContext)
+                .request(modelRequest -> updateStackSetRequest(modelRequest))
+                .retry(MULTIPLE_OF)
+                .call((modelRequest, proxyInvocation) ->
+                        proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackSet))
+                .stabilize((request, response, proxyInvocation, resourceModel, context) ->
+                        isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
+                .exceptFilter(this::filterException)
+                .progress();
+    }
+
+    /**
+     * Analyzes/validates template and StackInstancesGroup
+     * @param proxy {@link AmazonWebServicesClientProxy}
+     * @param previousModel previous {@link ResourceModel}
+     * @param model {@link ResourceModel}
+     * @param context {@link CallbackContext}
+     */
+    private void analyzeTemplate(
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceModel previousModel,
+            final ResourceModel model,
+            final CallbackContext context) {
+
+        new Validator().validateTemplate(proxy, model.getTemplateBody(), model.getTemplateURL(), logger);
+        InstancesAnalyzer.builder().desiredModel(model).previousModel(previousModel).build().analyzeForUpdate(context);
+    }
+}

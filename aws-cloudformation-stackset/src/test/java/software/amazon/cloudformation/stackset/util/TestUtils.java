@@ -4,12 +4,15 @@ import com.google.common.collect.ImmutableMap;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
+import software.amazon.awssdk.services.cloudformation.model.DeleteStackSetResponse;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetsResponse;
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
+import software.amazon.awssdk.services.cloudformation.model.StackInstance;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperation;
@@ -22,6 +25,7 @@ import software.amazon.cloudformation.stackset.AutoDeployment;
 import software.amazon.cloudformation.stackset.DeploymentTargets;
 import software.amazon.cloudformation.stackset.OperationPreferences;
 import software.amazon.cloudformation.stackset.ResourceModel;
+import software.amazon.cloudformation.stackset.StackInstances;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -88,6 +92,12 @@ public class TestUtils {
     public final static String US_EAST_2 = "us-east-2";
     public final static String US_WEST_2 = "us-west-2";
 
+    public final static String EU_EAST_1 = "eu-east-1";
+    public final static String EU_EAST_2 = "eu-east-2";
+    public final static String EU_EAST_3 = "eu-east-3";
+    public final static String EU_CENTRAL_1 = "eu-central-1";
+    public final static String EU_NORTH_1 = "eu-north-1";
+
     public final static String ORGANIZATION_UNIT_ID_1 = "ou-example-1";
     public final static String ORGANIZATION_UNIT_ID_2 = "ou-example-2";
     public final static String ORGANIZATION_UNIT_ID_3 = "ou-example-3";
@@ -150,8 +160,11 @@ public class TestUtils {
     public final static Map<String, String> NEW_RESOURCE_TAGS = ImmutableMap.of(
             "key1", "val1", "key2updated", "val2updated", "key3", "val3");
 
-    public final static Set<String> REGIONS = new HashSet<>(Arrays.asList(US_WEST_1, US_EAST_1));
-    public final static Set<String> UPDATED_REGIONS = new HashSet<>(Arrays.asList(US_WEST_2, US_EAST_2));
+    public final static Set<String> REGIONS_1 = new HashSet<>(Arrays.asList(US_WEST_1, US_EAST_1));
+    public final static Set<String> UPDATED_REGIONS_1 = new HashSet<>(Arrays.asList(US_WEST_1, US_EAST_2));
+
+    public final static Set<String> REGIONS_2 = new HashSet<>(Arrays.asList(EU_EAST_1, EU_EAST_2));
+    public final static Set<String> UPDATED_REGIONS_2 = new HashSet<>(Arrays.asList(EU_EAST_3, EU_CENTRAL_1));
 
     public final static DeploymentTargets SERVICE_MANAGED_TARGETS = DeploymentTargets.builder()
             .organizationalUnitIds(new HashSet<>(Arrays.asList(
@@ -165,12 +178,12 @@ public class TestUtils {
 
     public final static DeploymentTargets SELF_MANAGED_TARGETS = DeploymentTargets.builder()
             .accounts(new HashSet<>(Arrays.asList(
-                    ACCOUNT_ID_1, ACCOUNT_ID_2)))
+                    ACCOUNT_ID_1)))
             .build();
 
     public final static DeploymentTargets UPDATED_SELF_MANAGED_TARGETS = DeploymentTargets.builder()
             .accounts(new HashSet<>(Arrays.asList(
-                    ACCOUNT_ID_3, ACCOUNT_ID_4)))
+                    ACCOUNT_ID_2)))
             .build();
 
     public final static Set<String> CAPABILITIES = new HashSet<>(Arrays.asList(
@@ -180,7 +193,6 @@ public class TestUtils {
             .failureToleranceCount(0)
             .maxConcurrentCount(1)
             .build();
-
 
     public final static Set<software.amazon.cloudformation.stackset.Tag> TAGS = new HashSet<>(Arrays.asList(
             new software.amazon.cloudformation.stackset.Tag("key1", "val1"),
@@ -239,14 +251,55 @@ public class TestUtils {
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_7 = StackInstanceSummary.builder()
             .account(ACCOUNT_ID_2)
-            .region(US_EAST_1)
+            .region(EU_EAST_1)
             .build();
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_8 = StackInstanceSummary.builder()
             .account(ACCOUNT_ID_2)
-            .region(US_WEST_1)
+            .region(EU_EAST_2)
             .build();
 
+    public final static StackInstance STACK_INSTANCE_1 = StackInstance.builder()
+            .account(ACCOUNT_ID_1)
+            .region(US_EAST_1)
+            .parameterOverrides(SDK_PARAMETER_1)
+            .build();
+
+    public final static DescribeStackInstanceResponse DESCRIBE_STACK_INSTANCE_RESPONSE_1 =
+            DescribeStackInstanceResponse.builder()
+                    .stackInstance(STACK_INSTANCE_1)
+                    .build();
+
+    public final static StackInstance STACK_INSTANCE_2 = StackInstance.builder()
+            .account(ACCOUNT_ID_1)
+            .region(US_WEST_1)
+            .parameterOverrides(SDK_PARAMETER_1)
+            .build();
+
+    public final static DescribeStackInstanceResponse DESCRIBE_STACK_INSTANCE_RESPONSE_2 =
+            DescribeStackInstanceResponse.builder()
+                    .stackInstance(STACK_INSTANCE_2)
+                    .build();
+
+    public final static StackInstance STACK_INSTANCE_3 = StackInstance.builder()
+            .account(ACCOUNT_ID_2)
+            .region(EU_EAST_1)
+            .build();
+
+    public final static DescribeStackInstanceResponse DESCRIBE_STACK_INSTANCE_RESPONSE_3 =
+            DescribeStackInstanceResponse.builder()
+                    .stackInstance(STACK_INSTANCE_3)
+                    .build();
+
+    public final static StackInstance STACK_INSTANCE_4 = StackInstance.builder()
+            .account(ACCOUNT_ID_2)
+            .region(EU_EAST_2)
+            .build();
+
+    public final static DescribeStackInstanceResponse DESCRIBE_STACK_INSTANCE_RESPONSE_4 =
+            DescribeStackInstanceResponse.builder()
+                    .stackInstance(STACK_INSTANCE_4)
+                    .build();
 
     public final static List<StackInstanceSummary> SERVICE_MANAGED_STACK_INSTANCE_SUMMARIES = Arrays.asList(
             STACK_INSTANCE_SUMMARY_1, STACK_INSTANCE_SUMMARY_2, STACK_INSTANCE_SUMMARY_3, STACK_INSTANCE_SUMMARY_4);
@@ -260,14 +313,45 @@ public class TestUtils {
                     .enabled(true)
                     .build();
 
+    public final static StackInstances STACK_INSTANCES_1 = StackInstances.builder()
+            .regions(REGIONS_1)
+            .deploymentTargets(SERVICE_MANAGED_TARGETS)
+            .build();
+
+    public final static StackInstances STACK_INSTANCES_2 = StackInstances.builder()
+            .regions(REGIONS_2)
+            .deploymentTargets(UPDATED_SERVICE_MANAGED_TARGETS)
+            .build();
+
+    public final static StackInstances SELF_MANAGED_STACK_INSTANCES_1 = StackInstances.builder()
+            .regions(REGIONS_1)
+            .deploymentTargets(SELF_MANAGED_TARGETS)
+            .parameterOverrides(new HashSet<>(Arrays.asList(PARAMETER_1)))
+            .build();
+
+    public final static StackInstances SELF_MANAGED_STACK_INSTANCES_2 = StackInstances.builder()
+            .regions(REGIONS_2)
+            .deploymentTargets(UPDATED_SELF_MANAGED_TARGETS)
+            .build();
+
+    public final static StackInstances SELF_MANAGED_STACK_INSTANCES_3 = StackInstances.builder()
+            .regions(UPDATED_REGIONS_1)
+            .deploymentTargets(SELF_MANAGED_TARGETS)
+            .parameterOverrides(new HashSet<>(Arrays.asList(PARAMETER_2)))
+            .build();
+
+    public final static StackInstances SELF_MANAGED_STACK_INSTANCES_4 = StackInstances.builder()
+            .regions(REGIONS_2)
+            .deploymentTargets(UPDATED_SELF_MANAGED_TARGETS)
+            .parameterOverrides(new HashSet<>(Arrays.asList(PARAMETER_1)))
+            .build();
+
     public final static StackSetSummary STACK_SET_SUMMARY_1 = StackSetSummary.builder()
-            .autoDeployment(SDK_AUTO_DEPLOYMENT)
             .description(DESCRIPTION)
-            .permissionModel(PermissionModels.SERVICE_MANAGED)
+            .permissionModel(PermissionModels.SELF_MANAGED)
             .stackSetId(STACK_SET_ID)
             .stackSetName(STACK_SET_NAME)
             .build();
-
 
     public final static StackSet SERVICE_MANAGED_STACK_SET = StackSet.builder()
             .stackSetId(STACK_SET_ID)
@@ -287,40 +371,55 @@ public class TestUtils {
             .capabilitiesWithStrings(CAPABILITIES)
             .description(DESCRIPTION)
             .parameters(SDK_PARAMETER_1, SDK_PARAMETER_2)
+            .templateBody(TEMPLATE_BODY)
             .permissionModel(PermissionModels.SELF_MANAGED)
             .tags(TAGGED_RESOURCES)
             .build();
 
     public final static ResourceModel SERVICE_MANAGED_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
-            .deploymentTargets(SERVICE_MANAGED_TARGETS)
             .permissionModel(SERVICE_MANAGED)
             .capabilities(CAPABILITIES)
             .description(DESCRIPTION)
             .autoDeployment(AUTO_DEPLOYMENT)
-            .regions(REGIONS)
+            .templateBody(TEMPLATE_BODY)
+            .stackInstancesGroup(new HashSet<>(Arrays.asList(STACK_INSTANCES_1, STACK_INSTANCES_2)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
             .tags(TAGS)
             .build();
 
     public final static ResourceModel SELF_MANAGED_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
-            .deploymentTargets(SELF_MANAGED_TARGETS)
             .permissionModel(SELF_MANAGED)
             .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
             .description(DESCRIPTION)
-            .regions(REGIONS)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
             .tags(TAGS)
             .build();
 
     public final static ResourceModel UPDATED_SELF_MANAGED_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
-            .deploymentTargets(UPDATED_SELF_MANAGED_TARGETS)
             .permissionModel(SELF_MANAGED)
             .capabilities(CAPABILITIES)
-            .regions(UPDATED_REGIONS)
+            .templateBody(TEMPLATE_BODY)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_3, SELF_MANAGED_STACK_INSTANCES_4)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_3)))
+            .tags(TAGS)
+            .build();
+
+    public final static ResourceModel SELF_MANAGED_MODEL_FOR_READ = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
             .tags(TAGS)
             .build();
 
@@ -330,10 +429,9 @@ public class TestUtils {
 
     public final static ResourceModel SIMPLE_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
-            .deploymentTargets(SERVICE_MANAGED_TARGETS)
-            .permissionModel(SERVICE_MANAGED)
-            .autoDeployment(AUTO_DEPLOYMENT)
-            .regions(REGIONS)
+            .permissionModel(SELF_MANAGED)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
             .templateURL(TEMPLATE_URL)
             .tags(TAGS)
             .operationPreferences(OPERATION_PREFERENCES)
@@ -341,10 +439,9 @@ public class TestUtils {
 
     public final static ResourceModel SIMPLE_TEMPLATE_BODY_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
-            .deploymentTargets(SERVICE_MANAGED_TARGETS)
+            .stackInstancesGroup(new HashSet<>(Arrays.asList(STACK_INSTANCES_1, STACK_INSTANCES_2)))
             .permissionModel(SERVICE_MANAGED)
             .autoDeployment(AUTO_DEPLOYMENT)
-            .regions(REGIONS)
             .templateBody(TEMPLATE_BODY)
             .tags(TAGS)
             .operationPreferences(OPERATION_PREFERENCES)
@@ -353,10 +450,9 @@ public class TestUtils {
 
     public final static ResourceModel UPDATED_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
-            .deploymentTargets(UPDATED_SERVICE_MANAGED_TARGETS)
             .permissionModel(SERVICE_MANAGED)
             .autoDeployment(AUTO_DEPLOYMENT)
-            .regions(UPDATED_REGIONS)
+            .stackInstancesGroup(new HashSet<>(Arrays.asList(STACK_INSTANCES_1, STACK_INSTANCES_2)))
             .templateURL(UPDATED_TEMPLATE_URL)
             .tags(TAGS_TO_UPDATE)
             .build();
@@ -391,6 +487,9 @@ public class TestUtils {
             CreateStackInstancesResponse.builder()
                     .operationId(OPERATION_ID_1)
                     .build();
+
+    public final static DeleteStackSetResponse DELETE_STACK_SET_RESPONSE =
+            DeleteStackSetResponse.builder().build();
 
     public final static UpdateStackSetResponse UPDATE_STACK_SET_RESPONSE =
             UpdateStackSetResponse.builder()

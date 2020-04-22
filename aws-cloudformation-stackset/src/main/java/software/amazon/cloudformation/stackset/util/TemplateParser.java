@@ -114,7 +114,7 @@ public class TemplateParser {
     @SuppressWarnings("unchecked")
     @VisibleForTesting
     protected static Map<String, Object> deserializeJson(final String templateString) {
-        Map<String, Object> template = null;
+        Map<String, Object> template;
         try {
             JsonParser parser = new MappingJsonFactory().createParser(templateString);
             template = OBJECT_MAPPER.readValue(parser, Map.class);

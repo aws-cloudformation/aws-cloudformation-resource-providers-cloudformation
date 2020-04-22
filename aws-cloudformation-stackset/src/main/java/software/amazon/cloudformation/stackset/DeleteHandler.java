@@ -1,92 +1,74 @@
 package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
-import software.amazon.awssdk.services.cloudformation.model.OperationInProgressException;
+import software.amazon.awssdk.services.cloudformation.model.DeleteStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.StackSetNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.stackset.util.ClientBuilder;
-import software.amazon.cloudformation.stackset.util.Stabilizer;
 
-import static software.amazon.cloudformation.stackset.translator.RequestTranslator.deleteStackInstancesRequest;
+import java.util.ArrayList;
+import java.util.function.Function;
+
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.deleteStackSetRequest;
-import static software.amazon.cloudformation.stackset.util.Stabilizer.getDelaySeconds;
 
-public class DeleteHandler extends BaseHandler<CallbackContext> {
+public class DeleteHandler extends BaseHandlerStd {
 
-    @Override
-    public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+    private Logger logger;
 
-        final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
+    protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final Logger logger) {
+
+        this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
-        final CloudFormationClient client = ClientBuilder.getClient();
+        // Add all stack instances into delete list
+        callbackContext.setDeleteStacksList(new ArrayList<>(model.getStackInstancesGroup()));
 
-        final Stabilizer stabilizer = Stabilizer.builder().proxy(proxy).client(client).logger(logger).build();
-
-        // Delete resource
-        if (!context.isStabilizationStarted()) {
-            deleteStackInstances(proxy, model, logger, client, context);
-
-        } else if (stabilizer.isStabilized(model, context)){
-            deleteStackSet(proxy, model.getStackSetId(), logger, client);
-
-            return ProgressEvent.defaultSuccessHandler(model);
-        }
-
-        return ProgressEvent.defaultInProgressHandler(
-                context,
-                getDelaySeconds(context),
-                model);
+        return proxy.initiate("AWS-CloudFormation-StackSet::Delete", proxyClient, model, callbackContext)
+                .request(Function.identity())
+                .retry(MULTIPLE_OF)
+                .call(EMPTY_CALL)
+                .progress()
+                // delete/stabilize progress chain - delete all associated stack instances
+                .then(progress -> deleteStackInstances(proxy, proxyClient, progress, logger))
+                .then(progress -> deleteStackSet(proxy, proxyClient, progress));
     }
 
-    private void deleteStackSet(
+    /**
+     * Implement client invocation of the delete request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     *
+     * @param proxy    Amazon webservice proxy to inject credentials correctly.
+     * @param client   the aws service client to make the call
+     * @param progress event of the previous state indicating success, in progress with delay callback or failed state
+     * @return delete resource response
+     */
+    protected ProgressEvent<ResourceModel, CallbackContext> deleteStackSet(
             final AmazonWebServicesClientProxy proxy,
-            final String stackSetName,
-            final Logger logger,
-            final CloudFormationClient client) {
+            final ProxyClient<CloudFormationClient> client,
+            final ProgressEvent<ResourceModel, CallbackContext> progress) {
 
-        try {
-            proxy.injectCredentialsAndInvokeV2(deleteStackSetRequest(stackSetName), client::deleteStackSet);
-            logger.log(String.format("%s [%s] StackSet deletion succeeded", ResourceModel.TYPE_NAME, stackSetName));
+        final ResourceModel model = progress.getResourceModel();
+        final CallbackContext callbackContext = progress.getCallbackContext();
 
-        } catch (final StackSetNotFoundException e) {
-            throw new CfnNotFoundException(e);
-        }
+        return proxy.initiate("AWS-CloudFormation-StackSet::DeleteStackSet", client, model, callbackContext)
+                .request(modelRequest -> deleteStackSetRequest(modelRequest.getStackSetId()))
+                .call((modelRequest, proxyInvocation) -> deleteStackSet(model.getStackSetId(), proxyInvocation))
+                .success();
     }
 
-    private void deleteStackInstances(
-            final AmazonWebServicesClientProxy proxy,
-            final ResourceModel model,
-            final Logger logger,
-            final CloudFormationClient client,
-            final CallbackContext context) {
-
-        try {
-            final DeleteStackInstancesResponse response = proxy.injectCredentialsAndInvokeV2(
-                    deleteStackInstancesRequest(model.getStackSetId(),
-                            model.getOperationPreferences(), model.getDeploymentTargets(), model.getRegions()),
-                    client::deleteStackInstances);
-
-            logger.log(String.format("%s [%s] stack instances deletion initiated",
-                    ResourceModel.TYPE_NAME, model.getStackSetId()));
-
-            context.setOperationId(response.operationId());
-            context.setStabilizationStarted(true);
-
-        } catch (final StackSetNotFoundException e) {
-            throw new CfnNotFoundException(e);
-
-        } catch (final OperationInProgressException e) {
-            context.incrementRetryCounter();
-        }
+    private DeleteStackSetResponse deleteStackSet(final String stackSetId, final ProxyClient<CloudFormationClient> proxyClient) {
+        DeleteStackSetResponse response;
+        response = proxyClient.injectCredentialsAndInvokeV2(
+                deleteStackSetRequest(stackSetId), proxyClient.client()::deleteStackSet);
+        logger.log(String.format("%s successfully deleted.", ResourceModel.TYPE_NAME));
+        return response;
     }
 }

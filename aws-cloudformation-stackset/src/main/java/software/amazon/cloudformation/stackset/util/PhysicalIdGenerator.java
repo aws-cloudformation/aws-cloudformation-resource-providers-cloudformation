@@ -5,7 +5,7 @@ import software.amazon.cloudformation.resource.IdentifierUtils;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
 /**
- * Utility class to generate Physical Resource Id from {@link ResourceHandlerRequest<ResourceModel>}.
+ * Utility class to generate Physical Resource Id from {@link ResourceHandlerRequest< ResourceModel >}.
  */
 public class PhysicalIdGenerator {
 

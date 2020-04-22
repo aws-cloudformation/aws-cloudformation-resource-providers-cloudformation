@@ -1,6 +1,5 @@
 package software.amazon.cloudformation.stackset.util;
 
-import lombok.Builder;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.awscore.AwsRequest;
 import software.amazon.awssdk.awscore.AwsRequestOverrideConfiguration;
