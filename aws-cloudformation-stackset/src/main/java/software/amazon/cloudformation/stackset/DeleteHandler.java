@@ -1,20 +1,20 @@
 package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
-import software.amazon.awssdk.services.cloudformation.model.OperationInProgressException;
 import software.amazon.awssdk.services.cloudformation.model.StackSetNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.stackset.util.ClientBuilder;
+import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
+import software.amazon.cloudformation.stackset.util.OperationOperator;
 import software.amazon.cloudformation.stackset.util.Stabilizer;
 
-import static software.amazon.cloudformation.stackset.translator.RequestTranslator.deleteStackInstancesRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.deleteStackSetRequest;
+import static software.amazon.cloudformation.stackset.util.Comparator.isDeletingStackInstances;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.DELETE_INSTANCES;
 import static software.amazon.cloudformation.stackset.util.Stabilizer.getDelaySeconds;
 
 public class DeleteHandler extends BaseHandler<CallbackContext> {
@@ -29,14 +29,20 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         final CallbackContext context = callbackContext == null ? CallbackContext.builder().build() : callbackContext;
         final ResourceModel model = request.getDesiredResourceState();
         final CloudFormationClient client = ClientBuilder.getClient();
-
         final Stabilizer stabilizer = Stabilizer.builder().proxy(proxy).client(client).logger(logger).build();
+        final OperationOperator operator = OperationOperator.builder()
+                .client(client).desiredModel(model)
+                .logger(logger).proxy(proxy).context(context)
+                .build();
+        InstancesAnalyzer.builder().desiredModel(model).build().analyzeForDelete(context);
 
-        // Delete resource
-        if (!context.isStabilizationStarted()) {
-            deleteStackInstances(proxy, model, logger, client, context);
+        if (stabilizer.isPerformingOperation(isDeletingStackInstances(context), context.isDeleteStacksStarted(), null,
+                DELETE_INSTANCES, context.getDeleteStacksQueue(), model, context)) {
 
-        } else if (stabilizer.isStabilized(model, context)){
+            operator.updateStackSet(DELETE_INSTANCES);
+        }
+
+        if (context.getOperationsStabilizationMap().get(DELETE_INSTANCES)){
             deleteStackSet(proxy, model.getStackSetId(), logger, client);
 
             return ProgressEvent.defaultSuccessHandler(model);
@@ -60,33 +66,6 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
 
         } catch (final StackSetNotFoundException e) {
             throw new CfnNotFoundException(e);
-        }
-    }
-
-    private void deleteStackInstances(
-            final AmazonWebServicesClientProxy proxy,
-            final ResourceModel model,
-            final Logger logger,
-            final CloudFormationClient client,
-            final CallbackContext context) {
-
-        try {
-            final DeleteStackInstancesResponse response = proxy.injectCredentialsAndInvokeV2(
-                    deleteStackInstancesRequest(model.getStackSetId(),
-                            model.getOperationPreferences(), model.getDeploymentTargets(), model.getRegions()),
-                    client::deleteStackInstances);
-
-            logger.log(String.format("%s [%s] stack instances deletion initiated",
-                    ResourceModel.TYPE_NAME, model.getStackSetId()));
-
-            context.setOperationId(response.operationId());
-            context.setStabilizationStarted(true);
-
-        } catch (final StackSetNotFoundException e) {
-            throw new CfnNotFoundException(e);
-
-        } catch (final OperationInProgressException e) {
-            context.incrementRetryCounter();
         }
     }
 }

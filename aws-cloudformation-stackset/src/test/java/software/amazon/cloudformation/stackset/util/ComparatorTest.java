@@ -1,21 +1,14 @@
 package software.amazon.cloudformation.stackset.util;
 
 import org.junit.jupiter.api.Test;
-import software.amazon.cloudformation.stackset.CallbackContext;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
-import java.util.HashSet;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.amazon.cloudformation.stackset.util.Comparator.isAddingStackInstances;
-import static software.amazon.cloudformation.stackset.util.Comparator.isDeletingStackInstances;
 import static software.amazon.cloudformation.stackset.util.Comparator.isEquals;
 import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
-import static software.amazon.cloudformation.stackset.util.Comparator.isUpdatingStackInstances;
 import static software.amazon.cloudformation.stackset.util.TestUtils.ADMINISTRATION_ROLE_ARN;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIPTION;
 import static software.amazon.cloudformation.stackset.util.TestUtils.EXECUTION_ROLE_NAME;
-import static software.amazon.cloudformation.stackset.util.TestUtils.REGIONS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TAGS_TO_UPDATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_BODY;
@@ -67,26 +60,6 @@ public class ComparatorTest {
         testPreviousModel.setTemplateBody(TEMPLATE_BODY);
 
         assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel)).isFalse();
-    }
-
-    @Test
-    public void testIsDeletingStackInstances() {
-        // Both are empty
-        assertThat(isDeletingStackInstances(new HashSet<>(), new HashSet<>(), CallbackContext.builder().build()))
-                .isFalse();
-        // targetsToDelete is empty
-        assertThat(isDeletingStackInstances(REGIONS, new HashSet<>(), CallbackContext.builder().build()))
-                .isTrue();
-    }
-
-    @Test
-    public void testisAddingStackInstances() {
-        // Both are empty
-        assertThat(isAddingStackInstances(new HashSet<>(), new HashSet<>(), CallbackContext.builder().build()))
-                .isFalse();
-        // targetsToDelete is empty
-        assertThat(isAddingStackInstances(REGIONS, new HashSet<>(), CallbackContext.builder().build()))
-                .isTrue();
     }
 
     @Test

@@ -5,14 +5,18 @@ import lombok.Builder;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationResponse;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationStatus;
+import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.stackset.CallbackContext;
 import software.amazon.cloudformation.stackset.ResourceModel;
-import software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations;
+import software.amazon.cloudformation.stackset.StackInstances;
+import software.amazon.cloudformation.stackset.util.EnumUtils.Operations;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackSetOperationRequest;
@@ -83,12 +87,6 @@ public class Stabilizer {
                 logger.log(String.format("StackSet stabilization [%s] time out", stackSetId));
                 throw new CfnServiceInternalErrorException(ResourceModel.TYPE_NAME);
             }
-
-            // If it exceeds max retries
-            if (context.getRetries() > MAX_RETRIES) {
-                logger.log(String.format("StackSet stabilization [%s] reaches max retries", stackSetId));
-                throw new CfnServiceInternalErrorException(ResourceModel.TYPE_NAME);
-            }
             return isStackSetOperationDone(status, operationId);
 
         } catch (final CfnServiceInternalErrorException e) {
@@ -118,6 +116,7 @@ public class Stabilizer {
     private Boolean isStackSetOperationDone(final StackSetOperationStatus status, final String operationId) {
         switch (status) {
             case SUCCEEDED:
+                logger.log(String.format("%s has been successfully stabilized.", operationId));
                 return true;
             case RUNNING:
             case QUEUED:
@@ -130,11 +129,10 @@ public class Stabilizer {
     }
 
     /**
-     * Checks if this operation {@link UpdateOperations} needs to run at this stabilization runtime
-     * @param isRequiredToRun If the operation is necessary to operate
+     * Checks if this operation {@link Operations} needs to run at this stabilization runtime
      * @param isStabilizedStarted If the operation has been initialed
-     * @param previousOperation Previous {@link UpdateOperations}
-     * @param operation {@link UpdateOperations}
+     * @param previousOperation Previous {@link Operations}
+     * @param operation {@link Operations}
      * @param model {@link ResourceModel}
      * @param context {@link CallbackContext}
      * @return boolean
@@ -142,19 +140,20 @@ public class Stabilizer {
     public boolean isPerformingOperation(
             final boolean isRequiredToRun,
             final boolean isStabilizedStarted,
-            final UpdateOperations previousOperation,
-            final UpdateOperations operation,
+            final Operations previousOperation,
+            final Operations operation,
+            final Collection<StackInstances> updateList,
             final ResourceModel model,
             final CallbackContext context) {
 
-        final Map<UpdateOperations, Boolean> operationsCompletionMap = context.getOperationsStabilizationMap();
+        final Map<Operations, Boolean> operationsCompletionMap = context.getOperationsStabilizationMap();
 
         // if previousOperation is not done or this operation has completed
         if (!isPreviousOperationDone(context, previousOperation) || operationsCompletionMap.get(operation)) {
             return false;
         }
 
-        // if it is not required to run, mark as complete
+        // if it is not required to run, mark this kind of operation as complete
         if (!isRequiredToRun) {
             operationsCompletionMap.put(operation, true);
             return false;
@@ -163,8 +162,19 @@ public class Stabilizer {
         // if this operation has not started yet
         if (!isStabilizedStarted) return true;
 
-        // if it is running check if it is stabilized, if so mark as complete
-        if (isStabilized(model, context)) operationsCompletionMap.put(operation, true);
+        final boolean isCurrentOperationDone = isStabilized(model, context);
+        if (isCurrentOperationDone)  {
+            // If current operation is complete and update list is empty, meaning this kind of Operations is complete
+            // otherwise, we still need to perform the rest of list
+            if (CollectionUtils.isNullOrEmpty(updateList)) {
+                operationsCompletionMap.put(operation, true);
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        // If current operation is not stabilized
         return false;
     }
 
@@ -175,21 +185,21 @@ public class Stabilizer {
      * @return boolean indicates whether the update is done
      */
     public static boolean isUpdateStabilized(final CallbackContext context) {
-        for (Map.Entry<UpdateOperations, Boolean> entry : context.getOperationsStabilizationMap().entrySet()) {
+        for (Map.Entry<Operations, Boolean> entry : context.getOperationsStabilizationMap().entrySet()) {
             if (!entry.getValue()) return false;
         }
         return true;
     }
 
     /**
-     * Checks if previous {@link UpdateOperations} is complete
+     * Checks if previous {@link Operations} is complete
      * to avoid running other operations until previous operation is done
      * @param context {@link CallbackContext}
-     * @param previousOperation {@link UpdateOperations}
+     * @param previousOperation {@link Operations}
      * @return boolean indicates whether the previous operation is done
      */
     public static boolean isPreviousOperationDone(final CallbackContext context,
-                                                  final UpdateOperations previousOperation) {
+                                                  final Operations previousOperation) {
         // Checks if previous operation is done. If no previous operation is running, mark as done
         return previousOperation == null ?
                 true : context.getOperationsStabilizationMap().get(previousOperation);

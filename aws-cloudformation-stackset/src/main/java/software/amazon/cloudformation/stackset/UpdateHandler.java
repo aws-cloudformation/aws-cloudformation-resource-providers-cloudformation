@@ -6,38 +6,24 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.stackset.util.ClientBuilder;
+import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
 import software.amazon.cloudformation.stackset.util.OperationOperator;
 import software.amazon.cloudformation.stackset.util.Stabilizer;
-import software.amazon.cloudformation.stackset.util.UpdatePlaceholder;
 import software.amazon.cloudformation.stackset.util.Validator;
-
-import java.util.Set;
 
 import static software.amazon.cloudformation.stackset.util.Comparator.isAddingStackInstances;
 import static software.amazon.cloudformation.stackset.util.Comparator.isDeletingStackInstances;
 import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
 import static software.amazon.cloudformation.stackset.util.Comparator.isUpdatingStackInstances;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.ADD_INSTANCES_BY_REGIONS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.ADD_INSTANCES_BY_TARGETS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.DELETE_INSTANCES_BY_REGIONS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.DELETE_INSTANCES_BY_TARGETS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.STACK_SET_CONFIGS;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.ADD_INSTANCES;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.DELETE_INSTANCES;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.STACK_SET_CONFIGS;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.UPDATE_INSTANCES;
 import static software.amazon.cloudformation.stackset.util.Stabilizer.getDelaySeconds;
-import static software.amazon.cloudformation.stackset.util.Stabilizer.isPreviousOperationDone;
 import static software.amazon.cloudformation.stackset.util.Stabilizer.isUpdateStabilized;
 
 
 public class UpdateHandler extends BaseHandler<CallbackContext> {
-
-    private Validator validator;
-
-    public UpdateHandler() {
-        this.validator = new Validator();
-    }
-
-    public UpdateHandler(Validator validator) {
-        this.validator = validator;
-    }
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -55,63 +41,33 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .client(client).desiredModel(desiredModel).previousModel(previousModel)
                 .logger(logger).proxy(proxy).context(context)
                 .build();
+        InstancesAnalyzer.builder().desiredModel(desiredModel).previousModel(previousModel).build()
+                .analyzeForUpdate(context);
 
         final boolean isStackSetUpdating = !isStackSetConfigEquals(previousModel, desiredModel);
-        final boolean isPerformingStackSetUpdate = stabilizer.isPerformingOperation(isStackSetUpdating,
-                context.isUpdateStackSetStarted(), null, STACK_SET_CONFIGS, desiredModel, context);
+        if (stabilizer.isPerformingOperation(isStackSetUpdating, context.isUpdateStackSetStarted(),null,
+                STACK_SET_CONFIGS, null, desiredModel, context)) {
 
-        if (isPerformingStackSetUpdate) {
-            if (previousModel.getTemplateURL() != desiredModel.getTemplateURL()) {
-                validator.validateTemplate(
-                        proxy, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), logger);
-            }
-            operator.updateStackSet(STACK_SET_CONFIGS,null, null);
+            new Validator().validateTemplate(proxy, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), logger);
+            operator.updateStackSet(STACK_SET_CONFIGS);
         }
 
-        final boolean isPerformingStackInstancesUpdate = isPreviousOperationDone(context, STACK_SET_CONFIGS) &&
-                isUpdatingStackInstances(previousModel, desiredModel, context);
+        if (stabilizer.isPerformingOperation(isDeletingStackInstances(context), context.isDeleteStacksStarted(),
+                STACK_SET_CONFIGS, DELETE_INSTANCES, context.getDeleteStacksQueue(), desiredModel, context)) {
 
-        if (isPerformingStackInstancesUpdate) {
+            operator.updateStackSet(DELETE_INSTANCES);
+        }
 
-            final UpdatePlaceholder updateTable = new UpdatePlaceholder(previousModel, desiredModel);
-            final Set<String> regionsToAdd = updateTable.getRegionsToAdd();
-            final Set<String> targetsToAdd = updateTable.getTargetsToAdd();
-            final Set<String> regionsToDelete = updateTable.getRegionsToDelete();
-            final Set<String> targetsToDelete = updateTable.getTargetsToDelete();
+        if (stabilizer.isPerformingOperation(isAddingStackInstances(context), context.isAddStacksStarted(),
+                DELETE_INSTANCES, ADD_INSTANCES, context.getCreateStacksQueue(), desiredModel, context)) {
 
-            if (isDeletingStackInstances(regionsToDelete, targetsToDelete, context)) {
+            operator.updateStackSet(ADD_INSTANCES);
+        }
 
-                if (stabilizer.isPerformingOperation(
-                        !regionsToDelete.isEmpty(), context.isDeleteStacksByRegionsStarted(),
-                        STACK_SET_CONFIGS, DELETE_INSTANCES_BY_REGIONS, desiredModel, context)) {
+        if (stabilizer.isPerformingOperation(isUpdatingStackInstances(context), context.isUpdateStacksStarted(),
+                ADD_INSTANCES, UPDATE_INSTANCES, context.getUpdateStacksQueue(), desiredModel, context)) {
 
-                    operator.updateStackSet(DELETE_INSTANCES_BY_REGIONS, regionsToDelete, null);
-                }
-
-                if (stabilizer.isPerformingOperation(
-                                !targetsToDelete.isEmpty(), context.isDeleteStacksByTargetsStarted(),
-                                DELETE_INSTANCES_BY_REGIONS, DELETE_INSTANCES_BY_TARGETS, desiredModel, context)) {
-
-                    operator.updateStackSet(DELETE_INSTANCES_BY_TARGETS, regionsToDelete, targetsToDelete);
-                }
-            }
-
-            if (isAddingStackInstances(regionsToAdd, targetsToAdd, context)) {
-
-                if (stabilizer.isPerformingOperation(
-                                !regionsToAdd.isEmpty(), context.isAddStacksByRegionsStarted(),
-                                DELETE_INSTANCES_BY_TARGETS, ADD_INSTANCES_BY_REGIONS, desiredModel, context)) {
-
-                    operator.updateStackSet(ADD_INSTANCES_BY_REGIONS, regionsToAdd, null);
-                }
-
-                if (stabilizer.isPerformingOperation(
-                                !targetsToAdd.isEmpty(), context.isAddStacksByTargetsStarted(),
-                                ADD_INSTANCES_BY_REGIONS, ADD_INSTANCES_BY_TARGETS, desiredModel, context)) {
-
-                    operator.updateStackSet(ADD_INSTANCES_BY_TARGETS, regionsToAdd, targetsToAdd);
-                }
-            }
+            operator.updateStackSet(UPDATE_INSTANCES);
         }
 
         if (isUpdateStabilized(context)) {
@@ -123,8 +79,5 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     getDelaySeconds(context),
                     desiredModel);
         }
-
     }
-
 }
-

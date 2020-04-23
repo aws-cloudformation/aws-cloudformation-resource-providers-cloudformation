@@ -4,17 +4,17 @@ import software.amazon.awssdk.services.cloudformation.model.CreateStackInstances
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackSetRequest;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetsRequest;
+import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.cloudformation.stackset.DeploymentTargets;
 import software.amazon.cloudformation.stackset.OperationPreferences;
 import software.amazon.cloudformation.stackset.ResourceModel;
-
-import java.util.Set;
+import software.amazon.cloudformation.stackset.StackInstances;
 
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkDeploymentTargets;
@@ -47,13 +47,26 @@ public class RequestTranslator {
     public static CreateStackInstancesRequest createStackInstancesRequest(
             final String stackSetName,
             final OperationPreferences operationPreferences,
-            final DeploymentTargets deploymentTargets,
-            final Set<String> regions) {
+            final StackInstances stackInstances) {
         return CreateStackInstancesRequest.builder()
                 .stackSetName(stackSetName)
-                .regions(regions)
+                .regions(stackInstances.getRegions())
                 .operationPreferences(translateToSdkOperationPreferences(operationPreferences))
-                .deploymentTargets(translateToSdkDeploymentTargets(deploymentTargets))
+                .deploymentTargets(translateToSdkDeploymentTargets(stackInstances.getDeploymentTargets()))
+                .parameterOverrides(translateToSdkParameters(stackInstances.getParameterOverrides()))
+                .build();
+    }
+
+    public static UpdateStackInstancesRequest updateStackInstancesRequest(
+            final String stackSetName,
+            final OperationPreferences operationPreferences,
+            final StackInstances stackInstances) {
+        return UpdateStackInstancesRequest.builder()
+                .stackSetName(stackSetName)
+                .regions(stackInstances.getRegions())
+                .operationPreferences(translateToSdkOperationPreferences(operationPreferences))
+                .deploymentTargets(translateToSdkDeploymentTargets(stackInstances.getDeploymentTargets()))
+                .parameterOverrides(translateToSdkParameters(stackInstances.getParameterOverrides()))
                 .build();
     }
 
@@ -66,13 +79,12 @@ public class RequestTranslator {
     public static DeleteStackInstancesRequest deleteStackInstancesRequest(
             final String stackSetName,
             final OperationPreferences operationPreferences,
-            final DeploymentTargets deploymentTargets,
-            final Set<String> regions) {
+            final StackInstances stackInstances) {
         return DeleteStackInstancesRequest.builder()
                 .stackSetName(stackSetName)
-                .regions(regions)
+                .regions(stackInstances.getRegions())
                 .operationPreferences(translateToSdkOperationPreferences(operationPreferences))
-                .deploymentTargets(translateToSdkDeploymentTargets(deploymentTargets))
+                .deploymentTargets(translateToSdkDeploymentTargets(stackInstances.getDeploymentTargets()))
                 .build();
     }
 
@@ -109,6 +121,17 @@ public class RequestTranslator {
 
     public static DescribeStackSetRequest describeStackSetRequest(final String stackSetId) {
         return DescribeStackSetRequest.builder()
+                .stackSetName(stackSetId)
+                .build();
+    }
+
+    public static DescribeStackInstanceRequest describeStackInstanceRequest(
+            final String account,
+            final String region,
+            final String stackSetId) {
+        return DescribeStackInstanceRequest.builder()
+                .stackInstanceAccount(account)
+                .stackInstanceRegion(region)
                 .stackSetName(stackSetId)
                 .build();
     }

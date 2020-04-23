@@ -5,9 +5,8 @@ public class EnumUtils {
     /**
      * Operations that need to complete during update
      */
-    public enum UpdateOperations {
-        STACK_SET_CONFIGS, ADD_INSTANCES_BY_REGIONS, ADD_INSTANCES_BY_TARGETS,
-        DELETE_INSTANCES_BY_REGIONS,DELETE_INSTANCES_BY_TARGETS
+    public enum Operations {
+        STACK_SET_CONFIGS, ADD_INSTANCES, DELETE_INSTANCES, UPDATE_INSTANCES
     }
 
 }

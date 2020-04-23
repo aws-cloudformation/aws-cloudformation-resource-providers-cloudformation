@@ -2,16 +2,11 @@ package software.amazon.cloudformation.stackset.util;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
 import software.amazon.cloudformation.stackset.CallbackContext;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
 import java.util.Collection;
-import java.util.Set;
-
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.ADD_INSTANCES_BY_REGIONS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.ADD_INSTANCES_BY_TARGETS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.DELETE_INSTANCES_BY_REGIONS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.DELETE_INSTANCES_BY_TARGETS;
 
 /**
  * Utility class to help comparing previous model and desire model
@@ -41,10 +36,11 @@ public class Comparator {
         if (StringUtils.compare(previousModel.getExecutionRoleName(), desiredModel.getExecutionRoleName()) != 0)
             return false;
 
-        if (StringUtils.compare(previousModel.getTemplateURL(), desiredModel.getTemplateURL()) != 0)
+        if (StringUtils.compare(previousModel.getTemplateBody(), desiredModel.getTemplateBody()) != 0)
             return false;
 
-        if (StringUtils.compare(previousModel.getTemplateBody(), desiredModel.getTemplateBody()) != 0)
+        // If TemplateURL is specified, always call Update API, Service client will decide if it is updatable
+        if (desiredModel.getTemplateBody() == null && desiredModel.getTemplateURL() != null)
             return false;
 
         return true;
@@ -52,24 +48,12 @@ public class Comparator {
 
     /**
      * Checks if stack instances need to be updated
-     * @param previousModel previous {@link ResourceModel}
-     * @param desiredModel desired {@link ResourceModel}
      * @param context {@link CallbackContext}
      * @return
      */
-    public static boolean isUpdatingStackInstances(
-            final ResourceModel previousModel,
-            final ResourceModel desiredModel,
-            final CallbackContext context) {
-
-        // if updating stack instances is unnecessary, mark all instances operation as complete
-        if (CollectionUtils.isEqualCollection(previousModel.getRegions(), desiredModel.getRegions()) &&
-                previousModel.getDeploymentTargets().equals(desiredModel.getDeploymentTargets())) {
-
-            context.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_REGIONS, true);
-            context.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_TARGETS, true);
-            context.getOperationsStabilizationMap().put(ADD_INSTANCES_BY_REGIONS, true);
-            context.getOperationsStabilizationMap().put(ADD_INSTANCES_BY_TARGETS, true);
+    public static boolean isUpdatingStackInstances(final CallbackContext context) {
+        // If no stack instances need to be updated
+        if (context.getUpdateStacksQueue().isEmpty() && !context.isUpdateStacksStarted()) {
             return false;
         }
         return true;
@@ -77,20 +61,12 @@ public class Comparator {
 
     /**
      * Checks if there is any stack instances need to be delete during the update
-     * @param regionsToDelete regions to delete
-     * @param targetsToDelete targets (accounts or OUIDs) to delete
      * @param context {@link CallbackContext}
      * @return
      */
-    public static boolean isDeletingStackInstances(
-            final Set<String> regionsToDelete,
-            final Set<String> targetsToDelete,
-            final CallbackContext context) {
-
-        // If no stack instances need to be deleted, mark DELETE_INSTANCES operations as done.
-        if (regionsToDelete.isEmpty() && targetsToDelete.isEmpty()) {
-            context.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_REGIONS, true);
-            context.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_TARGETS, true);
+    public static boolean isDeletingStackInstances(final CallbackContext context) {
+        // If no stack instances need to be deleted
+        if (context.getDeleteStacksQueue().isEmpty() && !context.isDeleteStacksStarted()) {
             return false;
         }
         return true;
@@ -98,20 +74,12 @@ public class Comparator {
 
     /**
      * Checks if new stack instances need to be added
-     * @param regionsToAdd regions to add
-     * @param targetsToAdd targets to add
      * @param context {@link CallbackContext}
      * @return
      */
-    public static boolean isAddingStackInstances(
-            final Set<String> regionsToAdd,
-            final Set<String> targetsToAdd,
-            final CallbackContext context) {
-
-        // If no stack instances need to be added, mark ADD_INSTANCES operations as done.
-        if (regionsToAdd.isEmpty() && targetsToAdd.isEmpty()) {
-            context.getOperationsStabilizationMap().put(ADD_INSTANCES_BY_REGIONS, true);
-            context.getOperationsStabilizationMap().put(ADD_INSTANCES_BY_TARGETS, true);
+    public static boolean isAddingStackInstances(final CallbackContext context) {
+        // If no stack instances need to be added
+        if (context.getCreateStacksQueue().isEmpty() && !context.isAddStacksStarted()) {
             return false;
         }
         return true;
@@ -125,6 +93,10 @@ public class Comparator {
      */
     public static boolean isEquals(final Collection<?> collection1, final Collection<?> collection2) {
         if (collection1 == null) return collection2 == null ? true : false;
-        return CollectionUtils.isEqualCollection(collection1, collection2);
+        return collection1.equals(collection2);
+    }
+
+    public static boolean isSelfManaged(final ResourceModel model) {
+        return PermissionModels.fromValue(model.getPermissionModel()).equals(PermissionModels.SELF_MANAGED);
     }
 }

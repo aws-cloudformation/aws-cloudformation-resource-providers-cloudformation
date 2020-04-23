@@ -3,10 +3,12 @@ package software.amazon.cloudformation.stackset.translator;
 import software.amazon.awssdk.services.cloudformation.model.AutoDeployment;
 import software.amazon.awssdk.services.cloudformation.model.DeploymentTargets;
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
+import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationPreferences;
 import software.amazon.awssdk.services.cloudformation.model.Tag;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.stackset.OperationPreferences;
+import software.amazon.cloudformation.stackset.util.StackInstance;
 
 import java.util.Collection;
 import java.util.List;
@@ -79,7 +81,7 @@ public class PropertyTranslator {
      */
     public static Set<software.amazon.cloudformation.stackset.Parameter> translateFromSdkParameters(
             final Collection<Parameter> parameters) {
-        if (parameters == null) return null;
+        if (CollectionUtils.isNullOrEmpty(parameters)) return null;
         return parameters.stream()
                 .map(parameter -> software.amazon.cloudformation.stackset.Parameter.builder()
                         .parameterKey(parameter.parameterKey())
@@ -132,5 +134,27 @@ public class PropertyTranslator {
                 .value(tag.value())
                 .build())
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Converts {@link StackInstanceSummary} to {@link StackInstance} utility placeholder
+     * @param isSelfManaged if PermissionModel is SELF_MANAGED
+     * @param summary {@link StackInstanceSummary}
+     * @return {@link StackInstance}
+     */
+    public static StackInstance translateToStackInstance(
+            final boolean isSelfManaged,
+            final StackInstanceSummary summary,
+            final Collection<Parameter> parameters) {
+
+        final StackInstance stackInstance = StackInstance.builder()
+                .region(summary.region())
+                .parameters(translateFromSdkParameters(parameters))
+                .build();
+
+        // Currently OrganizationalUnitId is Reserved for internal use. No data returned from this API
+        // TODO: Once OrganizationalUnitId is added back, we need to change to set organizationalUnitId to DeploymentTarget if SERVICE_MANAGED
+        stackInstance.setDeploymentTarget(summary.account());
+        return stackInstance;
     }
 }

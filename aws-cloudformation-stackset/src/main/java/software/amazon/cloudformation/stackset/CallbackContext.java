@@ -5,10 +5,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.Data;
-import software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations;
+import software.amazon.cloudformation.stackset.util.EnumUtils.Operations;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.stream.Collectors;
 
 @Data
@@ -19,33 +21,41 @@ public class CallbackContext {
     // Operation Id to verify stabilization for StackSet operation.
     private String operationId;
 
-    // Elapsed counts of retries on specific exceptions.
-    private int retries;
+    // Indicates initiation of analyzing template.
+    private boolean templateAnalyzed;
 
     // Indicates initiation of resource stabilization.
-    private boolean stabilizationStarted;
+    private boolean stackSetCreated;
 
     // Indicates initiation of stack instances creation.
-    private boolean addStacksByRegionsStarted;
-
-    // Indicates initiation of stack instances creation.
-    private boolean addStacksByTargetsStarted;
+    private boolean addStacksStarted;
 
     // Indicates initiation of stack instances delete.
-    private boolean deleteStacksByRegionsStarted;
-
-    // Indicates initiation of stack instances delete.
-    private boolean deleteStacksByTargetsStarted;
+    private boolean deleteStacksStarted;
 
     // Indicates initiation of stack set update.
     private boolean updateStackSetStarted;
 
     // Indicates initiation of stack instances update.
-    private boolean updateStackInstancesStarted;
+    private boolean updateStacksStarted;
 
     // Total running time
     @Builder.Default
     private int elapsedTime = 0;
+
+    private StackInstances stackInstancesInOperation;
+
+    // List to keep track on the complete status for creating
+    @Builder.Default
+    private Queue<StackInstances> createStacksQueue = new LinkedList<>();
+
+    // List to keep track on stack instances for deleting
+    @Builder.Default
+    private Queue<StackInstances> deleteStacksQueue = new LinkedList<>();
+
+    // List to keep track on stack instances for update
+    @Builder.Default
+    private Queue<StackInstances> updateStacksQueue = new LinkedList<>();
 
     /**
      * Default as 0, will be {@link software.amazon.cloudformation.stackset.util.Stabilizer#BASE_CALLBACK_DELAY_SECONDS}
@@ -55,13 +65,8 @@ public class CallbackContext {
 
     // Map to keep track on the complete status for operations in Update
     @Builder.Default
-    private Map<UpdateOperations, Boolean> operationsStabilizationMap = Arrays.stream(UpdateOperations.values())
+    private Map<Operations, Boolean> operationsStabilizationMap = Arrays.stream(Operations.values())
             .collect(Collectors.toMap(e -> e, e -> false));
-
-    @JsonIgnore
-    public void incrementRetryCounter() {
-        retries++;
-    }
 
     /**
      * Increments {@link CallbackContext#elapsedTime} and returns the total elapsed time
@@ -71,9 +76,5 @@ public class CallbackContext {
     public int incrementElapsedTime() {
         elapsedTime = elapsedTime + currentDelaySeconds;
         return elapsedTime;
-    }
-
-    @JsonPOJOBuilder(withPrefix = "")
-    public static class CallbackContextBuilder {
     }
 }

@@ -19,6 +19,7 @@ import software.amazon.cloudformation.stackset.util.Validator;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,23 +28,27 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.ADD_INSTANCES;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.DELETE_INSTANCES;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.STACK_SET_CONFIGS;
+import static software.amazon.cloudformation.stackset.util.EnumUtils.Operations.UPDATE_INSTANCES;
+import static software.amazon.cloudformation.stackset.util.Stabilizer.BASE_CALLBACK_DELAY_SECONDS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_INSTANCES_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_INSTANCES_SELF_MANAGED;
+import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_SELF_MANAGED;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_ID_1;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_ID_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_RUNNING_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SIMPLE_MODEL;
-import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_SELF_MANAGED_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATE_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.ADD_INSTANCES_BY_REGIONS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.ADD_INSTANCES_BY_TARGETS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.DELETE_INSTANCES_BY_REGIONS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.DELETE_INSTANCES_BY_TARGETS;
-import static software.amazon.cloudformation.stackset.util.EnumUtils.UpdateOperations.STACK_SET_CONFIGS;
-import static software.amazon.cloudformation.stackset.util.Stabilizer.BASE_CALLBACK_DELAY_SECONDS;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest {
@@ -51,9 +56,6 @@ public class UpdateHandlerTest {
     private UpdateHandler handler;
 
     private ResourceHandlerRequest<ResourceModel> request;
-
-    @Mock
-    private Validator validator;
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -65,11 +67,10 @@ public class UpdateHandlerTest {
     public void setup() {
         proxy = mock(AmazonWebServicesClientProxy.class);
         logger = mock(Logger.class);
-        validator = mock(Validator.class);
-        handler = new UpdateHandler(validator);
+        handler = new UpdateHandler();
         request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(UPDATED_MODEL)
-                .previousResourceState(SIMPLE_MODEL)
+                .desiredResourceState(UPDATED_SELF_MANAGED_MODEL)
+                .previousResourceState(SELF_MANAGED_MODEL)
                 .build();
     }
 
@@ -97,19 +98,18 @@ public class UpdateHandlerTest {
     @Test
     public void handleRequest_AllUpdatesStabilized_Success() {
 
-        final Map<UpdateOperations, Boolean> updateOperationsMap = new EnumMap<>(UpdateOperations.class);
+        final Map<Operations, Boolean> updateOperationsMap = new EnumMap<>(Operations.class);
         updateOperationsMap.put(STACK_SET_CONFIGS, true);
-        updateOperationsMap.put(DELETE_INSTANCES_BY_REGIONS, true);
-        updateOperationsMap.put(DELETE_INSTANCES_BY_TARGETS, true);
-        updateOperationsMap.put(ADD_INSTANCES_BY_REGIONS, true);
-        updateOperationsMap.put(ADD_INSTANCES_BY_TARGETS, true);
+        updateOperationsMap.put(DELETE_INSTANCES, true);
+        updateOperationsMap.put(UPDATE_INSTANCES, true);
+        updateOperationsMap.put(ADD_INSTANCES, true);
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
-                .deleteStacksByTargetsStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .addStacksByRegionsStarted(true)
-                .addStacksByTargetsStarted(true)
+                .deleteStacksStarted(true)
+                .addStacksStarted(true)
+                .updateStacksStarted(true)
+                .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .operationsStabilizationMap(updateOperationsMap)
                 .build();
@@ -130,19 +130,20 @@ public class UpdateHandlerTest {
     @Test
     public void handleRequest_UpdateStackSetNotStarted_InProgress() {
 
-        doNothing().when(validator).validateTemplate(any(), any(), any(), any());
-
         doReturn(UPDATE_STACK_SET_RESPONSE).when(proxy).injectCredentialsAndInvokeV2(any(), any());
-
-        final CallbackContext outputContext = CallbackContext.builder()
-                .updateStackSetStarted(true)
-                .operationId(OPERATION_ID_1)
-                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
-                .build();
-
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
+
+        final CallbackContext outputContext = CallbackContext.builder()
+                .updateStackSetStarted(true)
+                .templateAnalyzed(true)
+                .operationId(OPERATION_ID_1)
+                .createStacksQueue(response.getCallbackContext().getCreateStacksQueue())
+                .deleteStacksQueue(response.getCallbackContext().getDeleteStacksQueue())
+                .updateStacksQueue(response.getCallbackContext().getUpdateStacksQueue())
+                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
+                .build();
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
@@ -161,18 +162,19 @@ public class UpdateHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
+                .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
         final CallbackContext outputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
+                .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
                 .elapsedTime(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
-
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, inputContext, logger);
 
@@ -187,12 +189,65 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void handleRequest_DeleteStacksRegionsNotStarted_InProgress() {
+    public void handleRequest_SelfManaged_DeleteStacksNotStarted_InProgress() {
 
         doReturn(DELETE_STACK_INSTANCES_RESPONSE).when(proxy).injectCredentialsAndInvokeV2(any(), any());
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
+                .templateAnalyzed(true)
+                .deleteStacksQueue(DELETE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .createStacksQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStacksQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
+                .operationId(OPERATION_ID_2)
+                .build();
+
+        inputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, inputContext, logger);
+
+        final Set<StackInstances> stackInstancesSet = request.getDesiredResourceState().getStackInstancesGroup();
+        final StackInstances stackInstances = response.getCallbackContext().getStackInstancesInOperation();
+        stackInstancesSet.remove(stackInstances);
+
+        final CallbackContext outputContext = CallbackContext.builder()
+                .updateStackSetStarted(true)
+                .templateAnalyzed(true)
+                .deleteStacksStarted(true)
+                .operationId(OPERATION_ID_1)
+                .stackInstancesInOperation(DELETE_STACK_INSTANCES_SELF_MANAGED)
+                .createStacksQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStacksQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
+                .build();
+
+        outputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
+        assertThat(response.getCallbackContext()).isEqualTo(outputContext);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(outputContext.getCurrentDelaySeconds());
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_DeleteStacksNotYetStabilized_InProgress() {
+
+        doReturn(OPERATION_RUNNING_RESPONSE).when(proxy).injectCredentialsAndInvokeV2(any(), any());
+
+        final CallbackContext inputContext = CallbackContext.builder()
+                .updateStackSetStarted(true)
+                .deleteStacksStarted(true)
+                .templateAnalyzed(true)
+                .stackInstancesInOperation(DELETE_STACK_INSTANCES_SELF_MANAGED)
+                .createStacksQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStacksQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .operationId(OPERATION_ID_2)
                 .build();
 
@@ -200,52 +255,18 @@ public class UpdateHandlerTest {
 
         final CallbackContext outputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .operationId(OPERATION_ID_1)
-                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
-                .build();
-
-        outputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, inputContext, logger);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
-        assertThat(response.getCallbackContext()).isEqualTo(outputContext);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(outputContext.getCurrentDelaySeconds());
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-    }
-
-    @Test
-    public void handleRequest_SelfManaged_DeleteStacksRegionsNotStarted_InProgress() {
-        request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(UPDATED_SELF_MANAGED_MODEL)
-                .previousResourceState(SELF_MANAGED_MODEL)
-                .build();
-
-        doReturn(DELETE_STACK_INSTANCES_RESPONSE).when(proxy).injectCredentialsAndInvokeV2(any(), any());
-
-        final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
+                .deleteStacksStarted(true)
+                .templateAnalyzed(true)
+                .stackInstancesInOperation(DELETE_STACK_INSTANCES_SELF_MANAGED)
+                .createStacksQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStacksQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
+                .elapsedTime(BASE_CALLBACK_DELAY_SECONDS)
                 .operationId(OPERATION_ID_2)
                 .build();
 
-        inputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-
-        final CallbackContext outputContext = CallbackContext.builder()
-                .updateStackSetStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .operationId(OPERATION_ID_1)
-                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
-                .build();
-
         outputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, inputContext, logger);
@@ -261,74 +282,45 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void handleRequest_DeleteStacksTargetsNotStarted_InProgress() {
-
-        doReturn(DELETE_STACK_INSTANCES_RESPONSE).when(proxy).injectCredentialsAndInvokeV2(any(), any());
-
-        final CallbackContext inputContext = CallbackContext.builder()
-                .updateStackSetStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .operationId(OPERATION_ID_2)
-                .build();
-
-        inputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-        inputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_REGIONS, true);
-
-        final CallbackContext outputContext = CallbackContext.builder()
-                .updateStackSetStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .deleteStacksByTargetsStarted(true)
-                .operationId(OPERATION_ID_1)
-                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
-                .build();
-
-        outputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-        outputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_REGIONS, true);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, inputContext, logger);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
-        assertThat(response.getCallbackContext()).isEqualTo(outputContext);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(outputContext.getCurrentDelaySeconds());
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-    }
-
-    @Test
-    public void handleRequest_AddStacksRegionsNotStarted_InProgress() {
+    public void handleRequest_AddStacksNotStarted_InProgress() {
 
         doReturn(CREATE_STACK_INSTANCES_RESPONSE).when(proxy).injectCredentialsAndInvokeV2(any(), any());
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .deleteStacksByTargetsStarted(true)
+                .templateAnalyzed(true)
+                .deleteStacksStarted(true)
                 .operationId(OPERATION_ID_2)
-                .build();
-
-        inputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-        inputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_REGIONS, true);
-        inputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_TARGETS, true);
-
-        final CallbackContext outputContext = CallbackContext.builder()
-                .updateStackSetStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .deleteStacksByTargetsStarted(true)
-                .addStacksByRegionsStarted(true)
-                .operationId(OPERATION_ID_1)
+                .stackInstancesInOperation(DELETE_STACK_INSTANCES_SELF_MANAGED)
+                .createStacksQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStacksQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
-        outputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-        outputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_REGIONS, true);
-        outputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_TARGETS, true);
+        inputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
+        inputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES, true);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, inputContext, logger);
+
+        final Set<StackInstances> stackInstancesSet = request.getDesiredResourceState().getStackInstancesGroup();
+        final StackInstances stackInstances = response.getCallbackContext().getStackInstancesInOperation();
+        stackInstancesSet.remove(stackInstances);
+
+        final CallbackContext outputContext = CallbackContext.builder()
+                .updateStackSetStarted(true)
+                .templateAnalyzed(true)
+                .deleteStacksStarted(true)
+                .addStacksStarted(true)
+                .operationId(OPERATION_ID_1)
+                .stackInstancesInOperation(CREATE_STACK_INSTANCES_SELF_MANAGED)
+                .createStacksQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStacksQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
+                .build();
+
+        outputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
+        outputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES, true);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
@@ -341,40 +333,47 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void handleRequest_AddStacksTargetsNotStarted_InProgress() {
+    public void handleRequest_UpdateStacksNotStarted_InProgress() {
 
-        doReturn(CREATE_STACK_INSTANCES_RESPONSE).when(proxy).injectCredentialsAndInvokeV2(any(), any());
+        doReturn(UPDATE_STACK_INSTANCES_RESPONSE).when(proxy).injectCredentialsAndInvokeV2(any(), any());
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .deleteStacksByTargetsStarted(true)
-                .addStacksByRegionsStarted(true)
+                .templateAnalyzed(true)
+                .deleteStacksStarted(true)
+                .addStacksStarted(true)
                 .operationId(OPERATION_ID_2)
-                .build();
-
-        inputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-        inputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_REGIONS, true);
-        inputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_TARGETS, true);
-        inputContext.getOperationsStabilizationMap().put(ADD_INSTANCES_BY_REGIONS, true);
-
-        final CallbackContext outputContext = CallbackContext.builder()
-                .updateStackSetStarted(true)
-                .deleteStacksByRegionsStarted(true)
-                .deleteStacksByTargetsStarted(true)
-                .addStacksByRegionsStarted(true)
-                .addStacksByTargetsStarted(true)
-                .operationId(OPERATION_ID_1)
+                .stackInstancesInOperation(CREATE_STACK_INSTANCES_SELF_MANAGED)
+                .updateStacksQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
-        outputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
-        outputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_REGIONS, true);
-        outputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES_BY_TARGETS, true);
-        outputContext.getOperationsStabilizationMap().put(ADD_INSTANCES_BY_REGIONS, true);
+        inputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
+        inputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES, true);
+        inputContext.getOperationsStabilizationMap().put(ADD_INSTANCES, true);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, inputContext, logger);
+
+        final Set<StackInstances> stackInstancesSet = request.getDesiredResourceState().getStackInstancesGroup();
+        final StackInstances stackInstances = response.getCallbackContext().getStackInstancesInOperation();
+        stackInstancesSet.remove(stackInstances);
+
+        final CallbackContext outputContext = CallbackContext.builder()
+                .updateStackSetStarted(true)
+                .templateAnalyzed(true)
+                .deleteStacksStarted(true)
+                .addStacksStarted(true)
+                .updateStacksStarted(true)
+                .operationId(OPERATION_ID_1)
+                .stackInstancesInOperation(stackInstances)
+                .updateStacksQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
+                .build();
+
+        outputContext.getOperationsStabilizationMap().put(STACK_SET_CONFIGS, true);
+        outputContext.getOperationsStabilizationMap().put(DELETE_INSTANCES, true);
+        outputContext.getOperationsStabilizationMap().put(ADD_INSTANCES, true);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
@@ -385,7 +384,6 @@ public class UpdateHandlerTest {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
-
 
     @Test
     public void handlerRequest_InvalidOperationException() {
@@ -412,18 +410,19 @@ public class UpdateHandlerTest {
     @Test
     public void handlerRequest_OperationInProgressException() {
 
-        doNothing().when(validator).validateTemplate(any(), any(), any(), any());
-
         doThrow(OperationInProgressException.class).when(proxy)
                 .injectCredentialsAndInvokeV2(any(), any());
 
-        final CallbackContext outputContext = CallbackContext.builder()
-                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
-                .retries(1)
-                .build();
-
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, null, logger);
+
+        final CallbackContext outputContext = CallbackContext.builder()
+                .templateAnalyzed(true)
+                .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
+                .createStacksQueue(response.getCallbackContext().getCreateStacksQueue())
+                .deleteStacksQueue(response.getCallbackContext().getDeleteStacksQueue())
+                .updateStacksQueue(response.getCallbackContext().getUpdateStacksQueue())
+                .build();
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);

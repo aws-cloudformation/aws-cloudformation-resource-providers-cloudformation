@@ -3,23 +3,27 @@ package software.amazon.cloudformation.stackset.util;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesResponse;
+import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.stackset.CallbackContext;
-import software.amazon.cloudformation.stackset.DeploymentTargets;
 import software.amazon.cloudformation.stackset.ResourceModel;
+import software.amazon.cloudformation.stackset.StackInstances;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkParameters;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkTags;
+import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
+import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackInstanceRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.listStackInstancesRequest;
+import static software.amazon.cloudformation.stackset.util.InstancesAnalyzer.aggregateStackInstancesForRead;
 
 /**
  * Utility class to construct {@link ResourceModel} for Read/List request based on {@link StackSet}
@@ -32,14 +36,13 @@ public class ResourceModelBuilder {
     private AmazonWebServicesClientProxy proxy;
     private CloudFormationClient client;
     private StackSet stackSet;
-    private PermissionModels permissionModel;
+    private boolean isSelfManaged;
 
     /**
      * Returns the model we construct from StackSet service client using PrimaryIdentifier StackSetId
      * @return {@link ResourceModel}
      */
     public ResourceModel buildModel() {
-        permissionModel = stackSet.permissionModel();
 
         final String stackSetId = stackSet.stackSetId();
 
@@ -51,23 +54,29 @@ public class ResourceModelBuilder {
                 .permissionModel(stackSet.permissionModelAsString())
                 .capabilities(new HashSet<>(stackSet.capabilitiesAsStrings()))
                 .tags(translateFromSdkTags(stackSet.tags()))
-                .regions(new HashSet<>())
                 .parameters(translateFromSdkParameters(stackSet.parameters()))
                 .templateBody(stackSet.templateBody())
-                .deploymentTargets(DeploymentTargets.builder().build())
                 .build();
 
-        if (PermissionModels.SELF_MANAGED.equals(permissionModel)) {
+        isSelfManaged = stackSet.permissionModel().equals(PermissionModels.SELF_MANAGED);
+
+        if (isSelfManaged) {
             model.setAdministrationRoleARN(stackSet.administrationRoleARN());
             model.setExecutionRoleName(stackSet.executionRoleName());
         }
 
         String token = null;
+        final Set<StackInstance> stackInstanceSet = new HashSet<>();
         // Retrieves all Stack Instances associated with the StackSet,
         // Attaches regions and deploymentTargets to the constructing model
         do {
-            putRegionsAndDeploymentTargets(stackSetId, model, token);
+            attachStackInstances(stackSetId, isSelfManaged, stackInstanceSet, token);
         } while (token != null);
+
+        if (!stackInstanceSet.isEmpty()) {
+            final Set<StackInstances> stackInstancesGroup = aggregateStackInstancesForRead(stackInstanceSet);
+            model.setStackInstancesGroup(stackInstancesGroup);
+        }
 
         return model;
     }
@@ -75,47 +84,29 @@ public class ResourceModelBuilder {
     /**
      * Loop through all stack instance details and attach to the constructing model
      * @param stackSetId {@link ResourceModel#getStackSetId()}
-     * @param model {@link ResourceModel}
+     * @param isSelfManaged if permission model is SELF_MANAGED
      * @param token {@link ListStackInstancesResponse#nextToken()}
      */
-    private void putRegionsAndDeploymentTargets(
+    private void attachStackInstances(
             final String stackSetId,
-            final ResourceModel model,
+            final boolean isSelfManaged,
+            final Set<StackInstance> stackInstanceSet,
             String token) {
 
         final ListStackInstancesResponse listStackInstancesResponse = proxy.injectCredentialsAndInvokeV2(
                 listStackInstancesRequest(token, stackSetId), client::listStackInstances);
         token = listStackInstancesResponse.nextToken();
-        listStackInstancesResponse.summaries().forEach(member -> putRegionsAndDeploymentTargets(member, model));
+        listStackInstancesResponse.summaries().forEach(member -> {
+            final List<Parameter> parameters = getStackInstance(member);
+            stackInstanceSet.add(translateToStackInstance(isSelfManaged, member, parameters));
+        });
     }
 
-    /**
-     * Helper method to attach StackInstance details to the constructing model
-     * @param instance {@link StackInstanceSummary}
-     * @param model {@link ResourceModel}
-     */
-    private void putRegionsAndDeploymentTargets(final StackInstanceSummary instance, final ResourceModel model) {
-        model.getRegions().add(instance.region());
-
-        if (model.getRegions() == null) model.setRegions(new HashSet<>());
-
-        // If using SELF_MANAGED, getting accounts
-        if (PermissionModels.SELF_MANAGED.equals(permissionModel)) {
-            if (model.getDeploymentTargets().getAccounts() == null) {
-                model.getDeploymentTargets().setAccounts(new HashSet<>());
-            }
-            model.getDeploymentTargets().getAccounts().add(instance.account());
-
-        } else if (PermissionModels.SERVICE_MANAGED.equals(permissionModel)) {
-            // If using SERVICE_MANAGED, getting OUIds
-            if (model.getDeploymentTargets().getOrganizationalUnitIds() == null) {
-                model.getDeploymentTargets().setOrganizationalUnitIds(new HashSet<>());
-            }
-            model.getDeploymentTargets().getOrganizationalUnitIds().add(instance.organizationalUnitId());
-
-        } else {
-            throw new CfnServiceInternalErrorException(
-                    String.format("%s is not valid PermissionModels", permissionModel));
-        }
+    private List<Parameter> getStackInstance(final StackInstanceSummary summary) {
+        final DescribeStackInstanceResponse describeStackInstanceResponse = proxy.injectCredentialsAndInvokeV2(
+                describeStackInstanceRequest(summary.account(), summary.region(), summary.stackSetId()),
+                client::describeStackInstance);
+        return describeStackInstanceResponse.stackInstance().parameterOverrides();
     }
+
 }

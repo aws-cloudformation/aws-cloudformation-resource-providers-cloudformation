@@ -13,10 +13,14 @@ public class ClientBuilder {
      * Get CloudFormationClient for requests to interact with StackSet client
      * @return {@link CloudFormationClient}
      */
-    public static CloudFormationClient getClient() {
-        return CloudFormationClient.builder()
+    private static class LazyHolder {
+        public static CloudFormationClient SERVICE_CLIENT = CloudFormationClient.builder()
                 .httpClient(LambdaWrapper.HTTP_CLIENT)
                 .build();
+    }
+
+    public static CloudFormationClient getClient() {
+        return LazyHolder.SERVICE_CLIENT;
     }
 
     /**
