@@ -272,8 +272,8 @@
         "read": {
             "permissions": [
                 "cloudformation:DescribeStackSet",
-                "cloudformation:CreateStackInstances",
-                "cloudformation:DescribeStackInstances"
+                "cloudformation:ListStackInstances",
+                "cloudformation:DescribeStackInstance"
             ]
         },
         "update": {
@@ -282,6 +282,7 @@
                 "cloudformation:UpdateStackSet",
                 "cloudformation:CreateStackInstances",
                 "cloudformation:DeleteStackInstances",
+                "cloudformation:UpdatetackInstances",
                 "cloudformation:DescribeStackSetOperation"
             ]
         },
@@ -294,7 +295,10 @@
         },
         "list": {
             "permissions": [
-                "cloudformation:ListStackSets"
+                "cloudformation:ListStackSets",
+                "cloudformation:DescribeStackSet",
+                "cloudformation:ListStackInstances",
+                "cloudformation:DescribeStackInstance"
             ]
         }
     }
