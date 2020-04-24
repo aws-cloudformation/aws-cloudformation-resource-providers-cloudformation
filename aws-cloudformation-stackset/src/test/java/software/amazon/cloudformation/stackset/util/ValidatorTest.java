@@ -17,8 +17,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_EMBEDDED_STACKSET_TEMPLATE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_EMBEDDED_STACK_TEMPLATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_BODY;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_URL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_YAML_TEMPLATE;
 
 @ExtendWith(MockitoExtension.class)
 public class ValidatorTest {
@@ -64,7 +67,20 @@ public class ValidatorTest {
     }
 
     @Test
+    public void testValidateTemplate_InvalidTemplate() {
+        assertThrows(CfnInvalidRequestException.class,
+                () -> validator.validateTemplate(proxy, INVALID_EMBEDDED_STACK_TEMPLATE, null, logger));
+        assertThrows(CfnInvalidRequestException.class,
+                () -> validator.validateTemplate(proxy, INVALID_EMBEDDED_STACKSET_TEMPLATE, null, logger));
+        assertThrows(CfnInvalidRequestException.class,
+                () -> validator.validateTemplate(proxy, "", null, logger));
+        assertThrows(CfnInvalidRequestException.class,
+                () -> validator.validateTemplate(proxy, "null", null, logger));
+    }
+
+    @Test
     public void testValidateTemplate_ValidTemplateBody() {
         assertDoesNotThrow(() -> validator.validateTemplate(proxy, TEMPLATE_BODY, null, logger));
+        assertDoesNotThrow(() -> validator.validateTemplate(proxy, VALID_YAML_TEMPLATE, null, logger));
     }
 }

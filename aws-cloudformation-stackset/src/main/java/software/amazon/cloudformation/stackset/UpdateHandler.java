@@ -31,7 +31,11 @@ public class UpdateHandler extends BaseHandlerStd {
         return updateStackSet(proxy, proxyClient, model, callbackContext)
                 .then(progress -> deleteStackInstances(proxy, proxyClient, progress, logger))
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, logger))
-                .then(progress -> updateStackInstances(proxy, proxyClient, progress, logger));
+                .then(progress -> updateStackInstances(proxy, proxyClient, progress, logger))
+                .then(progress -> {
+                    if (progress.isFailed()) return progress;
+                    return ProgressEvent.defaultSuccessHandler(model);
+                });
     }
 
     /**

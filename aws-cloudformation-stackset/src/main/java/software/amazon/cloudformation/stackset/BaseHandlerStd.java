@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetNotEmptyException;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationStatus;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
+import software.amazon.cloudformation.exceptions.TerminalException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -93,7 +94,6 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                 .retry(MULTIPLE_OF)
                 .call((modelRequest, proxyInvocation) -> proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::createStackInstances))
                 .stabilize((request, response, proxyInvocation, resourceModel, context) -> isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
-                .exceptFilter(this::filterException)
                 .progress());
 
         return ProgressEvent.defaultInProgressHandler(callbackContext, NO_CALLBACK_DELAY, model);
@@ -210,9 +210,18 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                 return false;
             default:
                 logger.log(String.format("StackInstanceOperation [%s] unexpected status [%s]", operationId, status));
-                throw new CfnServiceInternalErrorException(
+                throw new TerminalException(
                         String.format("Stack set operation [%s] was unexpectedly stopped or failed", operationId));
         }
     }
 
+    protected ProgressEvent<ResourceModel, CallbackContext> handleException(AwsRequest request,
+                                                                          Exception exception,
+                                                                          ProxyClient<CloudFormationClient> client,
+                                                                          ResourceModel model,
+                                                                          CallbackContext context,
+                                                                          AmazonWebServicesClientProxy proxy) {
+
+        return proxy.defaultHandler(request, exception, client, model, context);
+    }
 }

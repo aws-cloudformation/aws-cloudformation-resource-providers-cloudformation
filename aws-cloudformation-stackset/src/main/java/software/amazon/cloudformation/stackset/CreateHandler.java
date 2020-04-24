@@ -36,11 +36,16 @@ public class CreateHandler extends BaseHandlerStd {
         analyzeTemplate(proxy, model, callbackContext);
 
         return proxy.initiate("AWS-CloudFormation-StackSet::Create", proxyClient, model, callbackContext)
-                .request(resourceModel -> createStackSetRequest(resourceModel, stackSetName, request.getClientRequestToken()))
+                .request(resourceModel ->
+                        createStackSetRequest(resourceModel, stackSetName, request.getClientRequestToken()))
+                .retry(MULTIPLE_OF)
                 .call((modelRequest, proxyInvocation) -> createResource(modelRequest, proxyClient, model))
                 .progress()
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, logger))
-                .then(progress -> ProgressEvent.defaultSuccessHandler(model));
+                .then(progress -> {
+                    if (progress.isFailed()) return progress;
+                    return ProgressEvent.defaultSuccessHandler(model);
+                });
     }
 
     /**

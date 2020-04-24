@@ -29,6 +29,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
@@ -36,6 +37,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SE
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SERVICE_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LOGICAL_ID;
+import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_STOPPED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.REQUEST_TOKEN;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
@@ -122,6 +124,34 @@ public class CreateHandlerTest extends AbstractTestBase {
     }
 
     @Test
+    public void handleRequest_SelfManagedSS_NotStabilized() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(SELF_MANAGED_MODEL)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        doReturn(CREATE_STACK_SET_RESPONSE).when(proxyClient.client())
+                .createStackSet(any(CreateStackSetRequest.class));
+        doReturn(CREATE_STACK_INSTANCES_RESPONSE).when(proxyClient.client())
+                .createStackInstances(any(CreateStackInstancesRequest.class));
+        doReturn(OPERATION_SUCCEED_RESPONSE).when(proxyClient.client())
+                .describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
     public void handlerRequest_InsufficientCapabilitiesException() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -140,5 +170,30 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getErrorCode()).isNotNull();
+    }
+
+    @Test
+    public void handlerRequest_OperationStoppedError() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(SELF_MANAGED_MODEL)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        doReturn(CREATE_STACK_SET_RESPONSE).when(proxyClient.client())
+                .createStackSet(any(CreateStackSetRequest.class));
+        doReturn(CREATE_STACK_INSTANCES_RESPONSE).when(proxyClient.client())
+                .createStackInstances(any(CreateStackInstancesRequest.class));
+        doReturn(OPERATION_STOPPED_RESPONSE).when(proxyClient.client())
+                .describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getErrorCode()).isEqualTo(InvalidRequest);
     }
 }

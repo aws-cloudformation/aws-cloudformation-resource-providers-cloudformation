@@ -1,10 +1,9 @@
 package software.amazon.cloudformation.stackset.util;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
-import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
+import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.stackset.CallbackContext;
 import software.amazon.cloudformation.stackset.DeploymentTargets;
 import software.amazon.cloudformation.stackset.Parameter;
@@ -104,8 +103,8 @@ public class InstancesAnalyzer {
      * Group regions by {@link DeploymentTargets} and {@link StackInstance#getParameters()}
      * @return {@link StackInstances}
      */
-    public static Set<StackInstances> groupInstancesByTargets(
-            @NonNull final Set<StackInstance> flatStackInstances, final boolean isSelfManaged) {
+    private static Set<StackInstances> groupInstancesByTargets(
+            final Set<StackInstance> flatStackInstances, final boolean isSelfManaged) {
 
         final Map<List<Object>, StackInstances> groupedStacksMap = new HashMap<>();
         for (final StackInstance stackInstance : flatStackInstances) {
@@ -191,6 +190,7 @@ public class InstancesAnalyzer {
             final Collection<StackInstances> stackInstancesGroup, final boolean isSelfManaged) {
 
         final Set<StackInstance> flatStacks = new HashSet<>();
+        if (CollectionUtils.isNullOrEmpty(stackInstancesGroup)) return flatStacks;
 
         for (final StackInstances stackInstances : stackInstancesGroup) {
             for (final String region : stackInstances.getRegions()) {
