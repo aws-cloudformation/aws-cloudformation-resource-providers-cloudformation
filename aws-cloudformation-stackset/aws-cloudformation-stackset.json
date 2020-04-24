@@ -266,7 +266,8 @@
                 "s3:GetObject",
                 "cloudformation:CreateStackSet",
                 "cloudformation:CreateStackInstances",
-                "cloudformation:DescribeStackSetOperation"
+                "cloudformation:DescribeStackSetOperation",
+                "cloudformation:TagResource"
             ]
         },
         "read": {
@@ -283,14 +284,17 @@
                 "cloudformation:CreateStackInstances",
                 "cloudformation:DeleteStackInstances",
                 "cloudformation:UpdatetackInstances",
-                "cloudformation:DescribeStackSetOperation"
+                "cloudformation:DescribeStackSetOperation",
+                "cloudformation:TagResource",
+                "cloudformation:UntagResource"
             ]
         },
         "delete": {
             "permissions": [
                 "cloudformation:DeleteStackSet",
                 "cloudformation:DeleteStackInstances",
-                "cloudformation:DescribeStackSetOperation"
+                "cloudformation:DescribeStackSetOperation",
+                "cloudformation:TagResource"
             ]
         },
         "list": {
