@@ -50,8 +50,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             createStackSet(proxy, model, logger, client, context, stackSetName, request.getClientRequestToken());
         }
 
-        if (stabilizer.isPerformingOperation(isAddingStackInstances(context), context.isAddStacksInstancesStarted(), null,
-                ADD_INSTANCES, context.getCreateStacksInstancesQueue(), model, context)) {
+        if (stabilizer.isPerformingOperation(isAddingStackInstances(context), context.isAddStackInstancesStarted(), null,
+                ADD_INSTANCES, context.getCreateStackInstancesQueue(), model, context)) {
 
             operator.updateStackSet(ADD_INSTANCES);
         }

@@ -15,7 +15,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.stackset.util.Validator;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -24,7 +23,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -106,9 +104,9 @@ public class UpdateHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
-                .deleteStacksInstancesStarted(true)
-                .addStacksInstancesStarted(true)
-                .updateStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
+                .addStackInstancesStarted(true)
+                .updateStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .operationsStabilizationMap(updateOperationsMap)
@@ -139,9 +137,9 @@ public class UpdateHandlerTest {
                 .updateStackSetStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
-                .createStacksInstancesQueue(response.getCallbackContext().getCreateStacksInstancesQueue())
-                .deleteStacksInstancesQueue(response.getCallbackContext().getDeleteStacksInstancesQueue())
-                .updateStacksInstancesQueue(response.getCallbackContext().getUpdateStacksInstancesQueue())
+                .createStackInstancesQueue(response.getCallbackContext().getCreateStackInstancesQueue())
+                .deleteStackInstancesQueue(response.getCallbackContext().getDeleteStackInstancesQueue())
+                .updateStackInstancesQueue(response.getCallbackContext().getUpdateStackInstancesQueue())
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
@@ -196,9 +194,9 @@ public class UpdateHandlerTest {
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
                 .templateAnalyzed(true)
-                .deleteStacksInstancesQueue(DELETE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
-                .createStacksInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
-                .updateStacksInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .deleteStackInstancesQueue(DELETE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .createStackInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStackInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .operationId(OPERATION_ID_2)
                 .build();
@@ -215,11 +213,11 @@ public class UpdateHandlerTest {
         final CallbackContext outputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
                 .templateAnalyzed(true)
-                .deleteStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .stackInstancesInOperation(DELETE_STACK_INSTANCES_SELF_MANAGED)
-                .createStacksInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
-                .updateStacksInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .createStackInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStackInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
                 .build();
 
@@ -242,11 +240,11 @@ public class UpdateHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
-                .deleteStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .stackInstancesInOperation(DELETE_STACK_INSTANCES_SELF_MANAGED)
-                .createStacksInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
-                .updateStacksInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .createStackInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStackInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .operationId(OPERATION_ID_2)
                 .build();
@@ -256,11 +254,11 @@ public class UpdateHandlerTest {
         final CallbackContext outputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
                 .updateStackSetStarted(true)
-                .deleteStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .stackInstancesInOperation(DELETE_STACK_INSTANCES_SELF_MANAGED)
-                .createStacksInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
-                .updateStacksInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .createStackInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStackInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
                 .elapsedTime(BASE_CALLBACK_DELAY_SECONDS)
                 .operationId(OPERATION_ID_2)
@@ -289,11 +287,11 @@ public class UpdateHandlerTest {
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
                 .templateAnalyzed(true)
-                .deleteStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
                 .operationId(OPERATION_ID_2)
                 .stackInstancesInOperation(DELETE_STACK_INSTANCES_SELF_MANAGED)
-                .createStacksInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
-                .updateStacksInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .createStackInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStackInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
@@ -310,12 +308,12 @@ public class UpdateHandlerTest {
         final CallbackContext outputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
                 .templateAnalyzed(true)
-                .deleteStacksInstancesStarted(true)
-                .addStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .stackInstancesInOperation(CREATE_STACK_INSTANCES_SELF_MANAGED)
-                .createStacksInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
-                .updateStacksInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .createStackInstancesQueue(CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStackInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
                 .build();
 
@@ -340,11 +338,11 @@ public class UpdateHandlerTest {
         final CallbackContext inputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
                 .templateAnalyzed(true)
-                .deleteStacksInstancesStarted(true)
-                .addStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .operationId(OPERATION_ID_2)
                 .stackInstancesInOperation(CREATE_STACK_INSTANCES_SELF_MANAGED)
-                .updateStacksInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStackInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
@@ -362,12 +360,12 @@ public class UpdateHandlerTest {
         final CallbackContext outputContext = CallbackContext.builder()
                 .updateStackSetStarted(true)
                 .templateAnalyzed(true)
-                .deleteStacksInstancesStarted(true)
-                .addStacksInstancesStarted(true)
-                .updateStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
+                .addStackInstancesStarted(true)
+                .updateStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .stackInstancesInOperation(stackInstances)
-                .updateStacksInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
+                .updateStackInstancesQueue(UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)
                 .build();
 
@@ -419,9 +417,9 @@ public class UpdateHandlerTest {
         final CallbackContext outputContext = CallbackContext.builder()
                 .templateAnalyzed(true)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
-                .createStacksInstancesQueue(response.getCallbackContext().getCreateStacksInstancesQueue())
-                .deleteStacksInstancesQueue(response.getCallbackContext().getDeleteStacksInstancesQueue())
-                .updateStacksInstancesQueue(response.getCallbackContext().getUpdateStacksInstancesQueue())
+                .createStackInstancesQueue(response.getCallbackContext().getCreateStackInstancesQueue())
+                .deleteStackInstancesQueue(response.getCallbackContext().getDeleteStackInstancesQueue())
+                .updateStackInstancesQueue(response.getCallbackContext().getUpdateStackInstancesQueue())
                 .build();
 
         assertThat(response).isNotNull();

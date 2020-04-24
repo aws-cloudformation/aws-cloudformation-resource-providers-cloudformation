@@ -64,7 +64,7 @@ public class DeleteHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .stackSetCreated(true)
-                .deleteStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .build();
@@ -97,11 +97,11 @@ public class DeleteHandlerTest {
         stackInstancesSet.remove(stackInstances);
 
         final CallbackContext outputContext = CallbackContext.builder()
-                .deleteStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
-                .deleteStacksInstancesQueue(new LinkedList<>(stackInstancesSet))
+                .deleteStackInstancesQueue(new LinkedList<>(stackInstancesSet))
                 .stackInstancesInOperation(stackInstances)
                 .build();
 
@@ -122,14 +122,14 @@ public class DeleteHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .templateAnalyzed(true)
-                .deleteStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
         final CallbackContext outputContext = CallbackContext.builder()
                 .templateAnalyzed(true)
-                .deleteStacksInstancesStarted(true)
+                .deleteStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .elapsedTime(BASE_CALLBACK_DELAY_SECONDS)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)

@@ -11,7 +11,6 @@ import software.amazon.cloudformation.stackset.Parameter;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -67,9 +66,9 @@ public class InstancesAnalyzer {
         final Set<StackInstances> stackInstancesGroupToUpdate = aggregateStackInstances(stacksToUpdate, isSelfManaged);
 
         // Update the stack lists that need to write of callbackContext holder
-        context.setCreateStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToAdd));
-        context.setDeleteStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToDelete));
-        context.setUpdateStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToUpdate));
+        context.setCreateStackInstancesQueue(new LinkedList<>(stackInstancesGroupToAdd));
+        context.setDeleteStackInstancesQueue(new LinkedList<>(stackInstancesGroupToDelete));
+        context.setUpdateStackInstancesQueue(new LinkedList<>(stackInstancesGroupToUpdate));
 
         context.setTemplateAnalyzed(true);
     }
@@ -82,7 +81,7 @@ public class InstancesAnalyzer {
     public void analyzeForCreate(final CallbackContext context) {
         if (context.isTemplateAnalyzed() || desiredModel.getStackInstancesGroup() == null) return;
         if (desiredModel.getStackInstancesGroup().size() == 1) {
-            context.setCreateStacksInstancesQueue(new LinkedList<>(desiredModel.getStackInstancesGroup()));
+            context.setCreateStackInstancesQueue(new LinkedList<>(desiredModel.getStackInstancesGroup()));
         }
         final boolean isSelfManaged = isSelfManaged(desiredModel);
 
@@ -90,7 +89,7 @@ public class InstancesAnalyzer {
                 flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
 
         final Set<StackInstances> stackInstancesGroupToAdd = aggregateStackInstances(desiredStackInstances, isSelfManaged);
-        context.setCreateStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToAdd));
+        context.setCreateStackInstancesQueue(new LinkedList<>(stackInstancesGroupToAdd));
 
         context.setTemplateAnalyzed(true);
     }
@@ -103,7 +102,7 @@ public class InstancesAnalyzer {
     public void analyzeForDelete(final CallbackContext context) {
         if (context.isTemplateAnalyzed() || desiredModel.getStackInstancesGroup() == null) return;
         if (desiredModel.getStackInstancesGroup().size() == 1) {
-            context.setDeleteStacksInstancesQueue(new LinkedList<>(desiredModel.getStackInstancesGroup()));
+            context.setDeleteStackInstancesQueue(new LinkedList<>(desiredModel.getStackInstancesGroup()));
         }
         final boolean isSelfManaged = isSelfManaged(desiredModel);
 
@@ -111,7 +110,7 @@ public class InstancesAnalyzer {
                 flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
 
         final Set<StackInstances> stackInstancesGroupToDelete = aggregateStackInstances(desiredStackInstances, isSelfManaged);
-        context.setDeleteStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToDelete));
+        context.setDeleteStackInstancesQueue(new LinkedList<>(stackInstancesGroupToDelete));
 
         context.setTemplateAnalyzed(true);
     }

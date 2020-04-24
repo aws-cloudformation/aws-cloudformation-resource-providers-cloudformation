@@ -1,6 +1,5 @@
 package software.amazon.cloudformation.stackset.util;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
 import software.amazon.cloudformation.stackset.CallbackContext;
@@ -53,7 +52,7 @@ public class Comparator {
      */
     public static boolean isUpdatingStackInstances(final CallbackContext context) {
         // If no stack instances need to be updated
-        if (context.getUpdateStacksInstancesQueue().isEmpty() && !context.isUpdateStacksInstancesStarted()) {
+        if (context.getUpdateStackInstancesQueue().isEmpty() && !context.isUpdateStackInstancesStarted()) {
             return false;
         }
         return true;
@@ -66,7 +65,7 @@ public class Comparator {
      */
     public static boolean isDeletingStackInstances(final CallbackContext context) {
         // If no stack instances need to be deleted
-        if (context.getDeleteStacksInstancesQueue().isEmpty() && !context.isDeleteStacksInstancesStarted()) {
+        if (context.getDeleteStackInstancesQueue().isEmpty() && !context.isDeleteStackInstancesStarted()) {
             return false;
         }
         return true;
@@ -79,7 +78,7 @@ public class Comparator {
      */
     public static boolean isAddingStackInstances(final CallbackContext context) {
         // If no stack instances need to be added
-        if (context.getCreateStacksInstancesQueue().isEmpty() && !context.isAddStacksInstancesStarted()) {
+        if (context.getCreateStackInstancesQueue().isEmpty() && !context.isAddStackInstancesStarted()) {
             return false;
         }
         return true;

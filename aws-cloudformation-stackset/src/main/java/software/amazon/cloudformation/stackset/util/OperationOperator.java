@@ -8,10 +8,8 @@ import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstances
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.InvalidOperationException;
 import software.amazon.awssdk.services.cloudformation.model.OperationInProgressException;
-import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetNotFoundException;
-import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetResponse;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
@@ -19,17 +17,13 @@ import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.stackset.CallbackContext;
-import software.amazon.cloudformation.stackset.DeploymentTargets;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
 
-import java.util.HashSet;
 import java.util.Queue;
-import java.util.Set;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.createStackInstancesRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.deleteStackInstancesRequest;
-import static software.amazon.cloudformation.stackset.translator.RequestTranslator.deleteStackSetRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackSetRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.updateStackInstancesRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.updateStackSetRequest;
@@ -78,45 +72,45 @@ public class OperationOperator {
     }
 
     /**
-     * Invokes CreateStackInstances API to add new {@link StackInstances} based on {@link CallbackContext#getCreateStacksInstancesQueue()}
+     * Invokes CreateStackInstances API to add new {@link StackInstances} based on {@link CallbackContext#getCreateStackInstancesQueue()}
      * @return Operation Id from {@link CreateStackInstancesResponse}
      */
     private String addStackInstances() {
-        final Queue<StackInstances> instancesQueue = context.getCreateStacksInstancesQueue();
+        final Queue<StackInstances> instancesQueue = context.getCreateStackInstancesQueue();
         final CreateStackInstancesResponse response = proxy.injectCredentialsAndInvokeV2(
                 createStackInstancesRequest(desiredModel.getStackSetId(), desiredModel.getOperationPreferences(),
                         instancesQueue.peek()), client::createStackInstances);
-        context.setAddStacksInstancesStarted(true);
+        context.setAddStackInstancesStarted(true);
         // We remove the stack instances from queue Only if API invocation succeeds
         context.setStackInstancesInOperation(instancesQueue.remove());
         return response.operationId();
     }
 
     /**
-     * Invokes DeleteStackInstances API to delete old {@link StackInstances} based on {@link CallbackContext#getDeleteStacksInstancesQueue()}
+     * Invokes DeleteStackInstances API to delete old {@link StackInstances} based on {@link CallbackContext#getDeleteStackInstancesQueue()}
      * @return Operation Id from {@link DeleteStackInstancesResponse}
      */
     private String deleteStackInstances() {
-        final Queue<StackInstances> instancesQueue = context.getDeleteStacksInstancesQueue();
+        final Queue<StackInstances> instancesQueue = context.getDeleteStackInstancesQueue();
         final DeleteStackInstancesResponse response = proxy.injectCredentialsAndInvokeV2(
                 deleteStackInstancesRequest(desiredModel.getStackSetId(), desiredModel.getOperationPreferences(),
                         instancesQueue.peek()), client::deleteStackInstances);
-        context.setDeleteStacksInstancesStarted(true);
+        context.setDeleteStackInstancesStarted(true);
         // We remove the stack instances from queue Only if API invocation succeeds
         context.setStackInstancesInOperation(instancesQueue.remove());
         return response.operationId();
     }
 
     /**
-     * Invokes UpdateStackInstances API to update existing {@link StackInstances} based on {@link CallbackContext#getUpdateStacksInstancesQueue()}
+     * Invokes UpdateStackInstances API to update existing {@link StackInstances} based on {@link CallbackContext#getUpdateStackInstancesQueue()}
      * @return Operation Id from {@link UpdateStackInstancesResponse}
      */
     private String updateStackInstances() {
-        final Queue<StackInstances> instancesQueue = context.getUpdateStacksInstancesQueue();
+        final Queue<StackInstances> instancesQueue = context.getUpdateStackInstancesQueue();
         final UpdateStackInstancesResponse response = proxy.injectCredentialsAndInvokeV2(
                 updateStackInstancesRequest(desiredModel.getStackSetId(), desiredModel.getOperationPreferences(),
                         instancesQueue.peek()), client::updateStackInstances);
-        context.setUpdateStacksInstancesStarted(true);
+        context.setUpdateStackInstancesStarted(true);
         // We remove the stack instances from queue Only if API invocation succeeds
         context.setStackInstancesInOperation(instancesQueue.remove());
         return response.operationId();

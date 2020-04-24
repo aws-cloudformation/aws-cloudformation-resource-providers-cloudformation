@@ -77,7 +77,7 @@ public class CreateHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .stackSetCreated(true)
-                .addStacksInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .build();
@@ -113,9 +113,9 @@ public class CreateHandlerTest {
         final CallbackContext outputContext = CallbackContext.builder()
                 .templateAnalyzed(true)
                 .stackSetCreated(true)
-                .addStacksInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
-                .createStacksInstancesQueue(new LinkedList<>(stackInstancesSet))
+                .createStackInstancesQueue(new LinkedList<>(stackInstancesSet))
                 .stackInstancesInOperation(stackInstances)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
@@ -151,7 +151,7 @@ public class CreateHandlerTest {
         final CallbackContext outputContext = CallbackContext.builder()
                 .templateAnalyzed(true)
                 .stackSetCreated(true)
-                .addStacksInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .stackInstancesInOperation(stackInstances)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
@@ -174,7 +174,7 @@ public class CreateHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .stackSetCreated(true)
-                .addStacksInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .templateAnalyzed(true)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
@@ -182,7 +182,7 @@ public class CreateHandlerTest {
 
         final CallbackContext outputContext = CallbackContext.builder()
                 .stackSetCreated(true)
-                .addStacksInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .elapsedTime(BASE_CALLBACK_DELAY_SECONDS)
@@ -222,7 +222,7 @@ public class CreateHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .stackSetCreated(true)
-                .addStacksInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
@@ -239,7 +239,7 @@ public class CreateHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .stackSetCreated(true)
-                .addStacksInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .elapsedTime(EXECUTION_TIMEOUT_SECONDS)
@@ -257,7 +257,7 @@ public class CreateHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .stackSetCreated(true)
-                .addStacksInstancesStarted(true)
+                .addStackInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .elapsedTime(EXECUTION_TIMEOUT_SECONDS)
                 .currentDelaySeconds(MAX_CALLBACK_DELAY_SECONDS)
@@ -331,7 +331,7 @@ public class CreateHandlerTest {
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .stackSetCreated(true)
                 .templateAnalyzed(true)
-                .createStacksInstancesQueue(response.getCallbackContext().getCreateStacksInstancesQueue())
+                .createStackInstancesQueue(response.getCallbackContext().getCreateStackInstancesQueue())
                 .build();
 
         assertThat(response).isNotNull();

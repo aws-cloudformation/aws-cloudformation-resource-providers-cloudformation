@@ -52,20 +52,20 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             operator.updateStackSet(STACK_SET_CONFIGS);
         }
 
-        if (stabilizer.isPerformingOperation(isDeletingStackInstances(context), context.isDeleteStacksInstancesStarted(),
-                STACK_SET_CONFIGS, DELETE_INSTANCES, context.getDeleteStacksInstancesQueue(), desiredModel, context)) {
+        if (stabilizer.isPerformingOperation(isDeletingStackInstances(context), context.isDeleteStackInstancesStarted(),
+                STACK_SET_CONFIGS, DELETE_INSTANCES, context.getDeleteStackInstancesQueue(), desiredModel, context)) {
 
             operator.updateStackSet(DELETE_INSTANCES);
         }
 
-        if (stabilizer.isPerformingOperation(isAddingStackInstances(context), context.isAddStacksInstancesStarted(),
-                DELETE_INSTANCES, ADD_INSTANCES, context.getCreateStacksInstancesQueue(), desiredModel, context)) {
+        if (stabilizer.isPerformingOperation(isAddingStackInstances(context), context.isAddStackInstancesStarted(),
+                DELETE_INSTANCES, ADD_INSTANCES, context.getCreateStackInstancesQueue(), desiredModel, context)) {
 
             operator.updateStackSet(ADD_INSTANCES);
         }
 
-        if (stabilizer.isPerformingOperation(isUpdatingStackInstances(context), context.isUpdateStacksInstancesStarted(),
-                ADD_INSTANCES, UPDATE_INSTANCES, context.getUpdateStacksInstancesQueue(), desiredModel, context)) {
+        if (stabilizer.isPerformingOperation(isUpdatingStackInstances(context), context.isUpdateStackInstancesStarted(),
+                ADD_INSTANCES, UPDATE_INSTANCES, context.getUpdateStackInstancesQueue(), desiredModel, context)) {
 
             operator.updateStackSet(UPDATE_INSTANCES);
         }

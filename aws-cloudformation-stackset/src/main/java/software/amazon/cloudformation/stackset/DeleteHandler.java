@@ -36,8 +36,8 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         InstancesAnalyzer.builder().desiredModel(model).build().analyzeForDelete(context);
 
-        if (stabilizer.isPerformingOperation(isDeletingStackInstances(context), context.isDeleteStacksInstancesStarted(), null,
-                DELETE_INSTANCES, context.getDeleteStacksInstancesQueue(), model, context)) {
+        if (stabilizer.isPerformingOperation(isDeletingStackInstances(context), context.isDeleteStackInstancesStarted(), null,
+                DELETE_INSTANCES, context.getDeleteStackInstancesQueue(), model, context)) {
 
             operator.updateStackSet(DELETE_INSTANCES);
         }
