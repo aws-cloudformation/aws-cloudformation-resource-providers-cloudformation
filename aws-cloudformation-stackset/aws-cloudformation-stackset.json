@@ -8,23 +8,25 @@
             "type": "object",
             "properties": {
                 "Key": {
-                    "description": "A string used to identify this tag. You can specify a maximum of 128 characters for a tag key.",
+                    "description": "A string used to identify this tag. You can specify a maximum of 127 characters for a tag key.",
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 128,
-                    "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
+                    "maxLength": 127,
+                    "pattern": "^(?!aws:.*)[a-z0-9\\s\\_\\.\\/\\=\\+\\-]+$"
                 },
                 "Value": {
                     "description": "A string containing the value for this tag. You can specify a maximum of 256 characters for a tag value.",
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 256
+                    "maxLength": 255,
+                    "pattern": "^(?!aws:.*)[a-z0-9\\s\\_\\.\\/\\=\\+\\-]+$"
                 }
             },
             "required": [
                 "Value",
                 "Key"
-            ]
+            ],
+            "additionalProperties": false
         },
         "AutoDeployment": {
             "type": "object",
@@ -283,7 +285,7 @@
                 "cloudformation:UpdateStackSet",
                 "cloudformation:CreateStackInstances",
                 "cloudformation:DeleteStackInstances",
-                "cloudformation:UpdatetackInstances",
+                "cloudformation:UpdateStackInstances",
                 "cloudformation:DescribeStackSetOperation",
                 "cloudformation:TagResource",
                 "cloudformation:UntagResource"
@@ -294,7 +296,7 @@
                 "cloudformation:DeleteStackSet",
                 "cloudformation:DeleteStackInstances",
                 "cloudformation:DescribeStackSetOperation",
-                "cloudformation:TagResource"
+                "cloudformation:UntagResource"
             ]
         },
         "list": {

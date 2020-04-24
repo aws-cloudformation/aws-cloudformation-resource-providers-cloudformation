@@ -67,9 +67,9 @@ public class InstancesAnalyzer {
         final Set<StackInstances> stackInstancesGroupToUpdate = aggregateStackInstances(stacksToUpdate, isSelfManaged);
 
         // Update the stack lists that need to write of callbackContext holder
-        context.setCreateStacksQueue(new LinkedList<>(stackInstancesGroupToAdd));
-        context.setDeleteStacksQueue(new LinkedList<>(stackInstancesGroupToDelete));
-        context.setUpdateStacksQueue(new LinkedList<>(stackInstancesGroupToUpdate));
+        context.setCreateStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToAdd));
+        context.setDeleteStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToDelete));
+        context.setUpdateStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToUpdate));
 
         context.setTemplateAnalyzed(true);
     }
@@ -82,7 +82,7 @@ public class InstancesAnalyzer {
     public void analyzeForCreate(final CallbackContext context) {
         if (context.isTemplateAnalyzed() || desiredModel.getStackInstancesGroup() == null) return;
         if (desiredModel.getStackInstancesGroup().size() == 1) {
-            context.setCreateStacksQueue(new LinkedList<>(desiredModel.getStackInstancesGroup()));
+            context.setCreateStacksInstancesQueue(new LinkedList<>(desiredModel.getStackInstancesGroup()));
         }
         final boolean isSelfManaged = isSelfManaged(desiredModel);
 
@@ -90,7 +90,7 @@ public class InstancesAnalyzer {
                 flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
 
         final Set<StackInstances> stackInstancesGroupToAdd = aggregateStackInstances(desiredStackInstances, isSelfManaged);
-        context.setCreateStacksQueue(new LinkedList<>(stackInstancesGroupToAdd));
+        context.setCreateStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToAdd));
 
         context.setTemplateAnalyzed(true);
     }
@@ -103,7 +103,7 @@ public class InstancesAnalyzer {
     public void analyzeForDelete(final CallbackContext context) {
         if (context.isTemplateAnalyzed() || desiredModel.getStackInstancesGroup() == null) return;
         if (desiredModel.getStackInstancesGroup().size() == 1) {
-            context.setDeleteStacksQueue(new LinkedList<>(desiredModel.getStackInstancesGroup()));
+            context.setDeleteStacksInstancesQueue(new LinkedList<>(desiredModel.getStackInstancesGroup()));
         }
         final boolean isSelfManaged = isSelfManaged(desiredModel);
 
@@ -111,7 +111,7 @@ public class InstancesAnalyzer {
                 flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
 
         final Set<StackInstances> stackInstancesGroupToDelete = aggregateStackInstances(desiredStackInstances, isSelfManaged);
-        context.setDeleteStacksQueue(new LinkedList<>(stackInstancesGroupToDelete));
+        context.setDeleteStacksInstancesQueue(new LinkedList<>(stackInstancesGroupToDelete));
 
         context.setTemplateAnalyzed(true);
     }
@@ -124,8 +124,8 @@ public class InstancesAnalyzer {
      */
     public static Set<StackInstances> aggregateStackInstances(
             @NonNull final Set<StackInstance> flatStackInstances, final boolean isSelfManaged) {
-        final Set<StackInstances> groupedStacks = groupInstancesByTargets(flatStackInstances, isSelfManaged);
-        return aggregateInstancesByRegions(groupedStacks, isSelfManaged);
+        final Set<StackInstances> groupedStacksInstances = groupInstancesByTargets(flatStackInstances, isSelfManaged);
+        return aggregateInstancesByRegions(groupedStacksInstances, isSelfManaged);
     }
 
     /**
@@ -137,8 +137,8 @@ public class InstancesAnalyzer {
      * @return {@link StackInstances} set
      */
     public static Set<StackInstances> aggregateStackInstancesForRead(@NonNull final Set<StackInstance> flatStackInstances) {
-        final Set<StackInstances> groupedStacks = groupInstancesByTargets(flatStackInstances, true);
-        return aggregateInstancesByRegions(groupedStacks, true);
+        final Set<StackInstances> groupedStacksInstances = groupInstancesByTargets(flatStackInstances, true);
+        return aggregateInstancesByRegions(groupedStacksInstances, true);
     }
 
 
@@ -149,15 +149,15 @@ public class InstancesAnalyzer {
     private static Set<StackInstances> groupInstancesByTargets(
             final Set<StackInstance> flatStackInstances, final boolean isSelfManaged) {
 
-        final Map<List<Object>, StackInstances> groupedStacksMap = new HashMap<>();
+        final Map<List<Object>, StackInstances> groupedStacksInstancesMap = new HashMap<>();
         for (final StackInstance stackInstance : flatStackInstances) {
             final String target = stackInstance.getDeploymentTarget();
             final String region = stackInstance.getRegion();
             final Set<Parameter> parameterSet = stackInstance.getParameters();
             final List<Object> compositeKey = Arrays.asList(target, parameterSet);
 
-            if (groupedStacksMap.containsKey(compositeKey)) {
-                groupedStacksMap.get(compositeKey).getRegions().add(stackInstance.getRegion());
+            if (groupedStacksInstancesMap.containsKey(compositeKey)) {
+                groupedStacksInstancesMap.get(compositeKey).getRegions().add(stackInstance.getRegion());
             } else {
                 final DeploymentTargets targets = DeploymentTargets.builder().build();
                 if (isSelfManaged) {
@@ -171,39 +171,39 @@ public class InstancesAnalyzer {
                         .deploymentTargets(targets)
                         .parameterOverrides(parameterSet)
                         .build();
-                groupedStacksMap.put(compositeKey, stackInstances);
+                groupedStacksInstancesMap.put(compositeKey, stackInstances);
             }
         }
-        return new HashSet<>(groupedStacksMap.values());
+        return new HashSet<>(groupedStacksInstancesMap.values());
     }
 
     /**
      * Aggregates instances with similar {@link StackInstances#getRegions()}
-     * @param groupedStacks {@link StackInstances} set
+     * @param groupedStacksInstances {@link StackInstances} set
      * @return Aggregated {@link StackInstances} set
      */
     private static Set<StackInstances> aggregateInstancesByRegions(
-            final Set<StackInstances> groupedStacks,
+            final Set<StackInstances> groupedStacksInstances,
             final boolean isSelfManaged) {
 
-        final Map<List<Object>, StackInstances> groupedStacksMap = new HashMap<>();
-        for (final StackInstances stackInstances : groupedStacks) {
+        final Map<List<Object>, StackInstances> groupedStacksInstancesMap = new HashMap<>();
+        for (final StackInstances stackInstances : groupedStacksInstances) {
             final DeploymentTargets target = stackInstances.getDeploymentTargets();
             final Set<Parameter> parameterSet = stackInstances.getParameterOverrides();
             final List<Object> compositeKey = Arrays.asList(stackInstances.getRegions(), parameterSet);
-            if (groupedStacksMap.containsKey(compositeKey)) {
+            if (groupedStacksInstancesMap.containsKey(compositeKey)) {
                 if (isSelfManaged) {
-                    groupedStacksMap.get(compositeKey).getDeploymentTargets()
+                    groupedStacksInstancesMap.get(compositeKey).getDeploymentTargets()
                             .getAccounts().addAll(target.getAccounts());
                 } else {
-                    groupedStacksMap.get(compositeKey).getDeploymentTargets()
+                    groupedStacksInstancesMap.get(compositeKey).getDeploymentTargets()
                             .getOrganizationalUnitIds().addAll(target.getOrganizationalUnitIds());
                 }
             } else {
-                groupedStacksMap.put(compositeKey, stackInstances);
+                groupedStacksInstancesMap.put(compositeKey, stackInstances);
             }
         }
-        return new HashSet<>(groupedStacksMap.values());
+        return new HashSet<>(groupedStacksInstancesMap.values());
     }
 
     /**
@@ -240,6 +240,13 @@ public class InstancesAnalyzer {
 
                 final Set<String> targets = isSelfManaged ? stackInstances.getDeploymentTargets().getAccounts()
                         : stackInstances.getDeploymentTargets().getOrganizationalUnitIds();
+
+                if (CollectionUtils.isNullOrEmpty(targets)) {
+                    throw new CfnInvalidRequestException(
+                            String.format("%s should be specified in DeploymentTargets in [%s] model",
+                                    isSelfManaged ? "Accounts" : "OrganizationalUnitIds",
+                                    isSelfManaged ? "SELF_MANAGED" : "SERVICE_MANAGED"));
+                }
 
                 for (final String target : targets) {
                     final StackInstance stackInstance = StackInstance.builder()

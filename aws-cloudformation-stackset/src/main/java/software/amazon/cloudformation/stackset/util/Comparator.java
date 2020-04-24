@@ -53,7 +53,7 @@ public class Comparator {
      */
     public static boolean isUpdatingStackInstances(final CallbackContext context) {
         // If no stack instances need to be updated
-        if (context.getUpdateStacksQueue().isEmpty() && !context.isUpdateStacksStarted()) {
+        if (context.getUpdateStacksInstancesQueue().isEmpty() && !context.isUpdateStacksInstancesStarted()) {
             return false;
         }
         return true;
@@ -66,7 +66,7 @@ public class Comparator {
      */
     public static boolean isDeletingStackInstances(final CallbackContext context) {
         // If no stack instances need to be deleted
-        if (context.getDeleteStacksQueue().isEmpty() && !context.isDeleteStacksStarted()) {
+        if (context.getDeleteStacksInstancesQueue().isEmpty() && !context.isDeleteStacksInstancesStarted()) {
             return false;
         }
         return true;
@@ -79,7 +79,7 @@ public class Comparator {
      */
     public static boolean isAddingStackInstances(final CallbackContext context) {
         // If no stack instances need to be added
-        if (context.getCreateStacksQueue().isEmpty() && !context.isAddStacksStarted()) {
+        if (context.getCreateStacksInstancesQueue().isEmpty() && !context.isAddStacksInstancesStarted()) {
             return false;
         }
         return true;

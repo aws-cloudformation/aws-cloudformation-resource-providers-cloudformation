@@ -29,7 +29,7 @@ import static software.amazon.cloudformation.stackset.translator.RequestTranslat
 public class Stabilizer {
 
     private static final String INTERNAL_FAILURE = "Internal Failure";
-    private static final int ONE_DAY_IN_SECONDS = 24 * 60 * 60;
+    private static final int ONE_DAY_IN_SECONDS = 12 * 60 * 60;
 
     public static final Double RATE = 1.1;
     public static final int MAX_RETRIES = 60;

@@ -78,45 +78,45 @@ public class OperationOperator {
     }
 
     /**
-     * Invokes CreateStackInstances API to add new {@link StackInstances} based on {@link CallbackContext#getCreateStacksQueue()}
+     * Invokes CreateStackInstances API to add new {@link StackInstances} based on {@link CallbackContext#getCreateStacksInstancesQueue()}
      * @return Operation Id from {@link CreateStackInstancesResponse}
      */
     private String addStackInstances() {
-        final Queue<StackInstances> instancesQueue = context.getCreateStacksQueue();
+        final Queue<StackInstances> instancesQueue = context.getCreateStacksInstancesQueue();
         final CreateStackInstancesResponse response = proxy.injectCredentialsAndInvokeV2(
                 createStackInstancesRequest(desiredModel.getStackSetId(), desiredModel.getOperationPreferences(),
                         instancesQueue.peek()), client::createStackInstances);
-        context.setAddStacksStarted(true);
+        context.setAddStacksInstancesStarted(true);
         // We remove the stack instances from queue Only if API invocation succeeds
         context.setStackInstancesInOperation(instancesQueue.remove());
         return response.operationId();
     }
 
     /**
-     * Invokes DeleteStackInstances API to delete old {@link StackInstances} based on {@link CallbackContext#getDeleteStacksQueue()}
+     * Invokes DeleteStackInstances API to delete old {@link StackInstances} based on {@link CallbackContext#getDeleteStacksInstancesQueue()}
      * @return Operation Id from {@link DeleteStackInstancesResponse}
      */
     private String deleteStackInstances() {
-        final Queue<StackInstances> instancesQueue = context.getDeleteStacksQueue();
+        final Queue<StackInstances> instancesQueue = context.getDeleteStacksInstancesQueue();
         final DeleteStackInstancesResponse response = proxy.injectCredentialsAndInvokeV2(
                 deleteStackInstancesRequest(desiredModel.getStackSetId(), desiredModel.getOperationPreferences(),
                         instancesQueue.peek()), client::deleteStackInstances);
-        context.setDeleteStacksStarted(true);
+        context.setDeleteStacksInstancesStarted(true);
         // We remove the stack instances from queue Only if API invocation succeeds
         context.setStackInstancesInOperation(instancesQueue.remove());
         return response.operationId();
     }
 
     /**
-     * Invokes UpdateStackInstances API to update existing {@link StackInstances} based on {@link CallbackContext#getUpdateStacksQueue()}
+     * Invokes UpdateStackInstances API to update existing {@link StackInstances} based on {@link CallbackContext#getUpdateStacksInstancesQueue()}
      * @return Operation Id from {@link UpdateStackInstancesResponse}
      */
     private String updateStackInstances() {
-        final Queue<StackInstances> instancesQueue = context.getUpdateStacksQueue();
+        final Queue<StackInstances> instancesQueue = context.getUpdateStacksInstancesQueue();
         final UpdateStackInstancesResponse response = proxy.injectCredentialsAndInvokeV2(
                 updateStackInstancesRequest(desiredModel.getStackSetId(), desiredModel.getOperationPreferences(),
                         instancesQueue.peek()), client::updateStackInstances);
-        context.setUpdateStacksStarted(true);
+        context.setUpdateStacksInstancesStarted(true);
         // We remove the stack instances from queue Only if API invocation succeeds
         context.setStackInstancesInOperation(instancesQueue.remove());
         return response.operationId();

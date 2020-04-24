@@ -1,7 +1,10 @@
 package software.amazon.cloudformation.stackset;
 
-import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesRequest;
-import software.amazon.awssdk.services.cloudformation.model.OperationInProgressException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.model.StackSetNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -9,11 +12,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.LinkedList;
 import java.util.Set;
@@ -24,14 +22,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static software.amazon.cloudformation.stackset.util.Stabilizer.BASE_CALLBACK_DELAY_SECONDS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_ID_1;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_RUNNING_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SIMPLE_MODEL;
-import static software.amazon.cloudformation.stackset.util.Stabilizer.BASE_CALLBACK_DELAY_SECONDS;
 
 @ExtendWith(MockitoExtension.class)
 public class DeleteHandlerTest {
@@ -67,7 +64,7 @@ public class DeleteHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .stackSetCreated(true)
-                .deleteStacksStarted(true)
+                .deleteStacksInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .build();
@@ -100,11 +97,11 @@ public class DeleteHandlerTest {
         stackInstancesSet.remove(stackInstances);
 
         final CallbackContext outputContext = CallbackContext.builder()
-                .deleteStacksStarted(true)
+                .deleteStacksInstancesStarted(true)
                 .templateAnalyzed(true)
                 .operationId(OPERATION_ID_1)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
-                .deleteStacksQueue(new LinkedList<>(stackInstancesSet))
+                .deleteStacksInstancesQueue(new LinkedList<>(stackInstancesSet))
                 .stackInstancesInOperation(stackInstances)
                 .build();
 
@@ -125,14 +122,14 @@ public class DeleteHandlerTest {
 
         final CallbackContext inputContext = CallbackContext.builder()
                 .templateAnalyzed(true)
-                .deleteStacksStarted(true)
+                .deleteStacksInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS)
                 .build();
 
         final CallbackContext outputContext = CallbackContext.builder()
                 .templateAnalyzed(true)
-                .deleteStacksStarted(true)
+                .deleteStacksInstancesStarted(true)
                 .operationId(OPERATION_ID_1)
                 .elapsedTime(BASE_CALLBACK_DELAY_SECONDS)
                 .currentDelaySeconds(BASE_CALLBACK_DELAY_SECONDS + 1)

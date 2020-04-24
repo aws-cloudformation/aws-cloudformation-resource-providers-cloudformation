@@ -34,8 +34,8 @@ Resources:
                 - "cloudformation:ListStackSets"
                 - "cloudformation:TagResource"
                 - "cloudformation:UntagResource"
+                - "cloudformation:UpdateStackInstances"
                 - "cloudformation:UpdateStackSet"
-                - "cloudformation:UpdatetackInstances"
                 - "s3:GetObject"
                 Resource: "*"
 Outputs:

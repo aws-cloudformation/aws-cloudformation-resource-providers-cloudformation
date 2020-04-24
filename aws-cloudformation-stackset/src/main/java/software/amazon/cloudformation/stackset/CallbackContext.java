@@ -28,16 +28,16 @@ public class CallbackContext {
     private boolean stackSetCreated;
 
     // Indicates initiation of stack instances creation.
-    private boolean addStacksStarted;
+    private boolean addStacksInstancesStarted;
 
     // Indicates initiation of stack instances delete.
-    private boolean deleteStacksStarted;
+    private boolean deleteStacksInstancesStarted;
 
     // Indicates initiation of stack set update.
     private boolean updateStackSetStarted;
 
     // Indicates initiation of stack instances update.
-    private boolean updateStacksStarted;
+    private boolean updateStacksInstancesStarted;
 
     // Total running time
     @Builder.Default
@@ -47,15 +47,15 @@ public class CallbackContext {
 
     // List to keep track on the complete status for creating
     @Builder.Default
-    private Queue<StackInstances> createStacksQueue = new LinkedList<>();
+    private Queue<StackInstances> createStacksInstancesQueue = new LinkedList<>();
 
     // List to keep track on stack instances for deleting
     @Builder.Default
-    private Queue<StackInstances> deleteStacksQueue = new LinkedList<>();
+    private Queue<StackInstances> deleteStacksInstancesQueue = new LinkedList<>();
 
     // List to keep track on stack instances for update
     @Builder.Default
-    private Queue<StackInstances> updateStacksQueue = new LinkedList<>();
+    private Queue<StackInstances> updateStacksInstancesQueue = new LinkedList<>();
 
     /**
      * Default as 0, will be {@link software.amazon.cloudformation.stackset.util.Stabilizer#BASE_CALLBACK_DELAY_SECONDS}
