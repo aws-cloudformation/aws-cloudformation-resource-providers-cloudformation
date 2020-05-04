@@ -4,11 +4,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static software.amazon.cloudformation.stackset.util.TemplateParser.formatJsonErrorLocation;
+import static software.amazon.cloudformation.stackset.util.TemplateParser.formatYamlErrorLocation;
 import static software.amazon.cloudformation.stackset.util.TemplateParser.getMapFromTemplate;
 import static software.amazon.cloudformation.stackset.util.TemplateParser.getStringFromTemplate;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_MAP;
 
 public class TemplateParserTest {
+
+    private static final String UNKNOWN_LOCATION = "unknown location";
 
     @Test
     public void testDeserializeYaml() {
@@ -32,5 +36,11 @@ public class TemplateParserTest {
     public void testGetStringFromTemplate() {
         assertThat(getStringFromTemplate(null)).isNull();
         assertThrows(ParseException.class, () -> getStringFromTemplate(TEMPLATE_MAP));
+    }
+
+    @Test
+    public void testFormatErrorLocation_IfIsNull() {
+        assertThat(formatYamlErrorLocation(null)).isEqualTo(UNKNOWN_LOCATION);
+        assertThat(formatJsonErrorLocation(null)).isEqualTo(UNKNOWN_LOCATION);
     }
 }

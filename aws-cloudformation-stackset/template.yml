@@ -20,4 +20,3 @@ Resources:
       Handler: software.amazon.cloudformation.stackset.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-cloudformation-stackset-handler-1.0-SNAPSHOT.jar
-

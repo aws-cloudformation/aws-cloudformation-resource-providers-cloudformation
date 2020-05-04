@@ -30,6 +30,7 @@ public class TemplateParser {
 
     /**
      * Deserializes template content which can be either JSON or YAML
+     *
      * @param template Template Content
      * @return Generic Map of template
      */
@@ -50,8 +51,9 @@ public class TemplateParser {
 
     /**
      * Gets a Generic Map object from template
+     *
      * @param templateMap Template Map
-     * @param key Key of the Map we are retrieving
+     * @param key         Key of the Map we are retrieving
      * @return Generic Map object
      */
     @SuppressWarnings("unchecked")
@@ -66,6 +68,7 @@ public class TemplateParser {
 
     /**
      * Gets String from the passed in value
+     *
      * @param value
      * @return String
      */
@@ -79,6 +82,7 @@ public class TemplateParser {
 
     /**
      * Deserializes YAML from template content string
+     *
      * @param templateString Template content
      * @return Template map
      * @throws ParseException if fails to parse the template
@@ -94,7 +98,7 @@ public class TemplateParser {
 
         } catch (final MarkedYAMLException e) {
             throw new ParseException(String.format(NOT_WELL_FORMATTED_ERROR_MSG, "YAML",
-                    formatErrorLocation(e.getProblemMark())));
+                    formatYamlErrorLocation(e.getProblemMark())));
 
         } catch (final YAMLException e) {
             throw new ParseException(String.format("Cannot parse as YAML : %s ", e.getMessage()));
@@ -107,6 +111,7 @@ public class TemplateParser {
 
     /**
      * Deserializes JSON from template content string
+     *
      * @param templateString Template content
      * @return Template map
      * @throws ParseException if fails to parse the template
@@ -121,11 +126,11 @@ public class TemplateParser {
 
         } catch (final JsonMappingException e) {
             throw new ParseException(String.format(UNSUPPORTED_TYPE_STRUCTURE_ERROR_MSG,
-                    formatErrorLocation(e.getLocation())));
+                    formatJsonErrorLocation(e.getLocation())));
 
         } catch (final JsonParseException e) {
             throw new ParseException(String.format(NOT_WELL_FORMATTED_ERROR_MSG, "JSON",
-                    formatErrorLocation(e.getLocation())));
+                    formatJsonErrorLocation(e.getLocation())));
 
         } catch (final IOException e) {
             throw new ParseException("Cannot parse template, I/O stream corrupt.");
@@ -144,20 +149,24 @@ public class TemplateParser {
 
     /**
      * Gets the error location when parsing as JSON
+     *
      * @param loc {@link JsonLocation}
      * @return Error location
      */
-    private static String formatErrorLocation(final JsonLocation loc) {
+    @VisibleForTesting
+    protected static String formatJsonErrorLocation(final JsonLocation loc) {
         if (loc == null) return UNKNOWN_LOCATION;
         return String.format(FORMAT_LOCATION_ERROR_MSG, loc.getLineNr(), loc.getColumnNr());
     }
 
     /**
      * Gets the error location when parsing as YAML
+     *
      * @param loc {@link Mark}
      * @return Error location
      */
-    private static String formatErrorLocation(final Mark loc) {
+    @VisibleForTesting
+    protected static String formatYamlErrorLocation(final Mark loc) {
         if (loc == null) return UNKNOWN_LOCATION;
         return String.format(FORMAT_LOCATION_ERROR_MSG, loc.getLine() + 1, loc.getColumn() + 1);
     }

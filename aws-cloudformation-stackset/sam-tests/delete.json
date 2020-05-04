@@ -1,0 +1,37 @@
+{
+    "credentials": {
+        "accessKeyId": "",
+        "secretAccessKey": "",
+        "sessionToken": ""
+    },
+    "action": "DELETE",
+    "request": {
+        "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
+        "desiredResourceState": {
+            "StackSetId": "MyStackSet-IsIHeS8hqtf3:278fd5ea-4b17-4c66-a93d-567c7daa7c0a",
+            "PermissionModel": "SELF_MANAGED",
+            "TemplateBody": "{\n  \"AWSTemplateFormatVersion\": \"2010-09-09\",\n  \"Resources\": {\n    \"IntegrationTestWaitHandle\": {\n      \"Type\": \"AWS::CloudFormation::WaitConditionHandle\",\n      \"Properties\": {}\n    }\n  }\n}\n",
+            "StackInstancesGroup": [
+                {
+                    "Regions": [
+                        "us-east-1",
+                        "us-west-2"
+                    ],
+                    "DeploymentTargets": {
+                        "Accounts": [
+                            111111111111
+                        ]
+                    }
+                }
+            ],
+            "Tags": [
+                {
+                    "Key": "key1",
+                    "Value": "value1"
+                }
+            ]
+        },
+        "logicalResourceIdentifier": "MyStackSet"
+    },
+    "callbackContext": null
+}

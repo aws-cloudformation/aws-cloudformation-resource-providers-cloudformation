@@ -1,15 +1,18 @@
 package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
+import software.amazon.cloudformation.stackset.util.StackInstancesPlaceHolder;
 import software.amazon.cloudformation.stackset.util.Validator;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.updateStackSetRequest;
+import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
 
 public class UpdateHandler extends BaseHandlerStd {
 
@@ -26,59 +29,67 @@ public class UpdateHandler extends BaseHandlerStd {
 
         final ResourceModel model = request.getDesiredResourceState();
         final ResourceModel previousModel = request.getPreviousResourceState();
-        analyzeTemplate(proxy, previousModel, model, callbackContext);
+        final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
+        analyzeTemplate(proxy, previousModel, placeHolder, model);
 
-        return updateStackSet(proxy, proxyClient, model, callbackContext)
-                .then(progress -> deleteStackInstances(proxy, proxyClient, progress, logger))
-                .then(progress -> createStackInstances(proxy, proxyClient, progress, logger))
-                .then(progress -> updateStackInstances(proxy, proxyClient, progress, logger))
-                .then(progress -> {
-                    if (progress.isFailed()) return progress;
-                    return ProgressEvent.defaultSuccessHandler(model);
-                });
+        return ProgressEvent.progress(model, callbackContext)
+                .then(progress -> updateStackSet(proxy, proxyClient, progress, previousModel))
+                .then(progress -> deleteStackInstances(proxy, proxyClient, progress, placeHolder.getDeleteStackInstances(), logger))
+                .then(progress -> createStackInstances(proxy, proxyClient, progress, placeHolder.getCreateStackInstances(), logger))
+                .then(progress -> updateStackInstances(proxy, proxyClient, progress, placeHolder.getUpdateStackInstances(), logger))
+                .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 
     /**
      * Implement client invocation of the update request through the proxyClient, which is already initialised with
      * caller credentials, correct region and retry settings
      *
-     * @param proxy {@link AmazonWebServicesClientProxy} to initiate proxy chain
-     * @param client the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
-     * @param model {@link ResourceModel}
-     * @param callbackContext {@link CallbackContext}
+     * @param proxy         {@link AmazonWebServicesClientProxy} to initiate proxy chain
+     * @param client        the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
+     * @param progress      {@link ProgressEvent<ResourceModel, CallbackContext>} to place hold the current progress data
+     * @param previousModel previous {@link ResourceModel} for comparing with desired model
      * @return progressEvent indicating success, in progress with delay callback or failed state
      */
     protected ProgressEvent<ResourceModel, CallbackContext> updateStackSet(
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<CloudFormationClient> client,
-            final ResourceModel model,
-            final CallbackContext callbackContext) {
+            final ProgressEvent<ResourceModel, CallbackContext> progress,
+            final ResourceModel previousModel) {
 
-        return proxy.initiate("AWS-CloudFormation-StackSet::UpdateStackSet", client, model, callbackContext)
-                .request(modelRequest -> updateStackSetRequest(modelRequest))
-                .retry(MULTIPLE_OF)
-                .call((modelRequest, proxyInvocation) ->
-                        proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackSet))
-                .stabilize((request, response, proxyInvocation, resourceModel, context) ->
-                        isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
-                .exceptFilter(this::filterException)
+        final ResourceModel desiredModel = progress.getResourceModel();
+        final CallbackContext callbackContext = progress.getCallbackContext();
+
+        if (isStackSetConfigEquals(previousModel, desiredModel)) {
+            return ProgressEvent.progress(desiredModel, callbackContext);
+        }
+        return proxy.initiate("AWS-CloudFormation-StackSet::UpdateStackSet", client, desiredModel, callbackContext)
+                .translateToServiceRequest(modelRequest -> updateStackSetRequest(modelRequest))
+                .makeServiceCall((modelRequest, proxyInvocation) -> {
+                    UpdateStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackSet);
+                    logger.log(String.format("%s UpdateStackSet initiated", ResourceModel.TYPE_NAME));
+                    return response;
+                })
+                .stabilize((request, response, proxyInvocation, resourceModel, context) -> isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
+                .retryErrorFilter(this::filterException)
                 .progress();
     }
 
     /**
      * Analyzes/validates template and StackInstancesGroup
-     * @param proxy {@link AmazonWebServicesClientProxy}
+     *
+     * @param proxy         {@link AmazonWebServicesClientProxy}
      * @param previousModel previous {@link ResourceModel}
-     * @param model {@link ResourceModel}
-     * @param context {@link CallbackContext}
+     * @param placeHolder   {@link StackInstancesPlaceHolder}
+     * @param model         {@link ResourceModel}
      */
     private void analyzeTemplate(
             final AmazonWebServicesClientProxy proxy,
             final ResourceModel previousModel,
-            final ResourceModel model,
-            final CallbackContext context) {
+            final StackInstancesPlaceHolder placeHolder,
+            final ResourceModel model) {
 
         new Validator().validateTemplate(proxy, model.getTemplateBody(), model.getTemplateURL(), logger);
-        InstancesAnalyzer.builder().desiredModel(model).previousModel(previousModel).build().analyzeForUpdate(context);
+        InstancesAnalyzer.builder().desiredModel(model).previousModel(previousModel).build()
+                .analyzeForUpdate(placeHolder);
     }
 }

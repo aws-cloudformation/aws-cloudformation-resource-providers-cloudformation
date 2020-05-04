@@ -20,7 +20,7 @@ import java.util.function.Function;
 
 /**
  * Utility class to extract AWS Credentials Provider from {@link AmazonWebServicesClientProxy}.
- *
+ * <p>
  * Because {@link AmazonWebServicesClientProxy#injectCredentialsAndInvokeV2(AwsRequest, Function)} doesn't extend
  * {@link ResponseInputStream<AwsResponse>}, but S3 GetObject requires AWS Credentials Provider to authenticate user,
  * we have to mimic dummy aws request, aws response and a function as input parameters to
@@ -81,6 +81,19 @@ public final class AwsCredentialsExtractor {
             return true;
         }
 
+        public interface Builder
+                extends AwsRequest.Builder, SdkPojo, CopyableBuilder<Builder, GetAwsCredentialsRequest> {
+            @Override
+            GetAwsCredentialsRequest.Builder overrideConfiguration(
+                    AwsRequestOverrideConfiguration awsRequestOverrideConfiguration
+            );
+
+            @Override
+            GetAwsCredentialsRequest.Builder overrideConfiguration(
+                    Consumer<AwsRequestOverrideConfiguration.Builder> builderConsumer
+            );
+        }
+
         static final class BuilderImpl extends AwsRequest.BuilderImpl
                 implements GetAwsCredentialsRequest.Builder {
 
@@ -107,25 +120,12 @@ public final class AwsCredentialsExtractor {
                 return Collections.emptyList();
             }
         }
-
-        public interface Builder
-                extends AwsRequest.Builder, SdkPojo, CopyableBuilder<Builder, GetAwsCredentialsRequest> {
-            @Override
-            GetAwsCredentialsRequest.Builder overrideConfiguration(
-                    AwsRequestOverrideConfiguration awsRequestOverrideConfiguration
-            );
-
-            @Override
-            GetAwsCredentialsRequest.Builder overrideConfiguration(
-                    Consumer<AwsRequestOverrideConfiguration.Builder> builderConsumer
-            );
-        }
     }
 
     /**
      * Inner class to mimic {@link AwsResponse} in order to obtain credentials from
      * {@link AmazonWebServicesClientProxy}.
-     *
+     * <p>
      * {@link AwsCredentialsProvider} is the additional parameter in this class. Other classes and functions are
      * implemented by following interfaces and abstract method of {@link AwsResponse}.
      */
@@ -140,6 +140,10 @@ public final class AwsCredentialsExtractor {
             super(builder);
             this.awsCredentialsProvider = (builder.awsCredentialsProvider);
             this.responseMetadata = builder.responseMetadata();
+        }
+
+        public static GetAwsCredentialsResponse.Builder builder() {
+            return new GetAwsCredentialsResponse.BuilderImpl();
         }
 
         public AwsCredentialsProvider awsCredentialsProvider() {
@@ -170,8 +174,16 @@ public final class AwsCredentialsExtractor {
             }
         }
 
-        public static GetAwsCredentialsResponse.Builder builder() {
-            return new GetAwsCredentialsResponse.BuilderImpl();
+        public interface Builder extends AwsResponse.Builder, SdkPojo,
+                CopyableBuilder<Builder, GetAwsCredentialsResponse> {
+
+            GetAwsCredentialsResponse build();
+
+            GetAwsCredentialsResponseMetadata responseMetadata();
+
+            GetAwsCredentialsResponse.Builder responseMetadata(AwsResponseMetadata awsResponseMetadata);
+
+            GetAwsCredentialsResponse.Builder awsCredentialsProvider(AwsCredentialsProvider awsCredentialsProvider);
         }
 
         static final class BuilderImpl extends AwsResponse.BuilderImpl
@@ -218,18 +230,6 @@ public final class AwsCredentialsExtractor {
             public void setAwsCredentialsProvider(AwsCredentialsProvider awsCredentialsProvider) {
                 this.awsCredentialsProvider = awsCredentialsProvider;
             }
-        }
-
-        public interface Builder extends AwsResponse.Builder, SdkPojo,
-                CopyableBuilder<Builder, GetAwsCredentialsResponse> {
-
-            GetAwsCredentialsResponse build();
-
-            GetAwsCredentialsResponseMetadata responseMetadata();
-
-            GetAwsCredentialsResponse.Builder responseMetadata(AwsResponseMetadata awsResponseMetadata);
-
-            GetAwsCredentialsResponse.Builder awsCredentialsProvider(AwsCredentialsProvider awsCredentialsProvider);
         }
     }
 

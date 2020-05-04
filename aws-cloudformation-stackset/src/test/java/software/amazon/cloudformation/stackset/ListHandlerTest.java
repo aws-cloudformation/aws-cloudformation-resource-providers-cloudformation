@@ -1,22 +1,20 @@
 package software.amazon.cloudformation.stackset;
 
-import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceRequest;
-import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
-import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
-import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesResponse;
-import software.amazon.awssdk.services.cloudformation.model.ListStackSetsRequest;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ProxyClient;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceRequest;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListStackSetsRequest;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ProxyClient;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.time.Duration;
 
@@ -24,35 +22,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_1;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_3;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_4;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SERVICE_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_STACK_SETS_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.READ_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_FOR_READ;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
 
 @ExtendWith(MockitoExtension.class)
 public class ListHandlerTest extends AbstractTestBase {
 
-    private ListHandler handler;
-
-    private ResourceHandlerRequest<ResourceModel> request;
-
-    @Mock
-    private AmazonWebServicesClientProxy proxy;
-
-    @Mock
-    private ProxyClient<CloudFormationClient> proxyClient;
-
     @Mock
     CloudFormationClient sdkClient;
+    private ListHandler handler;
+    private ResourceHandlerRequest<ResourceModel> request;
+    @Mock
+    private AmazonWebServicesClientProxy proxy;
+    @Mock
+    private ProxyClient<CloudFormationClient> proxyClient;
 
     @BeforeEach
     public void setup() {

@@ -1,7 +1,10 @@
 package software.amazon.cloudformation.stackset;
 
-import java.time.Duration;
-import software.amazon.awssdk.core.SdkClient;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
@@ -11,44 +14,35 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_1;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_3;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_4;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SERVICE_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.READ_MODEL;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_FOR_READ;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
 
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest extends AbstractTestBase {
 
-    private ReadHandler handler;
-
-    private ResourceHandlerRequest<ResourceModel> request;
-
-    @Mock
-    private AmazonWebServicesClientProxy proxy;
-
-    @Mock
-    private ProxyClient<CloudFormationClient> proxyClient;
-
     @Mock
     CloudFormationClient sdkClient;
+    private ReadHandler handler;
+    private ResourceHandlerRequest<ResourceModel> request;
+    @Mock
+    private AmazonWebServicesClientProxy proxy;
+    @Mock
+    private ProxyClient<CloudFormationClient> proxyClient;
 
     @BeforeEach
     public void setup() {
@@ -64,15 +58,15 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_SelfManagedSS_Success() {
 
-        doReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE).when(proxyClient.client())
-                .describeStackSet(any(DescribeStackSetRequest.class));
-        doReturn(LIST_SELF_MANAGED_STACK_SET_RESPONSE).when(proxyClient.client())
-                .listStackInstances(any(ListStackInstancesRequest.class));
-        doReturn(DESCRIBE_STACK_INSTANCE_RESPONSE_1,
-                DESCRIBE_STACK_INSTANCE_RESPONSE_2,
-                DESCRIBE_STACK_INSTANCE_RESPONSE_3,
-                DESCRIBE_STACK_INSTANCE_RESPONSE_4).when(proxyClient.client())
-                .describeStackInstance(any(DescribeStackInstanceRequest.class));
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
+                .thenReturn(LIST_SELF_MANAGED_STACK_SET_RESPONSE);
+        when(proxyClient.client().describeStackInstance(any(DescribeStackInstanceRequest.class)))
+                .thenReturn(DESCRIBE_STACK_INSTANCE_RESPONSE_1,
+                        DESCRIBE_STACK_INSTANCE_RESPONSE_2,
+                        DESCRIBE_STACK_INSTANCE_RESPONSE_3,
+                        DESCRIBE_STACK_INSTANCE_RESPONSE_4);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -85,5 +79,9 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
+        verify(proxyClient.client(), times(4)).describeStackInstance(any(DescribeStackInstanceRequest.class));
     }
 }

@@ -28,8 +28,59 @@ public class Validator {
     private static final String TEMPLATE_PARAMETERS_KEY = "Parameters";
 
     /**
+     * Validates the template to make sure:
+     * <ul>
+     *     <li> Template can be deserialized successfully
+     *     <li> Resources block doesn't have embedded Stack or StackSet
+     *     <li> Parameters block doesn't have embedded Stack or StackSet
+     * </ul>
+     *
+     * @param content Template content
+     */
+    private static void validateTemplate(final String content) {
+        final Map<String, Object> template = deserializeTemplate(content);
+        validateBlocks(template, TEMPLATE_RESOURCES_KEY);
+        validateBlocks(template, TEMPLATE_PARAMETERS_KEY);
+    }
+
+    /**
+     * Validates items in the block do not have any invalid resources
+     *
+     * @param templateMap Templates map
+     * @param block       Block key, i.e. Resources
+     */
+    @SuppressWarnings("unchecked")
+    private static void validateBlocks(final Map<String, Object> templateMap, final String block) {
+        final Map<String, Object> resourcesMap = (Map<String, Object>) templateMap.get(block);
+
+        if (CollectionUtils.isNullOrEmpty(resourcesMap)) return;
+        for (final Map.Entry<String, Object> entry : resourcesMap.entrySet()) {
+            final String resourceId = entry.getKey();
+            final Map<String, Object> resourceMap = getMapFromTemplate(resourcesMap, resourceId);
+            validateResource(resourceMap);
+        }
+    }
+
+    /**
+     * Embedded Stack or StackSet is not allowed
+     *
+     * @param resourceMap Resource map
+     */
+    private static void validateResource(final Map<String, Object> resourceMap) {
+        final String type = getStringFromTemplate(resourceMap.get(TEMPLATE_RESOURCE_TYPE_KEY));
+        if (type != null) {
+            switch (type) {
+                case "AWS::CloudFormation::Stack":
+                case "AWS::CloudFormation::StackSet":
+                    throw new CfnInvalidRequestException(String.format("Nested %s is not allowed", type));
+            }
+        }
+    }
+
+    /**
      * Gets template content from s3 bucket
-     * @param proxy {@link AmazonWebServicesClientProxy}
+     *
+     * @param proxy            {@link AmazonWebServicesClientProxy}
      * @param templateLocation Template URL
      * @return Template content from S3 object
      */
@@ -55,6 +106,7 @@ public class Validator {
 
     /**
      * Validates template url is valid S3 URL
+     *
      * @param s3Uri Template URL
      */
     @VisibleForTesting
@@ -76,10 +128,11 @@ public class Validator {
      *     <li> If using S3 URI, it must be valid
      *     <li> Template contents must be valid
      * </ul>
-     * @param proxy {@link AmazonWebServicesClientProxy}
-     * @param templateBody {@link software.amazon.cloudformation.stackset.ResourceModel#getTemplateBody}
+     *
+     * @param proxy            {@link AmazonWebServicesClientProxy}
+     * @param templateBody     {@link software.amazon.cloudformation.stackset.ResourceModel#getTemplateBody}
      * @param templateLocation {@link software.amazon.cloudformation.stackset.ResourceModel#getTemplateURL}
-     * @param logger {@link Logger}
+     * @param logger           {@link Logger}
      * @throws CfnInvalidRequestException if template is not valid
      */
     public void validateTemplate(
@@ -88,7 +141,7 @@ public class Validator {
             final String templateLocation,
             final Logger logger) {
 
-        if (!(Strings.isNullOrEmpty(templateBody) ^ Strings.isNullOrEmpty(templateLocation))) {
+        if (Strings.isNullOrEmpty(templateBody) == Strings.isNullOrEmpty(templateLocation)) {
             throw new CfnInvalidRequestException("Exactly one of TemplateBody or TemplateUrl must be specified");
         }
         String content = null;
@@ -104,53 +157,6 @@ public class Validator {
         } catch (final ParseException e) {
             logger.log(String.format("Failed to parse template content: %s", content));
             throw new CfnInvalidRequestException(e.getMessage());
-        }
-    }
-
-    /**
-     * Validates the template to make sure:
-     * <ul>
-     *     <li> Template can be deserialized successfully
-     *     <li> Resources block doesn't have embedded Stack or StackSet
-     *     <li> Parameters block doesn't have embedded Stack or StackSet
-     * </ul>
-     * @param content Template content
-     */
-    private static void validateTemplate(final String content) {
-        final Map<String, Object> template = deserializeTemplate(content);
-        validateBlocks(template, TEMPLATE_RESOURCES_KEY);
-        validateBlocks(template, TEMPLATE_PARAMETERS_KEY);
-    }
-
-    /**
-     * Validates items in the block do not have any invalid resources
-     * @param templateMap Templates map
-     * @param block Block key, i.e. Resources
-     */
-    @SuppressWarnings("unchecked")
-    private static void validateBlocks(final Map<String, Object> templateMap, final String block) {
-        final Map<String, Object> resourcesMap = (Map<String, Object>) templateMap.get(block);
-
-        if (CollectionUtils.isNullOrEmpty(resourcesMap)) return;
-        for (final Map.Entry<String, Object> entry : resourcesMap.entrySet()) {
-            final String resourceId = entry.getKey();
-            final Map<String, Object> resourceMap = getMapFromTemplate(resourcesMap, resourceId);
-            validateResource(resourceMap);
-        }
-    }
-
-    /**
-     * Embedded Stack or StackSet is not allowed
-     * @param resourceMap Resource map
-     */
-    private static void validateResource(final Map<String, Object> resourceMap) {
-        final String type = getStringFromTemplate(resourceMap.get(TEMPLATE_RESOURCE_TYPE_KEY));
-        if (type != null) {
-            switch (type) {
-                case "AWS::CloudFormation::Stack":
-                case "AWS::CloudFormation::StackSet":
-                    throw new CfnInvalidRequestException(String.format("Nested %s is not allowed", type));
-            }
         }
     }
 

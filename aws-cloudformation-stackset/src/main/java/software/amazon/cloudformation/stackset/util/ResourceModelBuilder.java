@@ -23,7 +23,7 @@ import static software.amazon.cloudformation.stackset.translator.PropertyTransla
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackInstanceRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.listStackInstancesRequest;
-import static software.amazon.cloudformation.stackset.util.InstancesAnalyzer.aggregateStackInstances;
+import static software.amazon.cloudformation.stackset.util.InstancesAnalyzer.aggregateStackInstancesForRead;
 
 /**
  * Utility class to construct {@link ResourceModel} for Read/List request based on {@link StackSet}
@@ -39,6 +39,7 @@ public class ResourceModelBuilder {
 
     /**
      * Returns the model we construct from StackSet service client using PrimaryIdentifier StackSetId
+     *
      * @return {@link ResourceModel}
      */
     public ResourceModel buildModel() {
@@ -51,7 +52,7 @@ public class ResourceModelBuilder {
                 .stackSetId(stackSetId)
                 .description(stackSet.description())
                 .permissionModel(stackSet.permissionModelAsString())
-                .capabilities(new HashSet<>(stackSet.capabilitiesAsStrings()))
+                .capabilities(stackSet.hasCapabilities() ? new HashSet<>(stackSet.capabilitiesAsStrings()) : null)
                 .tags(translateFromSdkTags(stackSet.tags()))
                 .parameters(translateFromSdkParameters(stackSet.parameters()))
                 .templateBody(stackSet.templateBody())
@@ -73,7 +74,7 @@ public class ResourceModelBuilder {
         } while (token != null);
 
         if (!stackInstanceSet.isEmpty()) {
-            final Set<StackInstances> stackInstancesGroup = aggregateStackInstances(stackInstanceSet, isSelfManaged);
+            final Set<StackInstances> stackInstancesGroup = aggregateStackInstancesForRead(stackInstanceSet);
             model.setStackInstancesGroup(stackInstancesGroup);
         }
 
@@ -82,9 +83,10 @@ public class ResourceModelBuilder {
 
     /**
      * Loop through all stack instance details and attach to the constructing model
-     * @param stackSetId {@link ResourceModel#getStackSetId()}
+     *
+     * @param stackSetId    {@link ResourceModel#getStackSetId()}
      * @param isSelfManaged if permission model is SELF_MANAGED
-     * @param token {@link ListStackInstancesResponse#nextToken()}
+     * @param token         {@link ListStackInstancesResponse#nextToken()}
      */
     private void attachStackInstances(
             final String stackSetId,
@@ -95,9 +97,10 @@ public class ResourceModelBuilder {
         final ListStackInstancesResponse listStackInstancesResponse = proxyClient.injectCredentialsAndInvokeV2(
                 listStackInstancesRequest(token, stackSetId), proxyClient.client()::listStackInstances);
         token = listStackInstancesResponse.nextToken();
+        if (!listStackInstancesResponse.hasSummaries()) return;
         listStackInstancesResponse.summaries().forEach(member -> {
-                final List<Parameter> parameters = getStackInstance(member);
-                stackInstanceSet.add(translateToStackInstance(isSelfManaged, member, parameters));
+            final List<Parameter> parameters = getStackInstance(member);
+            stackInstanceSet.add(translateToStackInstance(isSelfManaged, member, parameters));
         });
     }
 

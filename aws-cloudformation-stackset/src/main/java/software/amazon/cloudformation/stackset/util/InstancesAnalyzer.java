@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import software.amazon.awssdk.utils.CollectionUtils;
-import software.amazon.cloudformation.stackset.CallbackContext;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.stackset.DeploymentTargets;
 import software.amazon.cloudformation.stackset.Parameter;
 import software.amazon.cloudformation.stackset.ResourceModel;
@@ -34,62 +34,9 @@ public class InstancesAnalyzer {
     private ResourceModel desiredModel;
 
     /**
-     * Analyzes {@link StackInstances} that need to be modified during the update
-     * @param context {@link CallbackContext}
-     */
-    public void analyzeForUpdate(final CallbackContext context) {
-        final boolean isSelfManaged = isSelfManaged(desiredModel);
-
-        final Set<StackInstance> previousStackInstances =
-                flattenStackInstancesGroup(previousModel.getStackInstancesGroup(), isSelfManaged);
-        final Set<StackInstance> desiredStackInstances =
-                flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
-
-        // Calculates all necessary differences that we need to take actions
-        final Set<StackInstance> stacksToAdd = new HashSet<>(desiredStackInstances);
-        stacksToAdd.removeAll(previousStackInstances);
-        final Set<StackInstance> stacksToDelete = new HashSet<>(previousStackInstances);
-        stacksToDelete.removeAll(desiredStackInstances);
-        final Set<StackInstance> stacksToCompare = new HashSet<>(desiredStackInstances);
-        stacksToCompare.retainAll(previousStackInstances);
-
-        final Set<StackInstances> stackInstancesGroupToAdd = aggregateStackInstances(stacksToAdd, isSelfManaged);
-        final Set<StackInstances> stackInstancesGroupToDelete = aggregateStackInstances(stacksToDelete, isSelfManaged);
-
-        // Since StackInstance.parameters is excluded for @EqualsAndHashCode,
-        // we needs to construct a key value map to keep track on previous StackInstance objects
-        final Set<StackInstance> stacksToUpdate = getUpdatingStackInstances(
-                stacksToCompare, previousStackInstances.stream().collect(Collectors.toMap(s -> s, s -> s)));
-        final Set<StackInstances> stackInstancesGroupToUpdate = aggregateStackInstances(stacksToUpdate, isSelfManaged);
-
-        // Update the stack lists that need to write of callbackContext holder
-        context.setCreateStacksList(new ArrayList<>(stackInstancesGroupToAdd));
-        context.setDeleteStacksList(new ArrayList<>(stackInstancesGroupToDelete));
-        context.setUpdateStacksList(new ArrayList<>(stackInstancesGroupToUpdate));
-    }
-
-    /**
-     * Analyzes {@link StackInstances} that need to be modified during the update
-     * Updates callbackContext with the stack list to create
-     * @param context {@link CallbackContext}
-     */
-    public void analyzeForCreate(final CallbackContext context) {
-        if (desiredModel.getStackInstancesGroup() == null) return;
-        if (desiredModel.getStackInstancesGroup().size() == 1) {
-            context.setCreateStacksList(new ArrayList<>(desiredModel.getStackInstancesGroup()));
-        }
-        final boolean isSelfManaged = isSelfManaged(desiredModel);
-
-        final Set<StackInstance> desiredStackInstances =
-                flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
-
-        final Set<StackInstances> stackInstancesGroupToAdd = aggregateStackInstances(desiredStackInstances, isSelfManaged);
-        context.setCreateStacksList(new ArrayList<>(stackInstancesGroupToAdd));
-    }
-
-    /**
      * Aggregates flat {@link StackInstance} to a group of {@link StackInstances} to call
      * corresponding StackSet APIs
+     *
      * @param flatStackInstances {@link StackInstance}
      * @return {@link StackInstances} set
      */
@@ -100,7 +47,22 @@ public class InstancesAnalyzer {
     }
 
     /**
+     * Aggregates flat {@link StackInstance} to a group of {@link StackInstances} to construct resource model
+     * <p>Note:</p>
+     * This is being used only because currently we can not retrieve OUs from CloudFormation DescribeStackInstances API
+     * Hence, we are returning AccountIDs for stack instances.
+     *
+     * @param flatStackInstances {@link StackInstance}
+     * @return {@link StackInstances} set
+     */
+    public static Set<StackInstances> aggregateStackInstancesForRead(@NonNull final Set<StackInstance> flatStackInstances) {
+        final Set<StackInstances> groupedStacksInstances = groupInstancesByTargets(flatStackInstances, true);
+        return aggregateInstancesByRegions(groupedStacksInstances, true);
+    }
+
+    /**
      * Group regions by {@link DeploymentTargets} and {@link StackInstance#getParameters()}
+     *
      * @return {@link StackInstances}
      */
     private static Set<StackInstances> groupInstancesByTargets(
@@ -136,6 +98,7 @@ public class InstancesAnalyzer {
 
     /**
      * Aggregates instances with similar {@link StackInstances#getRegions()}
+     *
      * @param groupedStacks {@link StackInstances} set
      * @return Aggregated {@link StackInstances} set
      */
@@ -166,7 +129,8 @@ public class InstancesAnalyzer {
     /**
      * Compares {@link StackInstance#getParameters()} with previous {@link StackInstance#getParameters()}
      * Gets the StackInstances need to update
-     * @param intersection {@link StackInstance} retaining desired stack instances
+     *
+     * @param intersection     {@link StackInstance} retaining desired stack instances
      * @param previousStackMap Map contains previous stack instances
      * @return {@link StackInstance} to update
      */
@@ -183,6 +147,7 @@ public class InstancesAnalyzer {
     /**
      * Since Stack instances are defined across accounts and regions with(out) parameters,
      * We are expanding all before we tack actions
+     *
      * @param stackInstancesGroup {@link ResourceModel#getStackInstancesGroup()}
      * @return {@link StackInstance} set
      */
@@ -198,13 +163,21 @@ public class InstancesAnalyzer {
                 final Set<String> targets = isSelfManaged ? stackInstances.getDeploymentTargets().getAccounts()
                         : stackInstances.getDeploymentTargets().getOrganizationalUnitIds();
 
+                if (CollectionUtils.isNullOrEmpty(targets)) {
+                    throw new CfnInvalidRequestException(
+                            String.format("%s should be specified in DeploymentTargets in [%s] model",
+                                    isSelfManaged ? "Accounts" : "OrganizationalUnitIds",
+                                    isSelfManaged ? "SELF_MANAGED" : "SERVICE_MANAGED"));
+                }
+
                 for (final String target : targets) {
                     final StackInstance stackInstance = StackInstance.builder()
                             .region(region).deploymentTarget(target).parameters(stackInstances.getParameterOverrides())
                             .build();
 
                     if (flatStacks.contains(stackInstance)) {
-                        throw new ParseException(String.format("Stack instance [%s,%s] is duplicated", target, region));
+                        throw new CfnInvalidRequestException(
+                                String.format("Stack instance [%s,%s] is duplicated", target, region));
                     }
 
                     flatStacks.add(stackInstance);
@@ -212,5 +185,77 @@ public class InstancesAnalyzer {
             }
         }
         return flatStacks;
+    }
+
+    /**
+     * Analyzes {@link StackInstances} that need to be modified during the update
+     */
+    public void analyzeForUpdate(final StackInstancesPlaceHolder placeHolder) {
+        final boolean isSelfManaged = isSelfManaged(desiredModel);
+
+        final Set<StackInstance> previousStackInstances =
+                flattenStackInstancesGroup(previousModel.getStackInstancesGroup(), isSelfManaged);
+        final Set<StackInstance> desiredStackInstances =
+                flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
+
+        // Calculates all necessary differences that we need to take actions
+        final Set<StackInstance> stacksToAdd = new HashSet<>(desiredStackInstances);
+        stacksToAdd.removeAll(previousStackInstances);
+        final Set<StackInstance> stacksToDelete = new HashSet<>(previousStackInstances);
+        stacksToDelete.removeAll(desiredStackInstances);
+        final Set<StackInstance> stacksToCompare = new HashSet<>(desiredStackInstances);
+        stacksToCompare.retainAll(previousStackInstances);
+
+        final Set<StackInstances> stackInstancesGroupToAdd = aggregateStackInstances(stacksToAdd, isSelfManaged);
+        final Set<StackInstances> stackInstancesGroupToDelete = aggregateStackInstances(stacksToDelete, isSelfManaged);
+
+        // Since StackInstance.parameters is excluded for @EqualsAndHashCode,
+        // we needs to construct a key value map to keep track on previous StackInstance objects
+        final Set<StackInstance> stacksToUpdate = getUpdatingStackInstances(
+                stacksToCompare, previousStackInstances.stream().collect(Collectors.toMap(s -> s, s -> s)));
+        final Set<StackInstances> stackInstancesGroupToUpdate = aggregateStackInstances(stacksToUpdate, isSelfManaged);
+
+        // Update the stack lists that need to write of callbackContext holder
+        placeHolder.setCreateStackInstances(new ArrayList<>(stackInstancesGroupToAdd));
+        placeHolder.setDeleteStackInstances(new ArrayList<>(stackInstancesGroupToDelete));
+        placeHolder.setUpdateStackInstances(new ArrayList<>(stackInstancesGroupToUpdate));
+    }
+
+    /**
+     * Analyzes {@link StackInstances} that need to be modified during the update
+     * Updates callbackContext with the stack list to create
+     */
+    public void analyzeForCreate(final StackInstancesPlaceHolder placeHolder) {
+        if (desiredModel.getStackInstancesGroup() == null) return;
+        if (desiredModel.getStackInstancesGroup().size() == 1) {
+            placeHolder.setCreateStackInstances(new ArrayList<>(desiredModel.getStackInstancesGroup()));
+            return;
+        }
+        final boolean isSelfManaged = isSelfManaged(desiredModel);
+
+        final Set<StackInstance> desiredStackInstances =
+                flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
+
+        final Set<StackInstances> stackInstancesGroupToAdd = aggregateStackInstances(desiredStackInstances, isSelfManaged);
+        placeHolder.setCreateStackInstances(new ArrayList<>(stackInstancesGroupToAdd));
+    }
+
+    /**
+     * Analyzes {@link StackInstances} that need to be modified during the update
+     * Updates callbackContext with the stack list to delete
+     */
+    public void analyzeForDelete(final StackInstancesPlaceHolder placeHolder) {
+        if (desiredModel.getStackInstancesGroup() == null) return;
+        if (desiredModel.getStackInstancesGroup().size() == 1) {
+            placeHolder.setDeleteStackInstances(new ArrayList<>(desiredModel.getStackInstancesGroup()));
+            return;
+        }
+        final boolean isSelfManaged = isSelfManaged(desiredModel);
+
+        final Set<StackInstance> desiredStackInstances =
+                flattenStackInstancesGroup(desiredModel.getStackInstancesGroup(), isSelfManaged);
+
+        final Set<StackInstances> stackInstancesGroupToDelete = aggregateStackInstances(desiredStackInstances, isSelfManaged);
+        placeHolder.setDeleteStackInstances(new ArrayList<>(stackInstancesGroupToDelete));
     }
 }

@@ -19,6 +19,7 @@ public class PropertyTranslator {
 
     /**
      * Converts AutoDeployment (from StackSet SDK) to AutoDeployment (from CFN resource model)
+     *
      * @param autoDeployment SDK AutoDeployment
      * @return Resource model AutoDeployment
      */
@@ -33,6 +34,7 @@ public class PropertyTranslator {
 
     /**
      * Converts AutoDeployment (from CFN resource model) to AutoDeployment (from StackSet SDK)
+     *
      * @param autoDeployment AutoDeployment from resource model
      * @return SDK AutoDeployment
      */
@@ -47,6 +49,7 @@ public class PropertyTranslator {
 
     /**
      * Converts resource model DeploymentTargets to StackSet SDK DeploymentTargets
+     *
      * @param deploymentTargets DeploymentTargets from resource model
      * @return SDK DeploymentTargets
      */
@@ -60,6 +63,7 @@ public class PropertyTranslator {
 
     /**
      * Converts resource model Parameters to StackSet SDK Parameters
+     *
      * @param parameters Parameters collection from resource model
      * @return SDK Parameter list
      */
@@ -76,6 +80,7 @@ public class PropertyTranslator {
 
     /**
      * Converts resource model Parameters to StackSet SDK Parameters
+     *
      * @param parameters Parameters from SDK
      * @return resource model Parameters
      */
@@ -92,6 +97,7 @@ public class PropertyTranslator {
 
     /**
      * Converts resource model OperationPreferences to StackSet SDK OperationPreferences
+     *
      * @param operationPreferences OperationPreferences from resource model
      * @return SDK OperationPreferences
      */
@@ -110,6 +116,7 @@ public class PropertyTranslator {
 
     /**
      * Converts tags (from CFN resource model) to StackSet set (from StackSet SDK)
+     *
      * @param tags Tags CFN resource model.
      * @return SDK Tags.
      */
@@ -124,6 +131,7 @@ public class PropertyTranslator {
 
     /**
      * Converts a list of tags (from StackSet SDK) to HostedZoneTag set (from CFN resource model)
+     *
      * @param tags Tags from StackSet SDK.
      * @return A set of CFN StackSet Tag.
      */
@@ -138,8 +146,9 @@ public class PropertyTranslator {
 
     /**
      * Converts {@link StackInstanceSummary} to {@link StackInstance} utility placeholder
+     *
      * @param isSelfManaged if PermissionModel is SELF_MANAGED
-     * @param summary {@link StackInstanceSummary}
+     * @param summary       {@link StackInstanceSummary}
      * @return {@link StackInstance}
      */
     public static StackInstance translateToStackInstance(

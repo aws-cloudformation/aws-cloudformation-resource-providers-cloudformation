@@ -29,8 +29,10 @@ import software.amazon.cloudformation.stackset.StackInstances;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 public class TestUtils {
@@ -49,7 +51,7 @@ public class TestUtils {
 
     public final static String TEMPLATE_BODY = new StringBuilder()
             .append("{\n")
-            .append("  \"AWSTemplateFormatVersion\" : \"2010-09-09\",\n" )
+            .append("  \"AWSTemplateFormatVersion\" : \"2010-09-09\",\n")
             .append("  \"Resources\" : {\n")
             .append("    \"IntegrationTestWaitHandle\" : {\n")
             .append("      \"Type\" : \"AWS::CloudFormation::WaitConditionHandle\",\n")
@@ -61,7 +63,7 @@ public class TestUtils {
 
     public final static String UPDATED_TEMPLATE_BODY = new StringBuilder()
             .append("{\n")
-            .append("  \"AWSTemplateFormatVersion\" : \"2010-09-09\",\n" )
+            .append("  \"AWSTemplateFormatVersion\" : \"2010-09-09\",\n")
             .append("  \"Resources\" : {\n")
             .append("    \"IntegrationTestWaitHandle\" : {\n")
             .append("      \"Type\" : \"AWS::CloudFormation::WaitCondition\",\n")
@@ -73,53 +75,53 @@ public class TestUtils {
 
     public final static String VALID_YAML_TEMPLATE =
             "Parameters:\n" +
-            "    DomainName:\n" +
-            "        Type: String\n" +
-            "        Default: myexample.com\n" +
-            "Resources:\n" +
-            "    BasicHealthCheck:\n" +
-            "        Type: AWS::Route53::HealthCheck\n" +
-            "        Properties:\n" +
-            "            HealthCheckConfig:\n" +
-            "                RequestInterval: 10\n" +
-            "                FullyQualifiedDomainName:\n" +
-            "                    Ref: DomainName\n" +
-            "                IPAddress: 98.139.180.149\n" +
-            "                Port: \"88\"\n" +
-            "                ResourcePath: /docs/route-53-health-check.html\n" +
-            "                Type: HTTP\n" +
-            "            HealthCheckTags:\n" +
-            "                - Key: A\n" +
-            "                  Value: \"1\"\n" +
-            "                - Key: B\n" +
-            "                  Value: \"1\"\n" +
-            "                - Key: C\n" +
-            "                  Value: \"1\"";
+                    "    DomainName:\n" +
+                    "        Type: String\n" +
+                    "        Default: myexample.com\n" +
+                    "Resources:\n" +
+                    "    BasicHealthCheck:\n" +
+                    "        Type: AWS::Route53::HealthCheck\n" +
+                    "        Properties:\n" +
+                    "            HealthCheckConfig:\n" +
+                    "                RequestInterval: 10\n" +
+                    "                FullyQualifiedDomainName:\n" +
+                    "                    Ref: DomainName\n" +
+                    "                IPAddress: 98.139.180.149\n" +
+                    "                Port: \"88\"\n" +
+                    "                ResourcePath: /docs/route-53-health-check.html\n" +
+                    "                Type: HTTP\n" +
+                    "            HealthCheckTags:\n" +
+                    "                - Key: A\n" +
+                    "                  Value: \"1\"\n" +
+                    "                - Key: B\n" +
+                    "                  Value: \"1\"\n" +
+                    "                - Key: C\n" +
+                    "                  Value: \"1\"";
 
     public final static String INVALID_EMBEDDED_STACK_TEMPLATE =
             "{\n" +
-            "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
-            "    \"Resources\": {\n" +
-            "        \"MyStack\" : {\n" +
-            "            \"Type\" : \"AWS::CloudFormation::Stack\",\n" +
-            "            \"Properties\" : {\n" +
-            "                \"TemplateURL\" : \"test.url\"\n" +
-            "            },\n" +
-            "    }\n" +
-            "}";
+                    "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
+                    "    \"Resources\": {\n" +
+                    "        \"MyStack\" : {\n" +
+                    "            \"Type\" : \"AWS::CloudFormation::Stack\",\n" +
+                    "            \"Properties\" : {\n" +
+                    "                \"TemplateURL\" : \"test.url\"\n" +
+                    "            },\n" +
+                    "    }\n" +
+                    "}";
 
     public final static String INVALID_EMBEDDED_STACKSET_TEMPLATE =
             "{\n" +
-            "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
-            "    \"Resources\": {\n" +
-            "        \"MyStack\" : {\n" +
-            "            \"Type\" : \"AWS::CloudFormation::StackSet\",\n" +
-            "            \"Properties\" : {\n" +
-            "                \"TemplateURL\" : \"test.url\"\n" +
-            "            }\n" +
-            "        }\n" +
-            "    }\n" +
-            "}";
+                    "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
+                    "    \"Resources\": {\n" +
+                    "        \"MyStack\" : {\n" +
+                    "            \"Type\" : \"AWS::CloudFormation::StackSet\",\n" +
+                    "            \"Properties\" : {\n" +
+                    "                \"TemplateURL\" : \"test.url\"\n" +
+                    "            }\n" +
+                    "        }\n" +
+                    "    }\n" +
+                    "}";
 
     public final static String STACK_SET_NAME = "StackSet";
     public final static String STACK_SET_ID = "StackSet:stack-set-id";
@@ -271,22 +273,26 @@ public class TestUtils {
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_1 = StackInstanceSummary.builder()
             .organizationalUnitId(ORGANIZATION_UNIT_ID_1)
+            .account(ACCOUNT_ID_1)
             .region(US_EAST_1)
             .build();
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_2 = StackInstanceSummary.builder()
             .organizationalUnitId(ORGANIZATION_UNIT_ID_1)
+            .account(ACCOUNT_ID_1)
             .region(US_WEST_1)
             .build();
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_3 = StackInstanceSummary.builder()
             .organizationalUnitId(ORGANIZATION_UNIT_ID_2)
-            .region(US_EAST_1)
+            .account(ACCOUNT_ID_2)
+            .region(EU_EAST_1)
             .build();
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_4 = StackInstanceSummary.builder()
             .organizationalUnitId(ORGANIZATION_UNIT_ID_2)
-            .region(US_WEST_1)
+            .account(ACCOUNT_ID_2)
+            .region(EU_EAST_2)
             .build();
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_5 = StackInstanceSummary.builder()
@@ -312,7 +318,6 @@ public class TestUtils {
     public final static StackInstance STACK_INSTANCE_1 = StackInstance.builder()
             .account(ACCOUNT_ID_1)
             .region(US_EAST_1)
-            .parameterOverrides(SDK_PARAMETER_1)
             .build();
 
     public final static DescribeStackInstanceResponse DESCRIBE_STACK_INSTANCE_RESPONSE_1 =
@@ -323,7 +328,6 @@ public class TestUtils {
     public final static StackInstance STACK_INSTANCE_2 = StackInstance.builder()
             .account(ACCOUNT_ID_1)
             .region(US_WEST_1)
-            .parameterOverrides(SDK_PARAMETER_1)
             .build();
 
     public final static DescribeStackInstanceResponse DESCRIBE_STACK_INSTANCE_RESPONSE_2 =
@@ -354,8 +358,11 @@ public class TestUtils {
     public final static List<StackInstanceSummary> SERVICE_MANAGED_STACK_INSTANCE_SUMMARIES = Arrays.asList(
             STACK_INSTANCE_SUMMARY_1, STACK_INSTANCE_SUMMARY_2, STACK_INSTANCE_SUMMARY_3, STACK_INSTANCE_SUMMARY_4);
 
-    public final static List<StackInstanceSummary> SERVICE_SELF_STACK_INSTANCE_SUMMARIES = Arrays.asList(
+    public final static List<StackInstanceSummary> SELF_MANAGED_STACK_INSTANCE_SUMMARIES = Arrays.asList(
             STACK_INSTANCE_SUMMARY_5, STACK_INSTANCE_SUMMARY_6, STACK_INSTANCE_SUMMARY_7, STACK_INSTANCE_SUMMARY_8);
+
+    public final static List<StackInstanceSummary> SELF_MANAGED_STACK_ONE_INSTANCES_SUMMARIES = Arrays.asList(
+            STACK_INSTANCE_SUMMARY_5, STACK_INSTANCE_SUMMARY_6);
 
     public final static software.amazon.awssdk.services.cloudformation.model.AutoDeployment SDK_AUTO_DEPLOYMENT =
             software.amazon.awssdk.services.cloudformation.model.AutoDeployment.builder()
@@ -363,20 +370,19 @@ public class TestUtils {
                     .enabled(true)
                     .build();
 
-    public final static StackInstances STACK_INSTANCES_1 = StackInstances.builder()
+    public final static StackInstances SERVICE_MANAGED_STACK_INSTANCES_1 = StackInstances.builder()
             .regions(REGIONS_1)
             .deploymentTargets(SERVICE_MANAGED_TARGETS)
             .build();
 
-    public final static StackInstances STACK_INSTANCES_2 = StackInstances.builder()
-            .regions(REGIONS_2)
+    public final static StackInstances SERVICE_MANAGED_STACK_INSTANCES_2 = StackInstances.builder()
+            .regions(REGIONS_1)
             .deploymentTargets(UPDATED_SERVICE_MANAGED_TARGETS)
             .build();
 
     public final static StackInstances SELF_MANAGED_STACK_INSTANCES_1 = StackInstances.builder()
             .regions(REGIONS_1)
             .deploymentTargets(SELF_MANAGED_TARGETS)
-            .parameterOverrides(new HashSet<>(Arrays.asList(PARAMETER_1)))
             .build();
 
     public final static StackInstances SELF_MANAGED_STACK_INSTANCES_2 = StackInstances.builder()
@@ -387,7 +393,6 @@ public class TestUtils {
     public final static StackInstances SELF_MANAGED_STACK_INSTANCES_3 = StackInstances.builder()
             .regions(UPDATED_REGIONS_1)
             .deploymentTargets(SELF_MANAGED_TARGETS)
-            .parameterOverrides(new HashSet<>(Arrays.asList(PARAMETER_2)))
             .build();
 
     public final static StackInstances SELF_MANAGED_STACK_INSTANCES_4 = StackInstances.builder()
@@ -412,6 +417,7 @@ public class TestUtils {
             .organizationalUnitIds(ORGANIZATION_UNIT_ID_1, ORGANIZATION_UNIT_ID_2)
             .parameters(SDK_PARAMETER_1, SDK_PARAMETER_2)
             .permissionModel(PermissionModels.SERVICE_MANAGED)
+            .templateBody(TEMPLATE_BODY)
             .tags(TAGGED_RESOURCES)
             .build();
 
@@ -433,8 +439,9 @@ public class TestUtils {
             .description(DESCRIPTION)
             .autoDeployment(AUTO_DEPLOYMENT)
             .templateBody(TEMPLATE_BODY)
-            .stackInstancesGroup(new HashSet<>(Arrays.asList(STACK_INSTANCES_1, STACK_INSTANCES_2)))
+            .stackInstancesGroup(new HashSet<>(Arrays.asList(SERVICE_MANAGED_STACK_INSTANCES_1, SERVICE_MANAGED_STACK_INSTANCES_2)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .operationPreferences(OPERATION_PREFERENCES)
             .tags(TAGS)
             .build();
 
@@ -447,6 +454,7 @@ public class TestUtils {
             .stackInstancesGroup(
                     new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .operationPreferences(OPERATION_PREFERENCES)
             .tags(TAGS)
             .build();
 
@@ -458,12 +466,118 @@ public class TestUtils {
             .stackInstancesGroup(
                     new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_3, SELF_MANAGED_STACK_INSTANCES_4)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_3)))
+            .operationPreferences(OPERATION_PREFERENCES)
+            .tags(TAGS)
+            .build();
+
+    public final static ResourceModel SELF_MANAGED_NO_INSTANCES_MODEL = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .tags(TAGS)
+            .build();
+
+    public final static ResourceModel SELF_MANAGED_ONE_INSTANCES_MODEL = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .stackInstancesGroup(new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_2)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .tags(TAGS)
+            .build();
+
+    public final static ResourceModel SELF_MANAGED_DUPLICATE_INSTANCES_MODEL = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_2, SELF_MANAGED_STACK_INSTANCES_4)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .tags(TAGS)
+            .build();
+
+    public final static ResourceModel SELF_MANAGED_INVALID_INSTANCES_MODEL = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_2, SERVICE_MANAGED_STACK_INSTANCES_1)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .tags(TAGS)
+            .build();
+
+    public final static StackInstances CREATE_STACK_INSTANCES_SELF_MANAGED = StackInstances.builder()
+            .deploymentTargets(SELF_MANAGED_TARGETS)
+            .regions(new HashSet<>(Arrays.asList(US_EAST_2)))
+            .build();
+
+    public final static Queue<StackInstances> CREATE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE = new LinkedList<>(
+            Arrays.asList(CREATE_STACK_INSTANCES_SELF_MANAGED));
+
+    public final static StackInstances DELETE_STACK_INSTANCES_SELF_MANAGED = StackInstances.builder()
+            .deploymentTargets(SELF_MANAGED_TARGETS)
+            .regions(new HashSet<>(Arrays.asList(US_EAST_1)))
+            .build();
+
+    public final static Queue<StackInstances> DELETE_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE = new LinkedList<>(
+            Arrays.asList(DELETE_STACK_INSTANCES_SELF_MANAGED));
+
+    public final static StackInstances UPDATE_STACK_INSTANCES_SELF_MANAGED = StackInstances.builder()
+            .deploymentTargets(UPDATED_SELF_MANAGED_TARGETS)
+            .regions(new HashSet<>(Arrays.asList(EU_EAST_1, EU_EAST_2)))
+            .parameterOverrides(new HashSet<>(Arrays.asList(PARAMETER_1)))
+            .build();
+
+    public final static Queue<StackInstances> UPDATED_STACK_INSTANCES_SELF_MANAGED_FOR_UPDATE = new LinkedList<>(
+            Arrays.asList(UPDATE_STACK_INSTANCES_SELF_MANAGED));
+
+    public final static ResourceModel SELF_MANAGED_MODEL_NO_INSTANCES_FOR_READ = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .tags(TAGS)
+            .build();
+
+    public final static ResourceModel SELF_MANAGED_MODEL_ONE_INSTANCES_FOR_READ = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
             .tags(TAGS)
             .build();
 
     public final static ResourceModel SELF_MANAGED_MODEL_FOR_READ = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
             .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .tags(TAGS)
+            .build();
+
+    public final static ResourceModel SERVICE_MANAGED_MODEL_FOR_READ = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SERVICE_MANAGED)
+            .autoDeployment(AUTO_DEPLOYMENT)
             .capabilities(CAPABILITIES)
             .templateBody(TEMPLATE_BODY)
             .description(DESCRIPTION)
@@ -480,9 +594,7 @@ public class TestUtils {
     public final static ResourceModel SIMPLE_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
             .permissionModel(SELF_MANAGED)
-            .stackInstancesGroup(
-                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
-            .templateURL(TEMPLATE_URL)
+            .templateBody(TEMPLATE_BODY)
             .tags(TAGS)
             .operationPreferences(OPERATION_PREFERENCES)
             .build();
@@ -553,7 +665,16 @@ public class TestUtils {
 
     public final static ListStackInstancesResponse LIST_SELF_MANAGED_STACK_SET_RESPONSE =
             ListStackInstancesResponse.builder()
-                    .summaries(SERVICE_SELF_STACK_INSTANCE_SUMMARIES)
+                    .summaries(SELF_MANAGED_STACK_INSTANCE_SUMMARIES)
+                    .build();
+
+    public final static ListStackInstancesResponse LIST_SELF_MANAGED_STACK_SET_ONE_INSTANCES_RESPONSE =
+            ListStackInstancesResponse.builder()
+                    .summaries(SELF_MANAGED_STACK_ONE_INSTANCES_SUMMARIES)
+                    .build();
+
+    public final static ListStackInstancesResponse LIST_SELF_MANAGED_STACK_SET_EMPTY_RESPONSE =
+            ListStackInstancesResponse.builder()
                     .build();
 
     public final static ListStackSetsResponse LIST_STACK_SETS_RESPONSE =
