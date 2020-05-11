@@ -2,14 +2,13 @@ package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetResponse;
+import software.amazon.cloudformation.Action;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
 import software.amazon.cloudformation.stackset.util.StackInstancesPlaceHolder;
-import software.amazon.cloudformation.stackset.util.Validator;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.updateStackSetRequest;
 import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
@@ -30,7 +29,7 @@ public class UpdateHandler extends BaseHandlerStd {
         final ResourceModel model = request.getDesiredResourceState();
         final ResourceModel previousModel = request.getPreviousResourceState();
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
-        analyzeTemplate(proxy, previousModel, placeHolder, model);
+        analyzeTemplate(proxy, request, placeHolder, logger, Action.UPDATE);
 
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress -> updateStackSet(proxy, proxyClient, progress, previousModel))
@@ -50,7 +49,7 @@ public class UpdateHandler extends BaseHandlerStd {
      * @param previousModel previous {@link ResourceModel} for comparing with desired model
      * @return progressEvent indicating success, in progress with delay callback or failed state
      */
-    protected ProgressEvent<ResourceModel, CallbackContext> updateStackSet(
+    private ProgressEvent<ResourceModel, CallbackContext> updateStackSet(
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<CloudFormationClient> client,
             final ProgressEvent<ResourceModel, CallbackContext> progress,
@@ -65,31 +64,12 @@ public class UpdateHandler extends BaseHandlerStd {
         return proxy.initiate("AWS-CloudFormation-StackSet::UpdateStackSet", client, desiredModel, callbackContext)
                 .translateToServiceRequest(modelRequest -> updateStackSetRequest(modelRequest))
                 .makeServiceCall((modelRequest, proxyInvocation) -> {
-                    UpdateStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackSet);
+                    final UpdateStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackSet);
                     logger.log(String.format("%s UpdateStackSet initiated", ResourceModel.TYPE_NAME));
                     return response;
                 })
                 .stabilize((request, response, proxyInvocation, resourceModel, context) -> isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
                 .retryErrorFilter(this::filterException)
                 .progress();
-    }
-
-    /**
-     * Analyzes/validates template and StackInstancesGroup
-     *
-     * @param proxy         {@link AmazonWebServicesClientProxy}
-     * @param previousModel previous {@link ResourceModel}
-     * @param placeHolder   {@link StackInstancesPlaceHolder}
-     * @param model         {@link ResourceModel}
-     */
-    private void analyzeTemplate(
-            final AmazonWebServicesClientProxy proxy,
-            final ResourceModel previousModel,
-            final StackInstancesPlaceHolder placeHolder,
-            final ResourceModel model) {
-
-        new Validator().validateTemplate(proxy, model.getTemplateBody(), model.getTemplateURL(), logger);
-        InstancesAnalyzer.builder().desiredModel(model).previousModel(previousModel).build()
-                .analyzeForUpdate(placeHolder);
     }
 }

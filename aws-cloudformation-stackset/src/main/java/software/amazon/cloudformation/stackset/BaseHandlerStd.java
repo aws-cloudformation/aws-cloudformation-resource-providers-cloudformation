@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.cloudformation.model.StackInstanceNotFoun
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationStatus;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesResponse;
+import software.amazon.cloudformation.Action;
 import software.amazon.cloudformation.exceptions.TerminalException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -20,6 +21,9 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.delay.MultipleOf;
 import software.amazon.cloudformation.stackset.util.ClientBuilder;
+import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
+import software.amazon.cloudformation.stackset.util.StackInstancesPlaceHolder;
+import software.amazon.cloudformation.stackset.util.Validator;
 
 import java.time.Duration;
 import java.util.List;
@@ -34,8 +38,6 @@ import static software.amazon.cloudformation.stackset.translator.RequestTranslat
  * Placeholder for the functionality that could be shared across Create/Read/Update/Delete/List Handlers
  */
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
-
-    protected static final int NO_CALLBACK_DELAY = 0;
 
     protected static final MultipleOf MULTIPLE_OF = MultipleOf.multipleOf()
             .multiple(2)
@@ -93,7 +95,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final Logger logger) {
 
-        return handleRequest(proxy, request, callbackContext != null ? callbackContext : new CallbackContext(), proxy.newProxy(ClientBuilder::getClient), logger);
+        return handleRequest(proxy, request, callbackContext != null ?
+                callbackContext : new CallbackContext(), proxy.newProxy(ClientBuilder::getClient), logger);
     }
 
     protected abstract ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -107,6 +110,17 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         return e instanceof OperationInProgressException;
     }
 
+    /**
+     * Invocation of CreateStackInstances would possibly used by CREATE/UPDATE handler, after the template being analyzed
+     * by {@link InstancesAnalyzer}
+     *
+     * @param proxy              {@link AmazonWebServicesClientProxy} to initiate proxy chain
+     * @param client             the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
+     * @param progress           {@link ProgressEvent<ResourceModel, CallbackContext>} to place hold the current progress data
+     * @param stackInstancesList StackInstances that need to create, see in {@link InstancesAnalyzer#analyzeForCreate}
+     * @param logger             {@link Logger}
+     * @return {@link ProgressEvent<ResourceModel, CallbackContext>}
+     */
     protected ProgressEvent<ResourceModel, CallbackContext> createStackInstances(
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<CloudFormationClient> client,
@@ -138,6 +152,17 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         return ProgressEvent.progress(model, callbackContext);
     }
 
+    /**
+     * Invocation of DeleteStackInstances would possibly used by UPDATE/DELETE handler, after the template being analyzed
+     * by {@link InstancesAnalyzer}
+     *
+     * @param proxy              {@link AmazonWebServicesClientProxy} to initiate proxy chain
+     * @param client             the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
+     * @param progress           {@link ProgressEvent<ResourceModel, CallbackContext>} to place hold the current progress data
+     * @param stackInstancesList StackInstances that need to create, see in {@link InstancesAnalyzer#analyzeForDelete}
+     * @param logger             {@link Logger}
+     * @return {@link ProgressEvent<ResourceModel, CallbackContext>}
+     */
     protected ProgressEvent<ResourceModel, CallbackContext> deleteStackInstances(
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<CloudFormationClient> client,
@@ -164,6 +189,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                         if (e instanceof StackInstanceNotFoundException) {
                             return ProgressEvent.success(model_, context);
                         }
+                        // If OperationInProgressException is thrown by the service, then we retry
                         if (e instanceof OperationInProgressException) {
                             return ProgressEvent.progress(model_, context);
                         }
@@ -179,6 +205,17 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         return ProgressEvent.progress(model, callbackContext);
     }
 
+    /**
+     * Invocation of DeleteStackInstances would possibly used by DELETE handler, after the template being analyzed
+     * by {@link InstancesAnalyzer}
+     *
+     * @param proxy              {@link AmazonWebServicesClientProxy} to initiate proxy chain
+     * @param client             the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
+     * @param progress           {@link ProgressEvent<ResourceModel, CallbackContext>} to place hold the current progress data
+     * @param stackInstancesList StackInstances that need to create, see in {@link InstancesAnalyzer#analyzeForUpdate}
+     * @param logger             {@link Logger}
+     * @return {@link ProgressEvent<ResourceModel, CallbackContext>}
+     */
     protected ProgressEvent<ResourceModel, CallbackContext> updateStackInstances(
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<CloudFormationClient> client,
@@ -243,5 +280,38 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         final String stackSetId = model.getStackSetId();
         final StackSetOperationStatus status = getStackSetOperationStatus(proxyClient, stackSetId, operationId);
         return isStackSetOperationDone(status, operationId, logger);
+    }
+
+    /**
+     * Analyzes/validates template and StackInstancesGroup
+     *
+     * @param proxy       {@link AmazonWebServicesClientProxy}
+     * @param request     {@link ResourceHandlerRequest<ResourceModel>}
+     * @param placeHolder {@link StackInstancesPlaceHolder}
+     * @param logger      {@link Logger}
+     * @param action      {@link Action}
+     */
+    protected void analyzeTemplate(
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final StackInstancesPlaceHolder placeHolder,
+            final Logger logger,
+            final Action action) {
+
+        final ResourceModel desiredModel = request.getDesiredResourceState();
+        final ResourceModel previousModel = request.getPreviousResourceState();
+
+        switch (action) {
+            case CREATE:
+                new Validator().validateTemplate(proxy, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), logger);
+                InstancesAnalyzer.builder().desiredModel(desiredModel).build().analyzeForCreate(placeHolder);
+                break;
+            case UPDATE:
+                new Validator().validateTemplate(proxy, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), logger);
+                InstancesAnalyzer.builder().desiredModel(desiredModel).previousModel(previousModel).build().analyzeForUpdate(placeHolder);
+                break;
+            case DELETE:
+                InstancesAnalyzer.builder().desiredModel(desiredModel).build().analyzeForDelete(placeHolder);
+        }
     }
 }

@@ -2,6 +2,8 @@ package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.awscore.AwsRequest;
 import software.amazon.awssdk.awscore.AwsResponse;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -42,6 +44,18 @@ public class AbstractTestBase {
             @Override
             public <RequestT extends AwsRequest, ResponseT extends AwsResponse, IterableT extends SdkIterable<ResponseT>> IterableT
             injectCredentialsAndInvokeIterableV2(RequestT requestT, Function<RequestT, IterableT> function) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public <RequestT extends AwsRequest, ResponseT extends AwsResponse> ResponseInputStream<ResponseT>
+            injectCredentialsAndInvokeV2InputStream(RequestT requestT, Function<RequestT, ResponseInputStream<ResponseT>> function) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public <RequestT extends AwsRequest, ResponseT extends AwsResponse> ResponseBytes<ResponseT>
+            injectCredentialsAndInvokeV2Bytes(RequestT requestT, Function<RequestT, ResponseBytes<ResponseT>> function) {
                 throw new UnsupportedOperationException();
             }
 

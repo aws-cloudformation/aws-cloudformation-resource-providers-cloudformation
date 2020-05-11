@@ -1,6 +1,5 @@
 package software.amazon.cloudformation.stackset.util;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
 import software.amazon.cloudformation.stackset.ResourceModel;
@@ -51,8 +50,14 @@ public class Comparator {
      * @return boolean indicates if two collections equal.
      */
     public static boolean isEquals(final Collection<?> collection1, final Collection<?> collection2) {
-        if (collection1 == null) return collection2 == null;
-        return CollectionUtils.isEqualCollection(collection1, collection2);
+        boolean equals = false;
+        if (collection1 != null && collection2 != null) {
+            equals = collection1.size() == collection2.size()
+                    && collection1.containsAll(collection2) && collection2.containsAll(collection1);
+        } else if (collection1 == null && collection2 == null) {
+            equals = true;
+        }
+        return equals;
     }
 
     public static boolean isSelfManaged(final ResourceModel model) {

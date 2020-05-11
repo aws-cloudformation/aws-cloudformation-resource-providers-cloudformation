@@ -3,7 +3,6 @@ package software.amazon.cloudformation.stackset.util;
 import com.amazonaws.services.s3.AmazonS3URI;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
@@ -12,6 +11,7 @@ import software.amazon.cloudformation.proxy.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.getObjectRequest;
 import static software.amazon.cloudformation.stackset.util.TemplateParser.deserializeTemplate;
@@ -23,9 +23,14 @@ import static software.amazon.cloudformation.stackset.util.TemplateParser.getStr
  */
 public class Validator {
 
+    // A stack name can contain only alphanumeric characters (case-sensitive) and hyphens.
+    // It must start with an alphabetic character and can't be longer than 128 characters.
+    private static final Pattern STACKSET_NAME_FORMAT = Pattern.compile("^[a-zA-Z][a-zA-Z0-9\\-]{0,127}$");
+
     private static final String TEMPLATE_RESOURCE_TYPE_KEY = "Type";
     private static final String TEMPLATE_RESOURCES_KEY = "Resources";
     private static final String TEMPLATE_PARAMETERS_KEY = "Parameters";
+
 
     /**
      * Validates the template to make sure:
@@ -89,17 +94,8 @@ public class Validator {
         final AmazonS3URI s3Uri = new AmazonS3URI(templateLocation, true);
         final GetObjectRequest request = getObjectRequest(s3Uri.getBucket(), s3Uri.getKey());
 
-        /**
-         * Since currently response other than {@link AmazonWebServicesClientProxy#injectCredentialsAndInvokeV2}
-         * ${@link Result<T>} only extends {@link AwsResponse}, which we can't inject credentials into
-         * {@link software.amazon.awssdk.services.s3.S3Client#getObject}.
-         * Hence, getting {@link AwsCredentialsProvider} using an aws dummy request.
-         */
-        final AwsCredentialsProvider awsCredentialsProvider =
-                AwsCredentialsExtractor.extractAwsCredentialsProvider(proxy);
-
-        final String content = ClientBuilder.getS3Client(awsCredentialsProvider)
-                .getObjectAsBytes(request).asString(StandardCharsets.UTF_8);
+        final String content = proxy.injectCredentialsAndInvokeV2Bytes(request,
+                ClientBuilder.getS3Client()::getObjectAsBytes).asString(StandardCharsets.UTF_8);
 
         return content;
     }
@@ -160,4 +156,21 @@ public class Validator {
         }
     }
 
+    /**
+     * Validates StackSetName and CfnInvalidRequestException will be thrown if StackSetName does not meet:
+     * <ul>
+     *    <li> Contains only alphanumeric characters (case-sensitive) and hyphens.
+     *    <li> Starts with an alphabetic character
+     *    <li> Length is no longer than 128 characters
+     * </ul>
+     * https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStackSet.html
+     * @param stackSetName
+     */
+    public void validateStackSetName(final String stackSetName) {
+        if (!STACKSET_NAME_FORMAT.matcher(stackSetName).matches()) {
+            throw new CfnInvalidRequestException(
+                    "A stack name can contain only alphanumeric characters (case-sensitive) and hyphens. " +
+                            "It must start with an alphabetic character and can't be longer than 128 characters.");
+        }
+    }
 }

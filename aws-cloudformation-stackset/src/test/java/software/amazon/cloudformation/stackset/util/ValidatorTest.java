@@ -1,11 +1,14 @@
 package software.amazon.cloudformation.stackset.util;
 
+import com.google.common.base.Strings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.services.cloudformation.model.CreateStackSetRequest;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -14,9 +17,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_EMBEDDED_STACKSET_TEMPLATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_EMBEDDED_STACK_TEMPLATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_BODY;
@@ -29,6 +37,12 @@ public class ValidatorTest {
     private static final List<String> INVALID_S3_URLS = Arrays.asList(
             "http://s3-us-west-2.amazonaws.com//object.json", "nhttp://s3-us-west-2.amazonaws.com/test/",
             "invalid_url", "http://s3-us-west-2.amazonaws.com");
+
+    private static final List<String> VALID_STACK_SET_NAMES = Arrays.asList(
+            "myStackSet", "myStackSet123", "MyStack-Set", Strings.repeat("a", 128));
+
+    private static final List<String> INVALID_STACK_SET_NAMES = Arrays.asList(
+            "123myStackSet", "myStackSet!", "MyStack_Set", Strings.repeat("a", 129));
 
     @Spy
     private Validator validator;
@@ -61,6 +75,14 @@ public class ValidatorTest {
     }
 
     @Test
+    public void testGetUrlContent() {
+        final ResponseBytes<?> responseBytes = mock(ResponseBytes.class);
+        doReturn(ResponseBytes.fromByteArray(responseBytes, TEMPLATE_BODY.getBytes())).when(proxy)
+                .injectCredentialsAndInvokeV2Bytes(any(), any());
+        assertEquals(validator.getUrlContent(proxy, TEMPLATE_URL), TEMPLATE_BODY);
+    }
+
+    @Test
     public void testValidateTemplate_BothBodyAndUriNotExist() {
         assertThrows(CfnInvalidRequestException.class,
                 () -> validator.validateTemplate(proxy, null, null, logger));
@@ -82,5 +104,20 @@ public class ValidatorTest {
     public void testValidateTemplate_ValidTemplateBody() {
         assertDoesNotThrow(() -> validator.validateTemplate(proxy, TEMPLATE_BODY, null, logger));
         assertDoesNotThrow(() -> validator.validateTemplate(proxy, VALID_YAML_TEMPLATE, null, logger));
+    }
+
+    @Test
+    public void testValidateStackSetName_ValidStackSetNames() {
+        for (final String validStackSetName : VALID_STACK_SET_NAMES) {
+            assertDoesNotThrow(() -> validator.validateStackSetName(validStackSetName));
+        }
+    }
+
+    @Test
+    public void testValidateStackSetName_InValidStackSetNames() {
+        for (final String invalidStackSetName : INVALID_STACK_SET_NAMES) {
+            assertThrows(CfnInvalidRequestException.class,
+                    () -> validator.validateStackSetName(invalidStackSetName));
+        }
     }
 }

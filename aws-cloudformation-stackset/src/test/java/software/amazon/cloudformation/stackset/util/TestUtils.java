@@ -491,6 +491,17 @@ public class TestUtils {
             .tags(TAGS)
             .build();
 
+    public final static ResourceModel UPDATED_SELF_MANAGED_ONE_INSTANCES_MODEL = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .stackInstancesGroup(new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_4)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .tags(TAGS)
+            .build();
+
     public final static ResourceModel SELF_MANAGED_DUPLICATE_INSTANCES_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
             .permissionModel(SELF_MANAGED)

@@ -40,6 +40,7 @@ public class ListHandler extends BaseHandlerStd {
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModels(models)
                 .status(OperationStatus.SUCCESS)
+                .nextToken(response.nextToken())
                 .build();
     }
 }

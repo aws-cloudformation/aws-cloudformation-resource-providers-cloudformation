@@ -39,8 +39,10 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_M
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_FOR_READ;
+import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SIMPLE_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_SELF_MANAGED_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATE_STACK_SET_RESPONSE;
 
@@ -147,5 +149,4 @@ public class UpdateHandlerTest extends AbstractTestBase {
         verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
         verify(proxyClient.client(), times(4)).describeStackInstance(any(DescribeStackInstanceRequest.class));
     }
-
 }

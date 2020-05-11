@@ -163,6 +163,7 @@ public class InstancesAnalyzer {
                 final Set<String> targets = isSelfManaged ? stackInstances.getDeploymentTargets().getAccounts()
                         : stackInstances.getDeploymentTargets().getOrganizationalUnitIds();
 
+                // Validates expected DeploymentTargets exist in the template
                 if (CollectionUtils.isNullOrEmpty(targets)) {
                     throw new CfnInvalidRequestException(
                             String.format("%s should be specified in DeploymentTargets in [%s] model",
@@ -175,6 +176,7 @@ public class InstancesAnalyzer {
                             .region(region).deploymentTarget(target).parameters(stackInstances.getParameterOverrides())
                             .build();
 
+                    // Validates no duplicated stack instance is specified
                     if (flatStacks.contains(stackInstance)) {
                         throw new CfnInvalidRequestException(
                                 String.format("Stack instance [%s,%s] is duplicated", target, region));

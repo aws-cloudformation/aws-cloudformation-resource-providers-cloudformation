@@ -20,8 +20,10 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_1;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_2;
@@ -58,17 +60,17 @@ public class ListHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_SelfManagedSS_Success() {
 
-        doReturn(LIST_STACK_SETS_RESPONSE).when(proxyClient.client())
-                .listStackSets(any(ListStackSetsRequest.class));
-        doReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE).when(proxyClient.client())
-                .describeStackSet(any(DescribeStackSetRequest.class));
-        doReturn(LIST_SELF_MANAGED_STACK_SET_RESPONSE).when(proxyClient.client())
-                .listStackInstances(any(ListStackInstancesRequest.class));
-        doReturn(DESCRIBE_STACK_INSTANCE_RESPONSE_1,
-                DESCRIBE_STACK_INSTANCE_RESPONSE_2,
-                DESCRIBE_STACK_INSTANCE_RESPONSE_3,
-                DESCRIBE_STACK_INSTANCE_RESPONSE_4).when(proxyClient.client())
-                .describeStackInstance(any(DescribeStackInstanceRequest.class));
+        when(proxyClient.client().listStackSets(any(ListStackSetsRequest.class)))
+                .thenReturn(LIST_STACK_SETS_RESPONSE);
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
+                .thenReturn(LIST_SELF_MANAGED_STACK_SET_RESPONSE);
+        when(proxyClient.client().describeStackInstance(any(DescribeStackInstanceRequest.class)))
+                .thenReturn(DESCRIBE_STACK_INSTANCE_RESPONSE_1,
+                        DESCRIBE_STACK_INSTANCE_RESPONSE_2,
+                        DESCRIBE_STACK_INSTANCE_RESPONSE_3,
+                        DESCRIBE_STACK_INSTANCE_RESPONSE_4);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -81,5 +83,10 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).containsExactly(SELF_MANAGED_MODEL_FOR_READ);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).listStackSets(any(ListStackSetsRequest.class));
+        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
+        verify(proxyClient.client(), times(4)).describeStackInstance(any(DescribeStackInstanceRequest.class));
     }
 }

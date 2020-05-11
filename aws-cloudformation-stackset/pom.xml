@@ -41,7 +41,7 @@
         <dependency>
             <groupId>software.amazon.cloudformation</groupId>
             <artifactId>aws-cloudformation-rpdk-java-plugin</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.5</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/cloudformation -->
         <dependency>
@@ -99,11 +99,6 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>2.26.0</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
         </dependency>
     </dependencies>
 
@@ -190,7 +185,6 @@
                 <configuration>
                     <excludes>
                         <exclude>**/Configuration*</exclude>
-                        <exclude>**/util/AwsCredentialsExtractor*</exclude>
                         <exclude>**/util/ClientBuilder*</exclude>
                         <exclude>**/BaseConfiguration*</exclude>
                         <exclude>**/BaseHandler*</exclude>

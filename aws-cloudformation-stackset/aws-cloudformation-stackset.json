@@ -2,6 +2,12 @@
     "typeName": "AWS::CloudFormation::StackSet",
     "description": "Resource Type definition for AWS::CloudFormation::StackSet",
     "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-cloudformation.git",
+    "resourceLink": {
+        "templateUri": "/cloudformation/home?region=${awsRegion}#/stacksets/${StackSetId}",
+        "mappings": {
+            "StackSetId": "/StackSetId"
+        }
+    },
     "definitions": {
         "Tag": {
             "description": "Tag type enables you to specify a key-value pair that can be used to store information about an AWS CloudFormation StackSet.",
@@ -270,7 +276,8 @@
                 "cloudformation:CreateStackInstances",
                 "cloudformation:DescribeStackSetOperation",
                 "cloudformation:TagResource"
-            ]
+            ],
+            "timeoutInMinutes": 720
         },
         "read": {
             "permissions": [
@@ -289,7 +296,8 @@
                 "cloudformation:DescribeStackSetOperation",
                 "cloudformation:TagResource",
                 "cloudformation:UntagResource"
-            ]
+            ],
+            "timeoutInMinutes": 720
         },
         "delete": {
             "permissions": [
@@ -297,7 +305,8 @@
                 "cloudformation:DeleteStackInstances",
                 "cloudformation:DescribeStackSetOperation",
                 "cloudformation:UntagResource"
-            ]
+            ],
+            "timeoutInMinutes": 720
         },
         "list": {
             "permissions": [

@@ -2,12 +2,12 @@ package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackSetResponse;
+import software.amazon.cloudformation.Action;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
 import software.amazon.cloudformation.stackset.util.StackInstancesPlaceHolder;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.deleteStackSetRequest;
@@ -27,7 +27,7 @@ public class DeleteHandler extends BaseHandlerStd {
         final ResourceModel model = request.getDesiredResourceState();
         // Analyzes stack instances group for delete
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
-        InstancesAnalyzer.builder().desiredModel(model).build().analyzeForDelete(placeHolder);
+        analyzeTemplate(proxy, request, placeHolder, logger, Action.DELETE);
 
         return ProgressEvent.progress(model, callbackContext)
                 // delete/stabilize progress chain - delete all associated stack instances
