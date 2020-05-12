@@ -139,7 +139,7 @@ public class InstancesAnalyzer {
             final Map<StackInstance, StackInstance> previousStackMap) {
 
         return intersection.stream()
-                .filter(stackInstance -> !Comparator.isEquals(
+                .filter(stackInstance -> !Comparator.equals(
                         previousStackMap.get(stackInstance).getParameters(), stackInstance.getParameters()))
                 .collect(Collectors.toSet());
     }
@@ -190,7 +190,9 @@ public class InstancesAnalyzer {
     }
 
     /**
-     * Analyzes {@link StackInstances} that need to be modified during the update
+     * Analyzes {@link StackInstances} that need to be modified during the update operations
+     *
+     * @param placeHolder {@link StackInstancesPlaceHolder}
      */
     public void analyzeForUpdate(final StackInstancesPlaceHolder placeHolder) {
         final boolean isSelfManaged = isSelfManaged(desiredModel);
@@ -224,8 +226,9 @@ public class InstancesAnalyzer {
     }
 
     /**
-     * Analyzes {@link StackInstances} that need to be modified during the update
-     * Updates callbackContext with the stack list to create
+     * Analyzes {@link StackInstances} that need to be modified during create operations
+     *
+     * @param placeHolder {@link StackInstancesPlaceHolder}
      */
     public void analyzeForCreate(final StackInstancesPlaceHolder placeHolder) {
         if (desiredModel.getStackInstancesGroup() == null) return;
@@ -243,8 +246,9 @@ public class InstancesAnalyzer {
     }
 
     /**
-     * Analyzes {@link StackInstances} that need to be modified during the update
-     * Updates callbackContext with the stack list to delete
+     * Analyzes {@link StackInstances} that need to be modified during delete operations
+     *
+     * @param placeHolder {@link StackInstancesPlaceHolder}
      */
     public void analyzeForDelete(final StackInstancesPlaceHolder placeHolder) {
         if (desiredModel.getStackInstancesGroup() == null) return;

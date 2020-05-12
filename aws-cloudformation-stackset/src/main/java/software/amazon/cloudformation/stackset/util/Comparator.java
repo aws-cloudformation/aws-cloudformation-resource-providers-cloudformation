@@ -22,7 +22,7 @@ public class Comparator {
     public static boolean isStackSetConfigEquals(
             final ResourceModel previousModel, final ResourceModel desiredModel) {
 
-        if (!isEquals(previousModel.getTags(), desiredModel.getTags()))
+        if (!equals(previousModel.getTags(), desiredModel.getTags()))
             return false;
 
         if (StringUtils.compare(previousModel.getAdministrationRoleARN(),
@@ -39,7 +39,7 @@ public class Comparator {
             return false;
 
         // If TemplateURL is specified, always call Update API, Service client will decide if it is updatable
-        return desiredModel.getTemplateBody() != null || desiredModel.getTemplateURL() == null;
+        return desiredModel.getTemplateURL() == null;
     }
 
     /**
@@ -49,7 +49,7 @@ public class Comparator {
      * @param collection2
      * @return boolean indicates if two collections equal.
      */
-    public static boolean isEquals(final Collection<?> collection1, final Collection<?> collection2) {
+    public static boolean equals(final Collection<?> collection1, final Collection<?> collection2) {
         boolean equals = false;
         if (collection1 != null && collection2 != null) {
             equals = collection1.size() == collection2.size()

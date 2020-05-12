@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.amazon.cloudformation.stackset.util.Comparator.isEquals;
 import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
 import static software.amazon.cloudformation.stackset.util.TestUtils.ADMINISTRATION_ROLE_ARN;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIPTION;
@@ -53,6 +52,26 @@ public class ComparatorTest {
 
         assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel)).isFalse();
 
+        // Even if both TemplateURLs remain no change, we still need to call Update API
+        // The service client will decide if it needs to update
+        testDesiredModel.setTemplateURL(TEMPLATE_URL);
+        testPreviousModel.setTemplateURL(TEMPLATE_URL);
+        assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel)).isFalse();
+
+        // previously using TemplateURL, currently using TemplateBody
+        testPreviousModel.setTemplateURL(TEMPLATE_URL);
+        testDesiredModel.setTemplateURL(null);
+        testDesiredModel.setTemplateBody(TEMPLATE_BODY);
+        assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel)).isFalse();
+
+        // previously using TemplateBody, currently using TemplateURL
+        testPreviousModel.setTemplateBody(TEMPLATE_URL);
+        testPreviousModel.setTemplateURL(null);
+        testDesiredModel.setTemplateBody(null);
+        testDesiredModel.setTemplateURL(TEMPLATE_URL);
+        assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel)).isFalse();
+
+        // Both using TemplateBody
         testDesiredModel.setTemplateURL(null);
         testPreviousModel.setTemplateURL(null);
 
@@ -60,11 +79,16 @@ public class ComparatorTest {
         testPreviousModel.setTemplateBody(TEMPLATE_BODY);
 
         assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel)).isFalse();
+
+        testDesiredModel.setTemplateBody(TEMPLATE_BODY);
+        assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel)).isTrue();
+
     }
 
     @Test
-    public void testIsEquals() {
-        assertThat(isEquals(null, TAGS)).isFalse();
+    public void testEquals() {
+        assertThat(Comparator.equals(TAGS, null)).isFalse();
+        assertThat(Comparator.equals(null, TAGS)).isFalse();
     }
 
 }

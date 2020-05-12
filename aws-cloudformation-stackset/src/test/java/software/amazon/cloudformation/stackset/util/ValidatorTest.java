@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.core.ResponseBytes;
-import software.amazon.awssdk.services.cloudformation.model.CreateStackSetRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -23,8 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_EMBEDDED_STACKSET_TEMPLATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_EMBEDDED_STACK_TEMPLATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_BODY;
@@ -43,6 +41,9 @@ public class ValidatorTest {
 
     private static final List<String> INVALID_STACK_SET_NAMES = Arrays.asList(
             "123myStackSet", "myStackSet!", "MyStack_Set", Strings.repeat("a", 129));
+
+    private static final long VALID_TEMPLATE_SIZE = 1000L;
+    private static final long INVALID_TEMPLATE_SIZE = 460801L;
 
     @Spy
     private Validator validator;
@@ -77,9 +78,19 @@ public class ValidatorTest {
     @Test
     public void testGetUrlContent() {
         final ResponseBytes<?> responseBytes = mock(ResponseBytes.class);
+        doReturn(HeadObjectResponse.builder().contentLength(VALID_TEMPLATE_SIZE).build())
+                .when(proxy).injectCredentialsAndInvokeV2(any(), any());
         doReturn(ResponseBytes.fromByteArray(responseBytes, TEMPLATE_BODY.getBytes())).when(proxy)
                 .injectCredentialsAndInvokeV2Bytes(any(), any());
         assertEquals(validator.getUrlContent(proxy, TEMPLATE_URL), TEMPLATE_BODY);
+    }
+
+    @Test
+    public void testGetUrlContent_TemplateTooLarge() {
+        doReturn(HeadObjectResponse.builder().contentLength(INVALID_TEMPLATE_SIZE).build())
+                .when(proxy).injectCredentialsAndInvokeV2(any(), any());
+        assertThrows(CfnInvalidRequestException.class,
+                () -> validator.getUrlContent(proxy, TEMPLATE_URL));
     }
 
     @Test

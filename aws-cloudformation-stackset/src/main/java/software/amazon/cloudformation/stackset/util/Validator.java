@@ -3,7 +3,7 @@ package software.amazon.cloudformation.stackset.util;
 import com.amazonaws.services.s3.AmazonS3URI;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.getObjectRequest;
+import static software.amazon.cloudformation.stackset.translator.RequestTranslator.headObjectRequest;
 import static software.amazon.cloudformation.stackset.util.TemplateParser.deserializeTemplate;
 import static software.amazon.cloudformation.stackset.util.TemplateParser.getMapFromTemplate;
 import static software.amazon.cloudformation.stackset.util.TemplateParser.getStringFromTemplate;
@@ -30,6 +31,8 @@ public class Validator {
     private static final String TEMPLATE_RESOURCE_TYPE_KEY = "Type";
     private static final String TEMPLATE_RESOURCES_KEY = "Resources";
     private static final String TEMPLATE_PARAMETERS_KEY = "Parameters";
+
+    private static final long TEMPLATE_CONTENT_LIMIT = 460800L;
 
 
     /**
@@ -92,9 +95,18 @@ public class Validator {
     @VisibleForTesting
     protected String getUrlContent(final AmazonWebServicesClientProxy proxy, final String templateLocation) {
         final AmazonS3URI s3Uri = new AmazonS3URI(templateLocation, true);
-        final GetObjectRequest request = getObjectRequest(s3Uri.getBucket(), s3Uri.getKey());
+        final S3Client client = ClientBuilder.getS3Client();
 
-        final String content = proxy.injectCredentialsAndInvokeV2Bytes(request,
+        final Long contentLength = proxy.injectCredentialsAndInvokeV2(
+                headObjectRequest(s3Uri.getBucket(), s3Uri.getKey()), client::headObject).contentLength();
+
+        if (contentLength > TEMPLATE_CONTENT_LIMIT) {
+            throw new CfnInvalidRequestException(String.format("TemplateBody may not exceed the limit %d Bytes",
+                    TEMPLATE_CONTENT_LIMIT));
+        }
+
+        final String content = proxy.injectCredentialsAndInvokeV2Bytes(
+                getObjectRequest(s3Uri.getBucket(), s3Uri.getKey()),
                 ClientBuilder.getS3Client()::getObjectAsBytes).asString(StandardCharsets.UTF_8);
 
         return content;
@@ -164,6 +176,7 @@ public class Validator {
      *    <li> Length is no longer than 128 characters
      * </ul>
      * https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStackSet.html
+     *
      * @param stackSetName
      */
     public void validateStackSetName(final String stackSetName) {

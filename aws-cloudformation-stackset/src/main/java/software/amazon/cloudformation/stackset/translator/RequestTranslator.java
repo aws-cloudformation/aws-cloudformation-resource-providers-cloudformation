@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.cloudformation.model.ListStackSetsRequest
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.cloudformation.stackset.OperationPreferences;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
@@ -147,6 +148,14 @@ public class RequestTranslator {
     public static GetObjectRequest getObjectRequest(
             final String bucketName, final String key) {
         return GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+    }
+
+    public static HeadObjectRequest headObjectRequest(
+            final String bucketName, final String key) {
+        return HeadObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
                 .build();
