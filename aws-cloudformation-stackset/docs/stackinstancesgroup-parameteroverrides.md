@@ -26,7 +26,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 
 The key associated with the parameter. If you don't specify a key and value for a particular parameter, AWS CloudFormation uses the default value that is specified in your template.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 
@@ -36,7 +36,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 The input value associated with the parameter.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 

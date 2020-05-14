@@ -69,6 +69,36 @@
                 "CAPABILITY_AUTO_EXPAND"
             ]
         },
+        "OperationPreferences": {
+            "description": "The user-specified preferences for how AWS CloudFormation performs a stack set operation.",
+            "type": "object",
+            "properties": {
+                "FailureToleranceCount": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "FailureTolerancePercentage": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "MaxConcurrentCount": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "MaxConcurrentPercentage": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "RegionOrder": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Region"
+                    }
+                }
+            }
+        },
         "Parameter": {
             "type": "object",
             "properties": {
@@ -81,6 +111,37 @@
                     "type": "string"
                 }
             },
+            "required": [
+                "ParameterKey",
+                "ParameterValue"
+            ],
+            "additionalProperties": false
+        },
+        "DeploymentTargets": {
+            "description": " The AWS OrganizationalUnitIds or Accounts for which to create stack instances in the specified Regions.",
+            "type": "object",
+            "properties": {
+                "Accounts": {
+                    "description": "AWS accounts that you want to create stack instances in the specified Region(s) for.",
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "insertionOrder": false,
+                    "items": {
+                        "$ref": "#/definitions/Account"
+                    }
+                },
+                "OrganizationalUnitIds": {
+                    "description": "The organization root ID or organizational unit (OU) IDs to which StackSets deploys.",
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "insertionOrder": false,
+                    "items": {
+                        "$ref": "#/definitions/OrganizationalUnitId"
+                    }
+                }
+            },
             "additionalProperties": false
         },
         "StackInstances": {
@@ -88,32 +149,12 @@
             "type": "object",
             "properties": {
                 "DeploymentTargets": {
-                    "description": " The AWS OrganizationalUnitIds or Accounts for which to create stack instances in the specified Regions.",
-                    "type": "object",
-                    "properties": {
-                        "Accounts": {
-                            "description": "AWS accounts that you want to create stack instances in the specified Region(s) for.",
-                            "type": "array",
-                            "uniqueItems": true,
-                            "insertionOrder": false,
-                            "items": {
-                                "$ref": "#/definitions/Account"
-                            }
-                        },
-                        "OrganizationalUnitIds": {
-                            "description": "The organization root ID or organizational unit (OU) IDs to which StackSets deploys.",
-                            "type": "array",
-                            "uniqueItems": true,
-                            "insertionOrder": false,
-                            "items": {
-                                "$ref": "#/definitions/OrganizationalUnitId"
-                            }
-                        }
-                    }
+                    "$ref": "#/definitions/DeploymentTargets"
                 },
                 "Regions": {
                     "description": "The names of one or more Regions where you want to create stack instances using the specified AWS account(s).",
                     "type": "array",
+                    "minItems": 1,
                     "uniqueItems": true,
                     "insertionOrder": false,
                     "items": {
@@ -173,34 +214,7 @@
             "maxLength": 64
         },
         "OperationPreferences": {
-            "description": "The user-specified preferences for how AWS CloudFormation performs a stack set operation.",
-            "type": "object",
-            "properties": {
-                "FailureToleranceCount": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "FailureTolerancePercentage": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "maximum": 100
-                },
-                "MaxConcurrentCount": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "MaxConcurrentPercentage": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "maximum": 100
-                },
-                "RegionOrder": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Region"
-                    }
-                }
-            }
+            "$ref": "#/definitions/OperationPreferences"
         },
         "StackInstancesGroup": {
             "description": "",
@@ -251,8 +265,19 @@
             "maxLength": 1024
         }
     },
-    "required": [
-        "PermissionModel"
+    "oneOf": [
+        {
+            "required": [
+                "TemplateURL",
+                "PermissionModel"
+            ]
+        },
+        {
+            "required": [
+                "TemplateBody",
+                "PermissionModel"
+            ]
+        }
     ],
     "additionalProperties": false,
     "createOnlyProperties": [

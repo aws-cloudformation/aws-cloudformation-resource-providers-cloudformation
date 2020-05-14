@@ -75,53 +75,65 @@ public class TestUtils {
 
     public final static String VALID_YAML_TEMPLATE =
             "Parameters:\n" +
-                    "    DomainName:\n" +
-                    "        Type: String\n" +
-                    "        Default: myexample.com\n" +
-                    "Resources:\n" +
-                    "    BasicHealthCheck:\n" +
-                    "        Type: AWS::Route53::HealthCheck\n" +
-                    "        Properties:\n" +
-                    "            HealthCheckConfig:\n" +
-                    "                RequestInterval: 10\n" +
-                    "                FullyQualifiedDomainName:\n" +
-                    "                    Ref: DomainName\n" +
-                    "                IPAddress: 98.139.180.149\n" +
-                    "                Port: \"88\"\n" +
-                    "                ResourcePath: /docs/route-53-health-check.html\n" +
-                    "                Type: HTTP\n" +
-                    "            HealthCheckTags:\n" +
-                    "                - Key: A\n" +
-                    "                  Value: \"1\"\n" +
-                    "                - Key: B\n" +
-                    "                  Value: \"1\"\n" +
-                    "                - Key: C\n" +
-                    "                  Value: \"1\"";
+            "    DomainName:\n" +
+            "        Type: String\n" +
+            "        Default: myexample.com\n" +
+            "Resources:\n" +
+            "    BasicHealthCheck:\n" +
+            "        Type: AWS::Route53::HealthCheck\n" +
+            "        Properties:\n" +
+            "            HealthCheckConfig:\n" +
+            "                RequestInterval: 10\n" +
+            "                FullyQualifiedDomainName:\n" +
+            "                    Ref: DomainName\n" +
+            "                IPAddress: 98.139.180.149\n" +
+            "                Port: \"88\"\n" +
+            "                ResourcePath: /docs/route-53-health-check.html\n" +
+            "                Type: HTTP\n" +
+            "            HealthCheckTags:\n" +
+            "                - Key: A\n" +
+            "                  Value: \"1\"\n" +
+            "                - Key: B\n" +
+            "                  Value: \"1\"\n" +
+            "                - Key: C\n" +
+            "                  Value: \"1\"";
+
+    public final static String VALID_YAML_SHORTHANDS_TEMPLATE =
+            "Resources:\n" +
+            "  MyCodeDeploy:\n" +
+            "    Type: AWS::CodeDeploy::DeploymentGroup\n" +
+            "    Properties:\n" +
+            "      ApplicationName: !Ref CodeDeployApplication\n" +
+            "      AutoScalingGroups:\n" +
+            "        - !Ref AutoScalingGroup\n" +
+            "      DeploymentConfigName: CodeDeployDefault.OneAtATime\n" +
+            "      DeploymentGroupName: !Sub ${EnvironmentParameter}_${ServiceNameParameter}\n" +
+            "      ServiceRoleArn: !GetAtt CodeDeployRole.Arn";
 
     public final static String INVALID_EMBEDDED_STACK_TEMPLATE =
             "{\n" +
-                    "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
-                    "    \"Resources\": {\n" +
-                    "        \"MyStack\" : {\n" +
-                    "            \"Type\" : \"AWS::CloudFormation::Stack\",\n" +
-                    "            \"Properties\" : {\n" +
-                    "                \"TemplateURL\" : \"test.url\"\n" +
-                    "            },\n" +
-                    "    }\n" +
-                    "}";
+            "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
+            "    \"Resources\": {\n" +
+            "        \"MyStack\" : {\n" +
+            "            \"Type\" : \"AWS::CloudFormation::Stack\",\n" +
+            "            \"Properties\" : {\n" +
+            "                \"TemplateURL\" : \"test.url\"\n" +
+            "            },\n" +
+            "    }\n" +
+            "}";
 
     public final static String INVALID_EMBEDDED_STACKSET_TEMPLATE =
             "{\n" +
-                    "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
-                    "    \"Resources\": {\n" +
-                    "        \"MyStack\" : {\n" +
-                    "            \"Type\" : \"AWS::CloudFormation::StackSet\",\n" +
-                    "            \"Properties\" : {\n" +
-                    "                \"TemplateURL\" : \"test.url\"\n" +
-                    "            }\n" +
-                    "        }\n" +
-                    "    }\n" +
-                    "}";
+            "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
+            "    \"Resources\": {\n" +
+            "        \"MyStack\" : {\n" +
+            "            \"Type\" : \"AWS::CloudFormation::StackSet\",\n" +
+            "            \"Properties\" : {\n" +
+            "                \"TemplateURL\" : \"test.url\"\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
 
     public final static String STACK_SET_NAME = "StackSet";
     public final static String STACK_SET_ID = "StackSet:stack-set-id";

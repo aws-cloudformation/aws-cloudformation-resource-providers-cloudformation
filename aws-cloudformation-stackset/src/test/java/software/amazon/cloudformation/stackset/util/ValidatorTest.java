@@ -27,6 +27,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_EMB
 import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_EMBEDDED_STACK_TEMPLATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_BODY;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_URL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_YAML_SHORTHANDS_TEMPLATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_YAML_TEMPLATE;
 
 @ExtendWith(MockitoExtension.class)
@@ -115,6 +116,7 @@ public class ValidatorTest {
     public void testValidateTemplate_ValidTemplateBody() {
         assertDoesNotThrow(() -> validator.validateTemplate(proxy, TEMPLATE_BODY, null, logger));
         assertDoesNotThrow(() -> validator.validateTemplate(proxy, VALID_YAML_TEMPLATE, null, logger));
+        assertDoesNotThrow(() -> validator.validateTemplate(proxy, VALID_YAML_SHORTHANDS_TEMPLATE, null, logger));
     }
 
     @Test

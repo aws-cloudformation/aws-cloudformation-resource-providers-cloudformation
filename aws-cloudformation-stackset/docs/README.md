@@ -145,7 +145,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 Describes how the IAM roles required for stack set operations are created. By default, SELF-MANAGED is specified.
 
-_Required_: Yes
+_Required_: No
 
 _Type_: String
 

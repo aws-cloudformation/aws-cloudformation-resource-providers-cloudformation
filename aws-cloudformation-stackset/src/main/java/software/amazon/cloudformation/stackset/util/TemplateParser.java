@@ -1,53 +1,19 @@
 package software.amazon.cloudformation.stackset.util;
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.error.Mark;
 import org.yaml.snakeyaml.error.MarkedYAMLException;
 import org.yaml.snakeyaml.error.YAMLException;
 
-import java.io.IOException;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class TemplateParser {
 
-    private static final Pattern JSON_INPUT_PATTERN = Pattern.compile("^\\s*\\{.*\\}\\s*$", Pattern.DOTALL);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private static final String UNKNOWN_LOCATION = "unknown location";
     private static final String INVALID_TEMPLATE_ERROR_MSG = "Template format error: not a valid template";
-    private static final String UNSUPPORTED_TYPE_STRUCTURE_ERROR_MSG =
-            "Template format error: unsupported type or structure. (%s)";
-    private static final String NOT_WELL_FORMATTED_ERROR_MSG = "Template format error: %s not well-formed. (%s)";
+    private static final String NOT_WELL_FORMATTED_ERROR_MSG = "Template format error: not well-formed. (%s)";
     private static final String FORMAT_LOCATION_ERROR_MSG = "line %s, column %s";
-
-    /**
-     * Deserializes template content which can be either JSON or YAML
-     *
-     * @param template Template Content
-     * @return Generic Map of template
-     */
-    public static Map<String, Object> deserializeTemplate(final String template) {
-        // If the template does not follow valid Json pattern, parse as Yaml.
-        // Else, parse as Json first; if that fails parse as Yaml.
-        if (!isPossiblyJson(template)) {
-            return deserializeYaml(template);
-        }
-
-        try {
-            return deserializeJson(template);
-        } catch (final ParseException e) {
-            return deserializeYaml(template);
-        }
-
-    }
 
     /**
      * Gets a Generic Map object from template
@@ -81,82 +47,32 @@ public class TemplateParser {
     }
 
     /**
-     * Deserializes YAML from template content string
+     * Deserializes YAML/JSON from template content string,
+     * Since Yaml is a superset of JSON, we are parsing both with YAML library.
      *
      * @param templateString Template content
      * @return Template map
      * @throws ParseException if fails to parse the template
      */
-    @VisibleForTesting
-    protected static Map<String, Object> deserializeYaml(final String templateString) {
+    public static Map<String, Object> deserializeTemplate(final String templateString) {
         try {
-            final Map<String, Object> template = new Yaml().load(templateString);
+            final Map<String, Object> template = new Yaml(new TemplateConstructor()).load(templateString);
             if (template == null || template.isEmpty()) {
                 throw new ParseException(INVALID_TEMPLATE_ERROR_MSG);
             }
             return template;
 
         } catch (final MarkedYAMLException e) {
-            throw new ParseException(String.format(NOT_WELL_FORMATTED_ERROR_MSG, "YAML",
-                    formatYamlErrorLocation(e.getProblemMark())));
+            throw new ParseException(String.format(NOT_WELL_FORMATTED_ERROR_MSG,
+                    formatTemplateErrorLocation(e.getProblemMark())));
 
         } catch (final YAMLException e) {
-            throw new ParseException(String.format("Cannot parse as YAML : %s ", e.getMessage()));
+            throw new ParseException(String.format("Cannot parse the template : %s ", e.getMessage()));
 
         } catch (final ClassCastException e) {
             throw new ParseException("Template format error: unsupported structure.");
 
         }
-    }
-
-    /**
-     * Deserializes JSON from template content string
-     *
-     * @param templateString Template content
-     * @return Template map
-     * @throws ParseException if fails to parse the template
-     */
-    @SuppressWarnings("unchecked")
-    @VisibleForTesting
-    protected static Map<String, Object> deserializeJson(final String templateString) {
-        Map<String, Object> template;
-        try {
-            JsonParser parser = new MappingJsonFactory().createParser(templateString);
-            template = OBJECT_MAPPER.readValue(parser, Map.class);
-
-        } catch (final JsonMappingException e) {
-            throw new ParseException(String.format(UNSUPPORTED_TYPE_STRUCTURE_ERROR_MSG,
-                    formatJsonErrorLocation(e.getLocation())));
-
-        } catch (final JsonParseException e) {
-            throw new ParseException(String.format(NOT_WELL_FORMATTED_ERROR_MSG, "JSON",
-                    formatJsonErrorLocation(e.getLocation())));
-
-        } catch (final IOException e) {
-            throw new ParseException("Cannot parse template, I/O stream corrupt.");
-        }
-
-        // The string "null" may be considered as valid JSON by the parser, but it is not a valid template.
-        if (template == null) {
-            throw new ParseException(INVALID_TEMPLATE_ERROR_MSG);
-        }
-        return template;
-    }
-
-    private static boolean isPossiblyJson(final String template) {
-        return JSON_INPUT_PATTERN.matcher(template).matches();
-    }
-
-    /**
-     * Gets the error location when parsing as JSON
-     *
-     * @param loc {@link JsonLocation}
-     * @return Error location
-     */
-    @VisibleForTesting
-    protected static String formatJsonErrorLocation(final JsonLocation loc) {
-        if (loc == null) return UNKNOWN_LOCATION;
-        return String.format(FORMAT_LOCATION_ERROR_MSG, loc.getLineNr(), loc.getColumnNr());
     }
 
     /**
@@ -166,7 +82,7 @@ public class TemplateParser {
      * @return Error location
      */
     @VisibleForTesting
-    protected static String formatYamlErrorLocation(final Mark loc) {
+    protected static String formatTemplateErrorLocation(final Mark loc) {
         if (loc == null) return UNKNOWN_LOCATION;
         return String.format(FORMAT_LOCATION_ERROR_MSG, loc.getLine() + 1, loc.getColumn() + 1);
     }
