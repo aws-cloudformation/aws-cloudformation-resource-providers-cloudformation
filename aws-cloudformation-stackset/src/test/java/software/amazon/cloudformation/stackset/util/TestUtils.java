@@ -99,15 +99,19 @@ public class TestUtils {
             "                  Value: \"1\"";
 
     public final static String VALID_YAML_SHORTHANDS_TEMPLATE =
+            "Conditions:\n" +
+            "    Fn::Equals:\n" +
+            "    - !Ref\n" +
+            "    - !Select [1, [Foo, Bar]]\n" +
             "Resources:\n" +
             "  MyCodeDeploy:\n" +
-            "    Type: AWS::CodeDeploy::DeploymentGroup\n" +
+            "    Type: AWS::Test::Test\n" +
             "    Properties:\n" +
-            "      ApplicationName: !Ref CodeDeployApplication\n" +
+            "      TestTrue: !And true\n" +
             "      AutoScalingGroups:\n" +
             "        - !Ref AutoScalingGroup\n" +
-            "      DeploymentConfigName: CodeDeployDefault.OneAtATime\n" +
-            "      DeploymentGroupName: !Sub ${EnvironmentParameter}_${ServiceNameParameter}\n" +
+            "      TestMappingNode: !GetAtt { 1: Foo }\n" +
+            "      DeploymentGroupName: !Sub ${Test}_${Test}\n" +
             "      ServiceRoleArn: !GetAtt CodeDeployRole.Arn";
 
     public final static String INVALID_EMBEDDED_STACK_TEMPLATE =

@@ -41,7 +41,7 @@ public class InstancesAnalyzer {
      * @return {@link StackInstances} set
      */
     public static Set<StackInstances> aggregateStackInstances(
-            @NonNull final Set<StackInstance> flatStackInstances, final boolean isSelfManaged) {
+            final Set<StackInstance> flatStackInstances, final boolean isSelfManaged) {
         final Set<StackInstances> groupedStacks = groupInstancesByTargets(flatStackInstances, isSelfManaged);
         return aggregateInstancesByRegions(groupedStacks, isSelfManaged);
     }
@@ -55,7 +55,7 @@ public class InstancesAnalyzer {
      * @param flatStackInstances {@link StackInstance}
      * @return {@link StackInstances} set
      */
-    public static Set<StackInstances> aggregateStackInstancesForRead(@NonNull final Set<StackInstance> flatStackInstances) {
+    public static Set<StackInstances> aggregateStackInstancesForRead(final Set<StackInstance> flatStackInstances) {
         final Set<StackInstances> groupedStacksInstances = groupInstancesByTargets(flatStackInstances, true);
         return aggregateInstancesByRegions(groupedStacksInstances, true);
     }
