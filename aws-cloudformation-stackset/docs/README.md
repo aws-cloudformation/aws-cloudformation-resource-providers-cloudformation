@@ -12,6 +12,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 {
     "Type" : "AWS::CloudFormation::StackSet",
     "Properties" : {
+        "<a href="#stacksetname" title="StackSetName">StackSetName</a>" : <i>String</i>,
         "<a href="#administrationrolearn" title="AdministrationRoleARN">AdministrationRoleARN</a>" : <i>String</i>,
         "<a href="#autodeployment" title="AutoDeployment">AutoDeployment</a>" : <i><a href="autodeployment.md">AutoDeployment</a></i>,
         "<a href="#capabilities" title="Capabilities">Capabilities</a>" : <i>[ String, ... ]</i>,
@@ -33,6 +34,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 <pre>
 Type: AWS::CloudFormation::StackSet
 Properties:
+    <a href="#stacksetname" title="StackSetName">StackSetName</a>: <i>String</i>
     <a href="#administrationrolearn" title="AdministrationRoleARN">AdministrationRoleARN</a>: <i>String</i>
     <a href="#autodeployment" title="AutoDeployment">AutoDeployment</a>: <i><a href="autodeployment.md">AutoDeployment</a></i>
     <a href="#capabilities" title="Capabilities">Capabilities</a>: <i>
@@ -52,6 +54,20 @@ Properties:
 </pre>
 
 ## Properties
+
+#### StackSetName
+
+The name to associate with the stack set. The name must be unique in the Region where you create your stack set.
+
+_Required_: Yes
+
+_Type_: String
+
+_Maximum_: <code>128</code>
+
+_Pattern_: <code>^[a-zA-Z][a-zA-Z0-9\-]{0,127}$</code>
+
+_Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
 
 #### AdministrationRoleARN
 
@@ -145,7 +161,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 Describes how the IAM roles required for stack set operations are created. By default, SELF-MANAGED is specified.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 

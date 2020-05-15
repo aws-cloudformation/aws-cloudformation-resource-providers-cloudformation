@@ -178,6 +178,12 @@
         }
     },
     "properties": {
+        "StackSetName": {
+            "description": "The name to associate with the stack set. The name must be unique in the Region where you create your stack set.",
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9\\-]{0,127}$",
+            "maxLength": 128
+        },
         "StackSetId": {
             "description": "The ID of the stack set that you're creating.",
             "type": "string"
@@ -269,19 +275,22 @@
         {
             "required": [
                 "TemplateURL",
+                "StackSetName",
                 "PermissionModel"
             ]
         },
         {
             "required": [
                 "TemplateBody",
+                "StackSetName",
                 "PermissionModel"
             ]
         }
     ],
     "additionalProperties": false,
     "createOnlyProperties": [
-        "/properties/PermissionModel"
+        "/properties/PermissionModel",
+        "/properties/StackSetName"
     ],
     "writeOnlyProperties": [
         "/properties/TemplateURL",

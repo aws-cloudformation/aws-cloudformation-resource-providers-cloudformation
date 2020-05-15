@@ -25,13 +25,11 @@ public class CreateHandler extends BaseHandlerStd {
 
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
-        // Ensure the idempotency of StackSet, we should not generate a random StackSetName
-        final String stackSetName = request.getLogicalResourceIdentifier();
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         analyzeTemplate(proxy, request, placeHolder, logger, Action.CREATE);
 
         return proxy.initiate("AWS-CloudFormation-StackSet::Create", proxyClient, model, callbackContext)
-                .translateToServiceRequest(resourceModel -> createStackSetRequest(resourceModel, stackSetName, request.getClientRequestToken()))
+                .translateToServiceRequest(resourceModel -> createStackSetRequest(resourceModel, request.getClientRequestToken()))
                 .makeServiceCall((modelRequest, proxyInvocation) -> {
                     final CreateStackSetResponse response = proxyClient.injectCredentialsAndInvokeV2(modelRequest, proxyClient.client()::createStackSet);
                     model.setStackSetId(response.stackSetId());

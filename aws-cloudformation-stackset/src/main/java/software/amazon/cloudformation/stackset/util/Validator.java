@@ -11,7 +11,6 @@ import software.amazon.cloudformation.proxy.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.getObjectRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.headObjectRequest;
@@ -23,10 +22,6 @@ import static software.amazon.cloudformation.stackset.util.TemplateParser.getStr
  * Utility class to validate properties in {@link software.amazon.cloudformation.stackset.ResourceModel}
  */
 public class Validator {
-
-    // A stack name can contain only alphanumeric characters (case-sensitive) and hyphens.
-    // It must start with an alphabetic character and can't be longer than 128 characters.
-    private static final Pattern STACKSET_NAME_FORMAT = Pattern.compile("^[a-zA-Z][a-zA-Z0-9\\-]{0,127}$");
 
     private static final String TEMPLATE_RESOURCE_TYPE_KEY = "Type";
     private static final String TEMPLATE_RESOURCES_KEY = "Resources";
@@ -165,25 +160,6 @@ public class Validator {
         } catch (final ParseException e) {
             logger.log(String.format("Failed to parse template content: %s", content));
             throw new CfnInvalidRequestException(e.getMessage());
-        }
-    }
-
-    /**
-     * Validates StackSetName and CfnInvalidRequestException will be thrown if StackSetName does not meet:
-     * <ul>
-     *    <li> Contains only alphanumeric characters (case-sensitive) and hyphens.
-     *    <li> Starts with an alphabetic character
-     *    <li> Length is no longer than 128 characters
-     * </ul>
-     * https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStackSet.html
-     *
-     * @param stackSetName
-     */
-    public void validateStackSetName(final String stackSetName) {
-        if (!STACKSET_NAME_FORMAT.matcher(stackSetName).matches()) {
-            throw new CfnInvalidRequestException(
-                    "A stack name can contain only alphanumeric characters (case-sensitive) and hyphens. " +
-                            "It must start with an alphabetic character and can't be longer than 128 characters.");
         }
     }
 }

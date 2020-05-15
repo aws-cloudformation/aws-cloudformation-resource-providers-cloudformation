@@ -37,12 +37,6 @@ public class ValidatorTest {
             "http://s3-us-west-2.amazonaws.com//object.json", "nhttp://s3-us-west-2.amazonaws.com/test/",
             "invalid_url", "http://s3-us-west-2.amazonaws.com");
 
-    private static final List<String> VALID_STACK_SET_NAMES = Arrays.asList(
-            "myStackSet", "myStackSet123", "MyStack-Set", Strings.repeat("a", 128));
-
-    private static final List<String> INVALID_STACK_SET_NAMES = Arrays.asList(
-            "123myStackSet", "myStackSet!", "MyStack_Set", Strings.repeat("a", 129));
-
     private static final long VALID_TEMPLATE_SIZE = 1000L;
     private static final long INVALID_TEMPLATE_SIZE = 460801L;
 
@@ -117,20 +111,5 @@ public class ValidatorTest {
         assertDoesNotThrow(() -> validator.validateTemplate(proxy, TEMPLATE_BODY, null, logger));
         assertDoesNotThrow(() -> validator.validateTemplate(proxy, VALID_YAML_TEMPLATE, null, logger));
         assertDoesNotThrow(() -> validator.validateTemplate(proxy, VALID_YAML_SHORTHANDS_TEMPLATE, null, logger));
-    }
-
-    @Test
-    public void testValidateStackSetName_ValidStackSetNames() {
-        for (final String validStackSetName : VALID_STACK_SET_NAMES) {
-            assertDoesNotThrow(() -> validator.validateStackSetName(validStackSetName));
-        }
-    }
-
-    @Test
-    public void testValidateStackSetName_InValidStackSetNames() {
-        for (final String invalidStackSetName : INVALID_STACK_SET_NAMES) {
-            assertThrows(CfnInvalidRequestException.class,
-                    () -> validator.validateStackSetName(invalidStackSetName));
-        }
     }
 }
