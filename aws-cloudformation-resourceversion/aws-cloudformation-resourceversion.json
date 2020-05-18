@@ -134,6 +134,7 @@
   "handlers": {
     "create": {
       "permissions": [
+        "cloudformation:ListTypeVersions",
         "cloudformation:DescribeTypeRegistration",
         "cloudformation:RegisterType"
       ]

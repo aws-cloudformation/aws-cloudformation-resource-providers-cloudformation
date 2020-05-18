@@ -1,5 +1,6 @@
 package software.amazon.cloudformation.resourceversion;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
@@ -9,6 +10,7 @@ import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.resource.Serializer;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -44,7 +46,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
         DescribeTypeResponse response;
         try {
-            response = proxy.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(model),
+            response = proxy.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(model, logger),
                 ClientBuilder.getClient()::describeType);
 
             // if the type is deprecated, this will be treated as non-existent for the purposes of CloudFormation
@@ -66,6 +68,12 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         modelFromReadResult.setArn(model.getArn());
         modelFromReadResult.setIsDefaultVersion(versionId.equals(response.defaultVersionId()));
         modelFromReadResult.setVersionId(versionId);
+
+        try {
+            logger.log(new Serializer().serialize(modelFromReadResult));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         return ProgressEvent.defaultSuccessHandler(modelFromReadResult);
     }

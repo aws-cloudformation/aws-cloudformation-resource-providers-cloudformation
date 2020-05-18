@@ -32,15 +32,20 @@ class Translator {
         return builder.build();
     }
 
-    static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
+    static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model,
+                                                      @NonNull final Logger logger) {
+
+        logger.log("Reading version: " + model.getArn());
+
         return DescribeTypeRequest.builder()
+            .arn(model.getArn())
             .type(RegistryType.RESOURCE)
             .typeName(model.getTypeName())
             .build();
     }
 
     static DeregisterTypeRequest translateToDeleteRequest(@NonNull final ResourceModel model,
-                                                          final Logger logger) {
+                                                          @NonNull final Logger logger) {
         if (model.getIsDefaultVersion()) {
             logger.log("De-registering default version");
             return DeregisterTypeRequest.builder()
@@ -65,7 +70,7 @@ class Translator {
     static ResourceModel translateForRead(@NonNull final DescribeTypeResponse response) {
 
         final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
-//            .isDefaultVersion(response.isDefaultVersion())
+            .isDefaultVersion(response.isDefaultVersion())
             .description(response.description())
             .documentationUrl(response.documentationUrl())
             .executionRoleArn(response.executionRoleArn())

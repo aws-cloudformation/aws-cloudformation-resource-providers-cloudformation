@@ -2,6 +2,7 @@ package software.amazon.cloudformation.resourceversionalias;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
@@ -9,6 +10,7 @@ import software.amazon.awssdk.services.cloudformation.model.ProvisioningType;
 import software.amazon.awssdk.services.cloudformation.model.RegistryType;
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionRequest;
 import software.amazon.awssdk.services.cloudformation.model.Visibility;
+import software.amazon.cloudformation.proxy.Logger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -16,9 +18,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ExtendWith(MockitoExtension.class)
 public class TranslatorTest {
 
+    @Mock
+    private Logger logger;
+
     @Test
     public void translateToUpdateRequest_nullResourceModel() {
-        assertThatThrownBy(() -> Translator.translateToUpdateRequest(null))
+        assertThatThrownBy(() -> Translator.translateToUpdateRequest(null, logger))
             .hasNoCause()
             .hasMessage("model is marked @NonNull but is null")
             .isExactlyInstanceOf(NullPointerException.class);
@@ -30,7 +35,7 @@ public class TranslatorTest {
             .typeName("AWS::Test::Resource")
             .defaultVersionId("00000002")
             .build();
-        SetTypeDefaultVersionRequest request = Translator.translateToUpdateRequest(model);
+        SetTypeDefaultVersionRequest request = Translator.translateToUpdateRequest(model, logger);
 
         assertThat(request.arn()).isNull();
         assertThat(request.type()).isEqualTo(RegistryType.RESOURCE);
@@ -44,12 +49,12 @@ public class TranslatorTest {
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000002")
             .defaultVersionId("00000002")
             .build();
-        SetTypeDefaultVersionRequest request = Translator.translateToUpdateRequest(model);
+        SetTypeDefaultVersionRequest request = Translator.translateToUpdateRequest(model, logger);
 
         assertThat(request.arn()).isEqualTo("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000002");
         assertThat(request.type()).isNull();
         assertThat(request.typeName()).isNull();
-        assertThat(request.versionId()).isEqualTo("00000002");
+        assertThat(request.versionId()).isNull();
     }
 
     @Test

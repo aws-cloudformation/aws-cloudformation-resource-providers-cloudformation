@@ -30,7 +30,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         final ResourceModel model = request.getDesiredResourceState();
 
         try {
-            proxy.injectCredentialsAndInvokeV2(Translator.translateToUpdateRequest(model),
+            proxy.injectCredentialsAndInvokeV2(Translator.translateToUpdateRequest(model, logger),
                 ClientBuilder.getClient()::setTypeDefaultVersion);
         } catch (final ResourceNotFoundException e) {
             throw nullSafeNotFoundException(model);

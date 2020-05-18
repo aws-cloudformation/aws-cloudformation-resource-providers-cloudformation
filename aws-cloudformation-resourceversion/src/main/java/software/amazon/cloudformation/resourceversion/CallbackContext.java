@@ -12,6 +12,7 @@ import java.util.List;
 @Builder
 @JsonDeserialize(builder = CallbackContext.CallbackContextBuilder.class)
 public class CallbackContext {
+    private boolean arnPredicted;
     private boolean createStarted;
     private boolean createStabilized;
     private boolean updateStarted;

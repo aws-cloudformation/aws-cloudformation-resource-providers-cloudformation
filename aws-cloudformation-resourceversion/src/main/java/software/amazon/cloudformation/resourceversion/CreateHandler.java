@@ -3,8 +3,13 @@ package software.amazon.cloudformation.resourceversion;
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationResponse;
+import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
+import software.amazon.awssdk.services.cloudformation.model.RegistryType;
+import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
+import software.amazon.awssdk.services.cloudformation.model.TypeVersionSummary;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
@@ -14,6 +19,8 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.Arrays;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
@@ -37,6 +44,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         if (!context.isCreateStarted()) {
             registerType(proxy, model, context, logger);
+        }
+
+        if (!context.isArnPredicted()) {
+            return predictArn(proxy, request, context, logger);
         }
 
         return checkTypeRegistrationCompletion(proxy, model, context, logger);
@@ -64,6 +75,57 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         return response;
     }
+
+    ProgressEvent<ResourceModel, CallbackContext> predictArn(
+        final AmazonWebServicesClientProxy proxy,
+        final ResourceHandlerRequest<ResourceModel> request,
+        final CallbackContext callbackContext,
+        final Logger logger) {
+
+        String arn;
+        try {
+            // find the highest existing version number for this type
+            while (true) {
+                final ListTypeVersionsRequest listTypeVersionsRequest = ListTypeVersionsRequest.builder()
+                    .type(RegistryType.RESOURCE)
+                    .typeName(request.getDesiredResourceState().getTypeName())
+                    .build();
+                final ListTypeVersionsResponse response = proxy.injectCredentialsAndInvokeV2(listTypeVersionsRequest,
+                    ClientBuilder.getClient()::listTypeVersions);
+
+                if (response.nextToken() == null) {
+                    // bump the version number for this revision
+                    final TypeVersionSummary mostRecentVersion = response.typeVersionSummaries().get(response.typeVersionSummaries().size() - 1);
+                    arn = mostRecentVersion.arn();
+                    arn = arn
+                        .substring(0, arn.lastIndexOf("/") + 1)
+                        .concat(String.format("%08d", Integer.parseInt(mostRecentVersion.versionId()) + 1));
+                    break;
+                }
+            }
+        } catch (final TypeNotFoundException e) {
+            // registration can be assumed to be the first version for a type
+            arn = String.format("arn:{%s}:cloudformation:{%s}:{%s}:type/resource/{%s}/00000001",
+                request.getAwsPartition(),
+                request.getRegion(),
+                request.getAwsAccountId(),
+                request.getDesiredResourceState().getTypeName().replace("::", "-"));
+        } catch (final CfnRegistryException e) {
+            logger.log(Arrays.toString(e.getStackTrace()));
+            throw new CfnGeneralServiceException(e);
+        }
+
+        callbackContext.setArnPredicted(true);
+        request.getDesiredResourceState().setArn(arn);
+
+        return ProgressEvent.<ResourceModel, CallbackContext>builder()
+            .callbackContext(callbackContext)
+            .callbackDelaySeconds(3)
+            .status(OperationStatus.IN_PROGRESS)
+            .resourceModel(request.getDesiredResourceState())
+            .build();
+    }
+
 
     ProgressEvent<ResourceModel, CallbackContext> checkTypeRegistrationCompletion(
         final AmazonWebServicesClientProxy proxy,

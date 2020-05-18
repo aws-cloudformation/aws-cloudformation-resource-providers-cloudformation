@@ -21,7 +21,6 @@ Resources:
         Type: AWS::CloudFormation::ResourceVersionAlias
         Properties:
             Arn: !Ref UpdatedType
-            # DefaultVersionId: !GetAtt UpdatedType.VersionId
-            DefaultVersionId: "00000002"
+            DefaultVersionId: !GetAtt UpdatedType.VersionId
             TypeName: Sample::CloudFormation::Resource
 ```

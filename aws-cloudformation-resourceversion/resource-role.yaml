@@ -26,6 +26,7 @@ Resources:
                 - "cloudformation:DeregisterType"
                 - "cloudformation:DescribeType"
                 - "cloudformation:DescribeTypeRegistration"
+                - "cloudformation:ListTypeVersions"
                 - "cloudformation:ListTypes"
                 - "cloudformation:RegisterType"
                 Resource: "*"

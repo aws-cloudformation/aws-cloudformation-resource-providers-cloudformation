@@ -19,7 +19,13 @@
     </properties>
 
     <dependencies>
-	<!-- https://mvnrepository.com/artifact/software.amazon.cloudformation/aws-cloudformation-rpdk-java-plugin -->
+        <!-- Can be removed when https://github.com/aws-cloudformation/cloudformation-cli-java-plugin/pull/267 is merged -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>cloudformation</artifactId>
+            <version>2.13.18</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/software.amazon.cloudformation/aws-cloudformation-rpdk-java-plugin -->
         <dependency>
             <groupId>software.amazon.cloudformation</groupId>
             <artifactId>aws-cloudformation-rpdk-java-plugin</artifactId>
