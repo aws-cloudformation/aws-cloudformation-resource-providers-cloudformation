@@ -29,7 +29,7 @@
         <dependency>
             <groupId>software.amazon.cloudformation</groupId>
             <artifactId>aws-cloudformation-rpdk-java-plugin</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.5</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
