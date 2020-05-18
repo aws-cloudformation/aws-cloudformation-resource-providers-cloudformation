@@ -11,6 +11,7 @@ import software.amazon.cloudformation.stackset.OperationPreferences;
 import software.amazon.cloudformation.stackset.util.StackInstance;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -69,7 +70,8 @@ public class PropertyTranslator {
      */
     static List<Parameter> translateToSdkParameters(
             final Collection<software.amazon.cloudformation.stackset.Parameter> parameters) {
-        if (parameters == null) return null;
+        // To remove Parameters from a StackSet or StackSetInstance, set it as an empty list
+        if (CollectionUtils.isNullOrEmpty(parameters)) return Collections.emptyList();
         return parameters.stream()
                 .map(parameter -> Parameter.builder()
                         .parameterKey(parameter.getParameterKey())
@@ -120,8 +122,9 @@ public class PropertyTranslator {
      * @param tags Tags CFN resource model.
      * @return SDK Tags.
      */
-    static Collection<Tag> translateToSdkTags(final Collection<software.amazon.cloudformation.stackset.Tag> tags) {
-        if (CollectionUtils.isNullOrEmpty(tags)) return null;
+    static List<Tag> translateToSdkTags(final Collection<software.amazon.cloudformation.stackset.Tag> tags) {
+        // To remove Tags from a StackSet, set it as an empty list
+        if (CollectionUtils.isNullOrEmpty(tags)) return Collections.emptyList();
         return tags.stream().map(tag -> Tag.builder()
                 .key(tag.getKey())
                 .value(tag.getValue())

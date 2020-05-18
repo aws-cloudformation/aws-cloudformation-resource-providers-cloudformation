@@ -29,8 +29,8 @@
                 }
             },
             "required": [
-                "Value",
-                "Key"
+                "Key",
+                "Value"
             ],
             "additionalProperties": false
         },
@@ -306,6 +306,7 @@
         "create": {
             "permissions": [
                 "s3:GetObject",
+                "s3:HeadObject",
                 "cloudformation:CreateStackSet",
                 "cloudformation:CreateStackInstances",
                 "cloudformation:DescribeStackSetOperation",
@@ -323,6 +324,7 @@
         "update": {
             "permissions": [
                 "s3:GetObject",
+                "s3:HeadObject",
                 "cloudformation:UpdateStackSet",
                 "cloudformation:CreateStackInstances",
                 "cloudformation:DeleteStackInstances",

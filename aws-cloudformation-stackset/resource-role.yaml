@@ -37,6 +37,7 @@ Resources:
                 - "cloudformation:UpdateStackInstances"
                 - "cloudformation:UpdateStackSet"
                 - "s3:GetObject"
+                - "s3:HeadObject"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

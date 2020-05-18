@@ -16,7 +16,7 @@ public class PropertyTranslatorTest {
 
     @Test
     public void test_translateToSdkTags_IfIsNull() {
-        assertThat(translateToSdkTags(null)).isNull();
+        assertThat(translateToSdkTags(null)).isEmpty();
     }
 
     @Test
