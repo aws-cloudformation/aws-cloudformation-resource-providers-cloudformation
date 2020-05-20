@@ -27,7 +27,7 @@ public class DeleteHandler extends BaseHandlerStd {
         final ResourceModel model = request.getDesiredResourceState();
         // Analyzes stack instances group for delete
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
-        analyzeTemplate(proxy, request, placeHolder, logger, Action.DELETE);
+        analyzeTemplate(proxyClient, request, placeHolder, Action.DELETE);
 
         return ProgressEvent.progress(model, callbackContext)
                 // delete/stabilize progress chain - delete all associated stack instances

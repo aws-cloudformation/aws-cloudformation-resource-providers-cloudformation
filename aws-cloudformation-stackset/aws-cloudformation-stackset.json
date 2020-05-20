@@ -305,8 +305,7 @@
     "handlers": {
         "create": {
             "permissions": [
-                "s3:GetObject",
-                "s3:HeadObject",
+                "cloudformation:GetTemplateSummary",
                 "cloudformation:CreateStackSet",
                 "cloudformation:CreateStackInstances",
                 "cloudformation:DescribeStackSetOperation",
@@ -323,8 +322,7 @@
         },
         "update": {
             "permissions": [
-                "s3:GetObject",
-                "s3:HeadObject",
+                "cloudformation:GetTemplateSummary",
                 "cloudformation:UpdateStackSet",
                 "cloudformation:CreateStackInstances",
                 "cloudformation:DeleteStackInstances",

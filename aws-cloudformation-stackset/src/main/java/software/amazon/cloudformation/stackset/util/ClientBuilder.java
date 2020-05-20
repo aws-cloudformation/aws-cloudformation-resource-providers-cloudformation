@@ -1,7 +1,6 @@
 package software.amazon.cloudformation.stackset.util;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.cloudformation.LambdaWrapper;
 
 public class ClientBuilder {
@@ -11,18 +10,6 @@ public class ClientBuilder {
 
     public static CloudFormationClient getClient() {
         return LazyHolder.SERVICE_CLIENT;
-    }
-
-    /**
-     * Gets S3 client for requests to interact with getting/validating template content
-     * if {@link software.amazon.cloudformation.stackset.ResourceModel#getTemplateURL()} is passed in
-     *
-     * @return {@link S3Client}
-     */
-    public static S3Client getS3Client() {
-        return S3Client.builder()
-                .httpClient(LambdaWrapper.HTTP_CLIENT)
-                .build();
     }
 
     /**

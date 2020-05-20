@@ -29,7 +29,7 @@ public class UpdateHandler extends BaseHandlerStd {
         final ResourceModel model = request.getDesiredResourceState();
         final ResourceModel previousModel = request.getPreviousResourceState();
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
-        analyzeTemplate(proxy, request, placeHolder, logger, Action.UPDATE);
+        analyzeTemplate(proxyClient, request, placeHolder, Action.UPDATE);
 
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress -> updateStackSet(proxy, proxyClient, progress, previousModel))

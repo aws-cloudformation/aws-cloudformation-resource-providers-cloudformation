@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.cloudformation.model.CreateStackSetReques
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
+import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -37,6 +38,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_ST
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_3;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_4;
+import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_TEMPLATE_SUMMARY_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_EMPTY_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_ONE_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_RESPONSE;
@@ -55,6 +57,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGE
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL_FOR_READ;
+import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest extends AbstractTestBase {
@@ -85,6 +88,8 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
         when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
@@ -112,6 +117,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
@@ -129,6 +135,8 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
         when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
@@ -156,6 +164,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client(), times(2)).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client(), times(2)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
@@ -173,6 +182,8 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
         when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
@@ -191,6 +202,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
@@ -204,7 +216,8 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
-
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
         when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
@@ -230,6 +243,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
@@ -247,6 +261,8 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
         when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
@@ -262,9 +278,28 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getErrorCode()).isEqualTo(InternalFailure);
 
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+    }
+
+    @Test
+    public void handlerRequest_CfnInvalidRequestException_NestedStack() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(SELF_MANAGED_DUPLICATE_INSTANCES_MODEL)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(INVALID_TEMPLATE_SUMMARY_RESPONSE);
+
+        assertThrows(CfnInvalidRequestException.class,
+                () -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger));
+
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
     }
 
     @Test
@@ -276,8 +311,13 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+
         assertThrows(CfnInvalidRequestException.class,
                 () -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger));
+
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
     }
 
     @Test
@@ -289,7 +329,12 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+
         assertThrows(CfnInvalidRequestException.class,
                 () -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger));
+
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
     }
 }

@@ -285,17 +285,15 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     /**
      * Analyzes/validates template and StackInstancesGroup
      *
-     * @param proxy       {@link AmazonWebServicesClientProxy}
+     * @param proxyClient the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
      * @param request     {@link ResourceHandlerRequest<ResourceModel>}
      * @param placeHolder {@link StackInstancesPlaceHolder}
-     * @param logger      {@link Logger}
      * @param action      {@link Action}
      */
     protected void analyzeTemplate(
-            final AmazonWebServicesClientProxy proxy,
+            final ProxyClient<CloudFormationClient> proxyClient,
             final ResourceHandlerRequest<ResourceModel> request,
             final StackInstancesPlaceHolder placeHolder,
-            final Logger logger,
             final Action action) {
 
         final ResourceModel desiredModel = request.getDesiredResourceState();
@@ -303,11 +301,11 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
         switch (action) {
             case CREATE:
-                new Validator().validateTemplate(proxy, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), logger);
+                new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
                 InstancesAnalyzer.builder().desiredModel(desiredModel).build().analyzeForCreate(placeHolder);
                 break;
             case UPDATE:
-                new Validator().validateTemplate(proxy, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), logger);
+                new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
                 InstancesAnalyzer.builder().desiredModel(desiredModel).previousModel(previousModel).build().analyzeForUpdate(placeHolder);
                 break;
             case DELETE:

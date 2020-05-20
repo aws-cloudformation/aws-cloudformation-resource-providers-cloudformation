@@ -2,7 +2,6 @@ package software.amazon.cloudformation.stackset.util;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.stackset.DeploymentTargets;

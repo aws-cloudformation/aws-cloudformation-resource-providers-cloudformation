@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.cloudformation.model.DeleteStackSetRespon
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetResponse;
+import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetsResponse;
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
@@ -73,81 +74,10 @@ public class TestUtils {
             .append("  }\n")
             .append("}").toString();
 
-    public final static String VALID_YAML_TEMPLATE =
-            "Parameters:\n" +
-            "    DomainName:\n" +
-            "        Type: String\n" +
-            "        Default: myexample.com\n" +
-            "Resources:\n" +
-            "    BasicHealthCheck:\n" +
-            "        Type: AWS::Route53::HealthCheck\n" +
-            "        Properties:\n" +
-            "            HealthCheckConfig:\n" +
-            "                RequestInterval: 10\n" +
-            "                FullyQualifiedDomainName:\n" +
-            "                    Ref: DomainName\n" +
-            "                IPAddress: 98.139.180.149\n" +
-            "                Port: \"88\"\n" +
-            "                ResourcePath: /docs/route-53-health-check.html\n" +
-            "                Type: HTTP\n" +
-            "            HealthCheckTags:\n" +
-            "                - Key: A\n" +
-            "                  Value: \"1\"\n" +
-            "                - Key: B\n" +
-            "                  Value: \"1\"\n" +
-            "                - Key: C\n" +
-            "                  Value: \"1\"";
-
-    public final static String VALID_YAML_SHORTHANDS_TEMPLATE =
-            "Conditions:\n" +
-            "    Fn::Equals:\n" +
-            "    - !Ref\n" +
-            "    - !Select [1, [Foo, Bar]]\n" +
-            "Resources:\n" +
-            "  MyCodeDeploy:\n" +
-            "    Type: AWS::Test::Test\n" +
-            "    Properties:\n" +
-            "      TestTrue: !And true\n" +
-            "      AutoScalingGroups:\n" +
-            "        - !Ref AutoScalingGroup\n" +
-            "      TestMappingNode: !GetAtt { 1: Foo }\n" +
-            "      DeploymentGroupName: !Sub ${Test}_${Test}\n" +
-            "      ServiceRoleArn: !GetAtt CodeDeployRole.Arn";
-
-    public final static String INVALID_EMBEDDED_STACK_TEMPLATE =
-            "{\n" +
-            "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
-            "    \"Resources\": {\n" +
-            "        \"MyStack\" : {\n" +
-            "            \"Type\" : \"AWS::CloudFormation::Stack\",\n" +
-            "            \"Properties\" : {\n" +
-            "                \"TemplateURL\" : \"test.url\"\n" +
-            "            },\n" +
-            "    }\n" +
-            "}";
-
-    public final static String INVALID_EMBEDDED_STACKSET_TEMPLATE =
-            "{\n" +
-            "    \"AWSTemplateFormatVersion\": \"2010-09-09\",\n" +
-            "    \"Resources\": {\n" +
-            "        \"MyStack\" : {\n" +
-            "            \"Type\" : \"AWS::CloudFormation::StackSet\",\n" +
-            "            \"Properties\" : {\n" +
-            "                \"TemplateURL\" : \"test.url\"\n" +
-            "            }\n" +
-            "        }\n" +
-            "    }\n" +
-            "}";
-
     public final static String STACK_SET_NAME = "StackSet";
     public final static String STACK_SET_ID = "StackSet:stack-set-id";
 
     public final static String OPERATION_ID_1 = "operation-id-1";
-
-    public final static String OPERATION_ID_2 = "operation-id-2";
-    public final static String OPERATION_ID_3 = "operation-id-3";
-    public final static String OPERATION_ID_4 = "operation-id-4";
-    public final static String OPERATION_ID_5 = "operation-id-5";
 
     public final static String LOGICAL_ID = "MyResource";
     public final static String REQUEST_TOKEN = "token";
@@ -219,8 +149,6 @@ public class TestUtils {
             .parameterValue(PARAMETER_VALUE_3)
             .build();
 
-    public final static Map<String, Object> TEMPLATE_MAP = ImmutableMap.of("TemplateURL", "foo");
-
     public final static Map<String, String> DESIRED_RESOURCE_TAGS = ImmutableMap.of(
             "key1", "val1", "key2", "val2", "key3", "val3");
     public final static Map<String, String> PREVIOUS_RESOURCE_TAGS = ImmutableMap.of(
@@ -285,6 +213,14 @@ public class TestUtils {
     public final static AutoDeployment AUTO_DEPLOYMENT = AutoDeployment.builder()
             .enabled(true)
             .retainStacksOnAccountRemoval(true)
+            .build();
+
+    public final static GetTemplateSummaryResponse VALID_TEMPLATE_SUMMARY_RESPONSE = GetTemplateSummaryResponse.builder()
+            .resourceTypes(Arrays.asList("AWS::CloudFormation::WaitCondition"))
+            .build();
+
+    public final static GetTemplateSummaryResponse INVALID_TEMPLATE_SUMMARY_RESPONSE = GetTemplateSummaryResponse.builder()
+            .resourceTypes(Arrays.asList("AWS::CloudFormation::Stack"))
             .build();
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_1 = StackInstanceSummary.builder()

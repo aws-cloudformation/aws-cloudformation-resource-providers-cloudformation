@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstances
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
+import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetRequest;
@@ -43,6 +44,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.SIMPLE_MODE
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATE_STACK_SET_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest extends AbstractTestBase {
@@ -72,6 +74,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .previousResourceState(SELF_MANAGED_MODEL)
                 .build();
 
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().updateStackSet(any(UpdateStackSetRequest.class)))
                 .thenReturn(UPDATE_STACK_SET_RESPONSE);
         when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
@@ -103,6 +107,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(proxyClient.client()).updateStackSet(any(UpdateStackSetRequest.class));
         verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client()).updateStackInstances(any(UpdateStackInstancesRequest.class));
@@ -121,6 +126,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .previousResourceState(SIMPLE_MODEL)
                 .build();
 
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
@@ -143,6 +150,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
         verify(proxyClient.client(), times(4)).describeStackInstance(any(DescribeStackInstanceRequest.class));

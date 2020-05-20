@@ -30,14 +30,13 @@ Resources:
                 - "cloudformation:DescribeStackInstance"
                 - "cloudformation:DescribeStackSet"
                 - "cloudformation:DescribeStackSetOperation"
+                - "cloudformation:GetTemplateSummary"
                 - "cloudformation:ListStackInstances"
                 - "cloudformation:ListStackSets"
                 - "cloudformation:TagResource"
                 - "cloudformation:UntagResource"
                 - "cloudformation:UpdateStackInstances"
                 - "cloudformation:UpdateStackSet"
-                - "s3:GetObject"
-                - "s3:HeadObject"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

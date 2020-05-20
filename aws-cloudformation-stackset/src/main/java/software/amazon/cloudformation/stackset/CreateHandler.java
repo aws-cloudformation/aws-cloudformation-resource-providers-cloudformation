@@ -26,7 +26,7 @@ public class CreateHandler extends BaseHandlerStd {
         this.logger = logger;
         final ResourceModel model = request.getDesiredResourceState();
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
-        analyzeTemplate(proxy, request, placeHolder, logger, Action.CREATE);
+        analyzeTemplate(proxyClient, request, placeHolder, Action.CREATE);
 
         return proxy.initiate("AWS-CloudFormation-StackSet::Create", proxyClient, model, callbackContext)
                 .translateToServiceRequest(resourceModel -> createStackSetRequest(resourceModel, request.getClientRequestToken()))
