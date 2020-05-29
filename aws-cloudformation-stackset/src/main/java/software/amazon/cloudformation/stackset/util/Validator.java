@@ -21,7 +21,8 @@ public class Validator {
         switch (type) {
             case "AWS::CloudFormation::Stack":
             case "AWS::CloudFormation::StackSet":
-                throw new CfnInvalidRequestException(String.format("Nested %s is not allowed", type));
+                throw new CfnInvalidRequestException(
+                        String.format("Nested %s is not supported in AWS::CloudFormation::StackSet", type));
         }
     }
 
@@ -33,7 +34,7 @@ public class Validator {
      *     <li> Template contents must be valid
      * </ul>
      *
-     * @param proxyClient      {@link ProxyClient < CloudFormationClient >}
+     * @param proxyClient      {@link ProxyClient <CloudFormationClient>}
      * @param templateBody     {@link software.amazon.cloudformation.stackset.ResourceModel#getTemplateBody}
      * @param templateLocation {@link software.amazon.cloudformation.stackset.ResourceModel#getTemplateURL}
      * @throws CfnInvalidRequestException if template is not valid
@@ -46,6 +47,7 @@ public class Validator {
         final GetTemplateSummaryResponse response = proxyClient.injectCredentialsAndInvokeV2(
                 getTemplateSummaryRequest(templateBody, templateLocation),
                 proxyClient.client()::getTemplateSummary);
+
         if (response.hasResourceTypes()) {
             response.resourceTypes().forEach(Validator::validateResource);
         }

@@ -57,7 +57,7 @@ public class DeleteHandler extends BaseHandlerStd {
                 .makeServiceCall((modelRequest, proxyInvocation) -> {
                     final DeleteStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
                             deleteStackSetRequest(model.getStackSetId()), proxyInvocation.client()::deleteStackSet);
-                    logger.log(String.format("%s successfully deleted.", ResourceModel.TYPE_NAME));
+                    logger.log(String.format("%s [%s] has been deleted successfully.", ResourceModel.TYPE_NAME, model.getStackSetId()));
                     return response;
                 })
                 .success();

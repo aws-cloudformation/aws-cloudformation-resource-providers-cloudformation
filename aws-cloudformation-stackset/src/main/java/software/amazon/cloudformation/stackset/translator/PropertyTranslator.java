@@ -63,7 +63,7 @@ public class PropertyTranslator {
     }
 
     /**
-     * Converts resource model Parameters to StackSet SDK Parameters
+     * Converts StackSet SDK Parameters to resource model Parameters
      *
      * @param parameters Parameters collection from resource model
      * @return SDK Parameter list

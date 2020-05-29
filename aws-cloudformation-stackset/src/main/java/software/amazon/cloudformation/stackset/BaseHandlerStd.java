@@ -76,7 +76,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
         switch (status) {
             case SUCCEEDED:
-                logger.log(String.format("%s has been successfully stabilized.", operationId));
+                logger.log(String.format("StackSet Operation [%s] has been successfully stabilized.", operationId));
                 return true;
             case RUNNING:
             case QUEUED:

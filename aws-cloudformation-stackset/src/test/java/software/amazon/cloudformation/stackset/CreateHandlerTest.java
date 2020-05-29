@@ -38,7 +38,6 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_ST
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_3;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_4;
-import static software.amazon.cloudformation.stackset.util.TestUtils.INVALID_TEMPLATE_SUMMARY_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_EMPTY_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_ONE_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_RESPONSE;
@@ -57,6 +56,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGE
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL_FOR_READ;
+import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK;
 import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
 
 @ExtendWith(MockitoExtension.class)
@@ -294,7 +294,7 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .build();
 
         when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
-                .thenReturn(INVALID_TEMPLATE_SUMMARY_RESPONSE);
+                .thenReturn(TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK);
 
         assertThrows(CfnInvalidRequestException.class,
                 () -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger));

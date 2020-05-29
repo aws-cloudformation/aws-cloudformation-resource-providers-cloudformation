@@ -1,6 +1,6 @@
 # AWS::CloudFormation::StackSet
 
-Resource Type definition for AWS::CloudFormation::StackSet
+StackSet as a resource provides one-click experience for provisioning a StackSet and StackInstances
 
 ## Syntax
 

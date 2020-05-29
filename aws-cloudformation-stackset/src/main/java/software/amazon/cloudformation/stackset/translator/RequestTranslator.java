@@ -24,7 +24,7 @@ import static software.amazon.cloudformation.stackset.translator.PropertyTransla
 
 public class RequestTranslator {
 
-    private static int LIST_MAX_ITEMS = 100;
+    private static final int LIST_MAX_ITEMS = 100;
 
     public static CreateStackSetRequest createStackSetRequest(
             final ResourceModel model, final String requestToken) {

@@ -219,9 +219,10 @@ public class TestUtils {
             .resourceTypes(Arrays.asList("AWS::CloudFormation::WaitCondition"))
             .build();
 
-    public final static GetTemplateSummaryResponse INVALID_TEMPLATE_SUMMARY_RESPONSE = GetTemplateSummaryResponse.builder()
-            .resourceTypes(Arrays.asList("AWS::CloudFormation::Stack"))
-            .build();
+    public final static GetTemplateSummaryResponse TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK =
+            GetTemplateSummaryResponse.builder()
+                    .resourceTypes(Arrays.asList("AWS::CloudFormation::Stack"))
+                    .build();
 
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_1 = StackInstanceSummary.builder()
             .organizationalUnitId(ORGANIZATION_UNIT_ID_1)
