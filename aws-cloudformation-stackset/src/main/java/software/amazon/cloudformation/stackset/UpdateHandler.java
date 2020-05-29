@@ -32,8 +32,8 @@ public class UpdateHandler extends BaseHandlerStd {
         analyzeTemplate(proxyClient, request, placeHolder, Action.UPDATE);
 
         return ProgressEvent.progress(model, callbackContext)
-                .then(progress -> updateStackSet(proxy, proxyClient, progress, previousModel))
                 .then(progress -> deleteStackInstances(proxy, proxyClient, progress, placeHolder.getDeleteStackInstances(), logger))
+                .then(progress -> updateStackSet(proxy, proxyClient, progress, previousModel))
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, placeHolder.getCreateStackInstances(), logger))
                 .then(progress -> updateStackInstances(proxy, proxyClient, progress, placeHolder.getUpdateStackInstances(), logger))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
