@@ -109,15 +109,15 @@ public class TranslatorTest {
     }
 
     @Test
-    public void translateForRead_nullResourceModel() {
-        assertThatThrownBy(() -> Translator.translateForRead(null))
+    public void translateFromReadResponse_nullResourceModel() {
+        assertThatThrownBy(() -> Translator.translateFromReadResponse(null))
             .hasNoCause()
-            .hasMessage("response is marked @NonNull but is null")
+            .hasMessage("awsResponse is marked @NonNull but is null")
             .isExactlyInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void translateForRead_noTimestamps() {
+    public void translateFromReadResponse_noTimestamps() {
         DescribeTypeResponse response = DescribeTypeResponse.builder()
             .description("some resource")
             .documentationUrl("https://mydocs.org/some-resource")
@@ -131,9 +131,9 @@ public class TranslatorTest {
             .defaultVersionId("1")
             .build();
 
-        ResourceModel model = Translator.translateForRead(response);
+        ResourceModel model = Translator.translateFromReadResponse(response);
 
-//        assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
+        assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());
         assertThat(model.getDocumentationUrl()).isEqualTo(response.documentationUrl());
         assertThat(model.getExecutionRoleArn()).isEqualTo(response.executionRoleArn());
@@ -149,7 +149,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void translateForRead_allTimestamps() {
+    public void translateFromReadResponse_allTimestamps() {
         DescribeTypeResponse response = DescribeTypeResponse.builder()
             .description("some resource")
             .documentationUrl("https://mydocs.org/some-resource")
@@ -165,9 +165,9 @@ public class TranslatorTest {
             .timeCreated(Instant.now())
             .build();
 
-        ResourceModel model = Translator.translateForRead(response);
+        ResourceModel model = Translator.translateFromReadResponse(response);
 
-//        assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
+        assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());
         assertThat(model.getDocumentationUrl()).isEqualTo(response.documentationUrl());
         assertThat(model.getExecutionRoleArn()).isEqualTo(response.executionRoleArn());
@@ -183,7 +183,7 @@ public class TranslatorTest {
     }
 
     @Test
-    public void translateForRead_withLoggingConfig() {
+    public void translateFromReadResponse_withLoggingConfig() {
         software.amazon.awssdk.services.cloudformation.model.LoggingConfig loggingConfig =
             software.amazon.awssdk.services.cloudformation.model.LoggingConfig.builder()
                 .logGroupName("my-group")
@@ -204,9 +204,9 @@ public class TranslatorTest {
             .defaultVersionId("1")
             .build();
 
-        ResourceModel model = Translator.translateForRead(response);
+        ResourceModel model = Translator.translateFromReadResponse(response);
 
-//        assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
+        assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());
         assertThat(model.getDocumentationUrl()).isEqualTo(response.documentationUrl());
         assertThat(model.getExecutionRoleArn()).isEqualTo(response.executionRoleArn());
@@ -223,27 +223,25 @@ public class TranslatorTest {
         assertThat(model.getLoggingConfig().getLogRoleArn()).isEqualTo(loggingConfig.logRoleArn());
     }
 
-
     @Test
-    public void translateForList_nullResourceModel() {
-        assertThatThrownBy(() -> Translator.translateForList(null))
+    public void translateFromListResponse_nullResourceModel() {
+        assertThatThrownBy(() -> Translator.translateFromListResponse(null))
             .hasNoCause()
-            .hasMessage("response is marked @NonNull but is null")
+            .hasMessage("awsResponse is marked @NonNull but is null")
             .isExactlyInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void translateForList_noTypes() {
+    public void translateFromListResponse_noTypes() {
         ListTypesResponse response = ListTypesResponse.builder().build();
 
-        List<ResourceModel> model = Translator.translateForList(response);
+        List<ResourceModel> model = Translator.translateFromListResponse(response);
 
         assertThat(model.isEmpty()).isTrue();
     }
 
-
     @Test
-    public void translateForList_withTypes() {
+    public void translateFromListResponse_withTypes() {
         List<TypeSummary> typeSummaries = new ArrayList<>();
         typeSummaries.add(TypeSummary.builder().typeArn("Type1").build());
         typeSummaries.add(TypeSummary.builder().typeArn("Type2").build());
@@ -252,7 +250,7 @@ public class TranslatorTest {
             .typeSummaries(typeSummaries)
             .build();
 
-        List<ResourceModel> model = Translator.translateForList(response);
+        List<ResourceModel> model = Translator.translateFromListResponse(response);
 
         assertThat(model.size()).isEqualTo(2);
         assertThat(model.get(0).getArn()).isEqualTo("Type1");

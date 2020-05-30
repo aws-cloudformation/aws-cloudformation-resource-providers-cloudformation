@@ -10,6 +10,7 @@
             "amazon",
             "cloudformation",
             "resourceversion"
-        ]
+        ],
+        "codegen_template_path": "guided_aws"
     }
 }

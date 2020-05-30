@@ -1,25 +1,13 @@
 package software.amazon.cloudformation.resourceversion;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import software.amazon.cloudformation.proxy.StdCallbackContext;
 
-import java.util.List;
-
-@Data
-@Builder
-@JsonDeserialize(builder = CallbackContext.CallbackContextBuilder.class)
-public class CallbackContext {
-    private boolean arnPredicted;
-    private boolean createStarted;
-    private boolean createStabilized;
-    private boolean updateStarted;
-    private boolean updateStabilized;
+@lombok.Getter
+@lombok.Setter
+@lombok.ToString
+@lombok.EqualsAndHashCode(callSuper = true)
+@lombok.Builder
+public class CallbackContext extends StdCallbackContext {
+    private String predictedArn;
     private String registrationToken;
-
-    @JsonPOJOBuilder(withPrefix = "")
-    public static class CallbackContextBuilder {
-    }
 }

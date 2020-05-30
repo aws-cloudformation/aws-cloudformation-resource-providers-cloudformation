@@ -1,26 +1,12 @@
 # AWS::CloudFormation::ResourceVersion
 
+Congratulations on starting development! Next steps:
 
-## Sample Usage
+1. Write the JSON schema describing your resource, `aws-cloudformation-resourceversion.json`
+1. Implement your resource handlers.
 
-```
-Resources:
-    InitialType:
-        Type: AWS::CloudFormation::ResourceVersion
-        Properties:
-            TypeName: Sample::CloudFormation::Resource
-            SchemaHandlerPackage: s3://cloudformationmanageduploadinfrast-artifactbucket-123456789012abcdef/sample-cloudformation-resource.zip
-    UpdatedType:
-        Type: AWS::CloudFormation::ResourceVersion
-        Properties:
-            TypeName: Sample::CloudFormation::Resource
-            SchemaHandlerPackage: s3://cloudformationmanageduploadinfrast-artifactbucket-123456789012abcdef/sample-cloudformation-resource-update.zip
-        DependsOn: InitialType
+The RPDK will automatically generate the correct resource model from the schema whenever the project is built via Maven. You can also do this manually with the following command: `cfn generate`.
 
-    DefaultVersion:
-        Type: AWS::CloudFormation::ResourceVersionAlias
-        Properties:
-            Arn: !Ref UpdatedType
-            DefaultVersionId: !GetAtt UpdatedType.VersionId
-            TypeName: Sample::CloudFormation::Resource
-```
+> Please don't modify files under `target/generated-sources/rpdk`, as they will be automatically overwritten.
+
+The code uses [Lombok](https://projectlombok.org/), and [you may have to install IDE integrations](https://projectlombok.org/setup/overview) to enable auto-complete for Lombok-annotated classes.
