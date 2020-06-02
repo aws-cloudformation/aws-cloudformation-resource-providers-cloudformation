@@ -43,9 +43,12 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     @Test
     public void handleRequest_CreateFailed() {
         final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
 
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
-            .thenThrow(CfnRegistryException.builder().message("some exception").build());
+            .thenThrow(make(
+                CfnRegistryException.builder(), 500, "some exception",
+                CfnRegistryException.class));
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(ResourceModel.builder().build())
@@ -63,13 +66,14 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
+        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
     @Test
     public void handleRequest_NoExistingVersions_Success() {
         final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
 
         final ResourceModel resourceModel = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
@@ -85,7 +89,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         // lack of existing type results in a TypeNotFoundException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
-            .thenThrow(TypeNotFoundException.builder().message("Type not found").build());
+            .thenThrow(make(
+                TypeNotFoundException.builder(), 404, "Type not found",
+                TypeNotFoundException.class));
 
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
             .progressStatus(RegistrationStatus.COMPLETE)
@@ -135,6 +141,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     @Test
     public void handleRequest_ExistingVersions_Success() {
         final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
 
         final ResourceModel resourceModel = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
@@ -205,6 +212,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     @Test
     public void handleRequest_ExistingVersions_PaginationHandling() {
         final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
 
         final ResourceModel resourceModel = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
@@ -288,6 +296,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     @Test
     public void handleRequest_PredictArn_TypeNotFoundException() {
         final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
 
         final ResourceModel resourceModel = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
@@ -303,11 +312,15 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         // lack of existing type results in a TypeNotFoundException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
-            .thenThrow(TypeNotFoundException.builder().message("Type not found").build());
+            .thenThrow(make(
+                TypeNotFoundException.builder(), 404, "Type not found",
+                TypeNotFoundException.class));
 
         // throw on DescribeTypeRegistration
         when(client.describeTypeRegistration(ArgumentMatchers.any(DescribeTypeRegistrationRequest.class)))
-            .thenThrow(CfnRegistryException.builder().build());
+            .thenThrow(make(
+                CfnRegistryException.builder(), 500, "some exception",
+                CfnRegistryException.class));
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(resourceModel)
@@ -332,13 +345,14 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
+        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
     @Test
     public void handleRequest_PredictArn_CfnRegistryException() {
         final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
 
         final ResourceModel resourceModel = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
@@ -354,7 +368,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         // lack of existing type results in a TypeNotFoundException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
-            .thenThrow(CfnRegistryException.builder().build());
+            .thenThrow(make(
+                CfnRegistryException.builder(), 500, "some exception",
+                CfnRegistryException.class));
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(resourceModel)
@@ -372,13 +388,14 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
+        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
     @Test
     public void handleRequest_StabilizeFailed() {
         final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
 
         final ResourceModel resourceModel = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
@@ -394,7 +411,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         // lack of existing type results in a TypeNotFoundException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
-            .thenThrow(TypeNotFoundException.builder().message("Type not found").build());
+            .thenThrow(make(
+                TypeNotFoundException.builder(), 404, "Type not found",
+                TypeNotFoundException.class));
 
         // Registration failure
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
@@ -417,10 +436,11 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .isExactlyInstanceOf(CfnNotStabilizedException.class);
     }
 
-    //@Test
+    @Test
     // Test hangs because the mock chain for DescribeTypeRegistration keeps using IN_PROGRESS result for some reason
     public void handleRequest_DelayedCompletion() {
         final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
 
         final ResourceModel resourceModel = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
@@ -436,7 +456,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         // lack of existing type results in a TypeNotFoundException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
-            .thenThrow(TypeNotFoundException.builder().message("Type not found").build());
+            .thenThrow(make(
+                TypeNotFoundException.builder(), 404, "Type not found",
+                TypeNotFoundException.class));
 
         // First registration IN_PROGRESS to force a stabilization loop
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponseInProgress = DescribeTypeRegistrationResponse.builder()
@@ -455,6 +477,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .typeName("AWS::Demo::Resource")
             .sourceUrl("https://github.com/myorg/resource/repo.git")
             .visibility(Visibility.PRIVATE)
+            .isDefaultVersion(false)
             .build();
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
             .thenReturn(describeTypeResponse);
@@ -472,7 +495,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .sourceUrl("https://github.com/myorg/resource/repo.git")
             .isDefaultVersion(false)
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .versionId("00000002") // next version
+            .versionId("00000001") // next version
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);

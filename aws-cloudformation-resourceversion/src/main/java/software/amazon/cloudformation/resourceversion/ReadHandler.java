@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.CallChain;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -17,7 +18,6 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class ReadHandler extends BaseHandlerStd {
-    private Logger logger;
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
         final AmazonWebServicesClientProxy proxy,
@@ -26,11 +26,11 @@ public class ReadHandler extends BaseHandlerStd {
         final ProxyClient<CloudFormationClient> proxyClient,
         final Logger logger) {
 
-        this.logger = logger;
-
         final ResourceModel resourceModel = request.getDesiredResourceState();
+        final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator =
+            proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
-        return proxy.initiate("AWS-CloudFormation-ResourceVersion::Read", proxyClient, resourceModel, CallbackContext.builder().build())
+        return initiator.initiate("read")
             .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
             .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient , resourceModel))
             .done(awsResponse -> constructResourceModelFromResponse(awsResponse, resourceModel));

@@ -37,7 +37,6 @@ class Translator {
     return builder.build();
   }
 
-
   /**
    * Request to read a resource
    * @param model resource model
@@ -106,7 +105,7 @@ class Translator {
   }
 
   /**
-   * Request to list resources
+   * Request to list all types
    * @param nextToken token passed to the aws service list resources request
    * @return awsRequest the aws service request to list resources within aws account
    */

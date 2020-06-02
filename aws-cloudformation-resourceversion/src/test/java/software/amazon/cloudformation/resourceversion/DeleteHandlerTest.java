@@ -62,15 +62,6 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .awsAccountId("123456789012")
             .build();
 
-        final ResourceModel resourceModelResult = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .versionId("00000001")
-            .isDefaultVersion(false)
-            .build();
-
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
@@ -79,7 +70,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
+        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
@@ -135,15 +126,6 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .desiredResourceState(resourceModel)
             .build();
 
-        final ResourceModel resourceModelResult = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .versionId("00000001")
-            .isDefaultVersion(false)
-            .build();
-
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
@@ -152,7 +134,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
+        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
@@ -187,15 +169,6 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .desiredResourceState(resourceModel)
             .build();
 
-        final ResourceModel resourceModelResult = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .versionId("00000001")
-            .isDefaultVersion(false)
-            .build();
-
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
@@ -204,7 +177,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
+        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
@@ -240,15 +213,6 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .desiredResourceState(resourceModel)
             .build();
 
-        final ResourceModel resourceModelResult = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .versionId("00000001")
-            .isDefaultVersion(true)
-            .build();
-
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
@@ -257,7 +221,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
+        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }

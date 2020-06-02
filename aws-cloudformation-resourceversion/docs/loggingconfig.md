@@ -50,6 +50,4 @@ _Minimum_: <code>1</code>
 
 _Maximum_: <code>256</code>
 
-_Pattern_: <code>^arn:.+:iam::[0-9]{12}:role/.+$</code>
-
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
