@@ -15,7 +15,7 @@
     },
     "VersionId": {
       "description": "The ID of an existing version of the resource to set as the default.",
-      "pattern": "^[A-Za-z0-9-]{1,128]$",
+      "pattern": "^[A-Za-z0-9-]{1,128}$",
       "type": "string"
     }
   },
