@@ -7,6 +7,8 @@ import software.amazon.cloudformation.proxy.StdCallbackContext;
 @lombok.ToString
 @lombok.EqualsAndHashCode(callSuper = true)
 @lombok.Builder
+@lombok.AllArgsConstructor
+@lombok.NoArgsConstructor
 public class CallbackContext extends StdCallbackContext {
     private String predictedArn;
     private String registrationToken;

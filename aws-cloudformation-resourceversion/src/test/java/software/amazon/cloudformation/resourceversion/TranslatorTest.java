@@ -119,6 +119,7 @@ public class TranslatorTest {
     @Test
     public void translateFromReadResponse_noTimestamps() {
         DescribeTypeResponse response = DescribeTypeResponse.builder()
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000003")
             .description("some resource")
             .documentationUrl("https://mydocs.org/some-resource")
             .executionRoleArn("arn:aws:iam::123456789012:role/AppRole")
@@ -151,6 +152,7 @@ public class TranslatorTest {
     @Test
     public void translateFromReadResponse_allTimestamps() {
         DescribeTypeResponse response = DescribeTypeResponse.builder()
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000003")
             .description("some resource")
             .documentationUrl("https://mydocs.org/some-resource")
             .executionRoleArn("arn:aws:iam::123456789012:role/AppRole")
@@ -191,6 +193,7 @@ public class TranslatorTest {
                 .build();
 
         DescribeTypeResponse response = DescribeTypeResponse.builder()
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000003")
             .description("some resource")
             .documentationUrl("https://mydocs.org/some-resource")
             .executionRoleArn("arn:aws:iam::123456789012:role/AppRole")

@@ -59,7 +59,7 @@ public class CreateHandler extends BaseHandlerStd {
                 listApi.translateToServiceRequest(incoming ->
                     ListTypeVersionsRequest.builder()
                         .nextToken(incoming.nextToken())
-                        .type(model.getTypeName())
+                        .typeName(model.getTypeName())
                         .type(RegistryType.RESOURCE).build())
                     .makeServiceCall((r, c) -> c.injectCredentialsAndInvokeV2(r, c.client()::listTypeVersions))
                     .handleError(

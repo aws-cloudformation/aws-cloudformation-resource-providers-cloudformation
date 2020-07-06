@@ -60,6 +60,7 @@ class Translator {
    */
   static ResourceModel translateFromReadResponse(@NonNull final DescribeTypeResponse awsResponse) {
     final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
+        .arn(awsResponse.arn())
         .description(awsResponse.description())
         .documentationUrl(awsResponse.documentationUrl())
         .executionRoleArn(awsResponse.executionRoleArn())
@@ -68,6 +69,7 @@ class Translator {
         .schema(awsResponse.schema())
         .sourceUrl(awsResponse.sourceUrl())
         .typeName(awsResponse.typeName())
+        .versionId(awsResponse.arn().substring(awsResponse.arn().lastIndexOf('/') + 1))
         .visibility(awsResponse.visibilityAsString());
 
     if (awsResponse.lastUpdated() != null) {

@@ -1,0 +1,11 @@
+{
+  "CREATE": {
+    "/SchemaHandlerPackage": "s3://cloudformationmanageduploadinfrast-artifactbucket-1fihshh1yagzn/aws-test-resource-2020-06-08T21-22-04.zip",
+    "/TypeName": "AWS::Test::Resource",
+    "/ExecutionRoleArn": "arn:aws:iam::832733839487:role/aws-cloudformation-resourceversion-r-ExecutionRole-5FXOVIRDAJH4",
+    "/LoggingConfig": {
+      "LogGroupName": "test-logs",
+      "LogRoleArn": "arn:aws:iam::832733839487:role/CloudFormationManagedUplo-LogAndMetricsDeliveryRol-6JVNMUOAHWY9"
+    }
+  }
+}

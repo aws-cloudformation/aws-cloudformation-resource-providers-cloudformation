@@ -33,7 +33,7 @@ public class ReadHandler extends BaseHandlerStd {
         return initiator.initiate("read")
             .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
             .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient , resourceModel))
-            .done(awsResponse -> constructResourceModelFromResponse(awsResponse, resourceModel));
+            .done(awsResponse -> ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(awsResponse)));
     }
 
     /**
@@ -64,27 +64,6 @@ public class ReadHandler extends BaseHandlerStd {
         }
 
         return awsResponse;
-    }
-
-    /**
-     * Implement client invocation of the read request through the proxyClient, which is already initialised with
-     * caller credentials, correct region and retry settings
-     * @param awsResponse the aws service describe resource response
-     * @return progressEvent indicating success, in progress with delay callback or failed state
-     */
-    private ProgressEvent<ResourceModel, CallbackContext> constructResourceModelFromResponse(
-        final DescribeTypeResponse awsResponse,
-        final ResourceModel model) {
-
-        final ResourceModel modelFromReadResult = Translator.translateFromReadResponse(awsResponse);
-
-        // set the version from the model ARN, not the Read response, which
-        // will use the Type details, rather than the specific version details
-        final String versionId = model.getArn().substring(model.getArn().lastIndexOf('/') + 1);
-        modelFromReadResult.setArn(model.getArn());
-        modelFromReadResult.setVersionId(versionId);
-
-        return ProgressEvent.defaultSuccessHandler(modelFromReadResult);
     }
 
     private software.amazon.cloudformation.exceptions.ResourceNotFoundException nullSafeNotFoundException(final ResourceModel model) {
