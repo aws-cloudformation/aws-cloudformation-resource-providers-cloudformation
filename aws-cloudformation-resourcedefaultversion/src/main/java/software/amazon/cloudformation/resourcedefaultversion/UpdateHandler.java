@@ -22,6 +22,9 @@ public class UpdateHandler extends BaseHandlerStd {
         final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator =
             proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
+        logger.log(String.format("Updating [Arn: %s | Type: %s | Version: %s]",
+            resourceModel.getArn(), resourceModel.getTypeName(), resourceModel.getVersionId()));
+
         return initiator
             .translateToServiceRequest(Translator::translateToUpdateRequest)
             .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::setTypeDefaultVersion))

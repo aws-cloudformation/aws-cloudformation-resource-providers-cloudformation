@@ -29,6 +29,7 @@ Resources:
                 - "cloudformation:ListTypeVersions"
                 - "cloudformation:ListTypes"
                 - "cloudformation:RegisterType"
+                - "iam:PassRole"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

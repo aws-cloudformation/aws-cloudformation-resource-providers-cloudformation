@@ -1,6 +1,7 @@
 package software.amazon.cloudformation.resourceversion;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsRequest;
@@ -51,13 +52,16 @@ public class CreateHandler extends BaseHandlerStd {
 
         final ResourceModel model = initiator.getResourceModel();
         final CallbackContext context = initiator.getCallbackContext();
+        context.setDeprecatedStatus(DeprecatedStatus.LIVE);
         CallChain.Initiator<CloudFormationClient, ListTypeVersionsResponse, CallbackContext>
             listApi = initiator.rebindModel(ListTypeVersionsResponse.builder().build());
+
         TypeVersionSummary latest = getPredictedSummary(request, model);
         do {
             ProgressEvent<ListTypeVersionsResponse, CallbackContext> response =
                 listApi.translateToServiceRequest(incoming ->
                     ListTypeVersionsRequest.builder()
+                        .deprecatedStatus(context.getDeprecatedStatus())
                         .nextToken(incoming.nextToken())
                         .typeName(model.getTypeName())
                         .type(RegistryType.RESOURCE).build())
@@ -101,6 +105,13 @@ public class CreateHandler extends BaseHandlerStd {
             if (callResponse.nextToken() != null) {
                 listApi = listApi.rebindModel(callResponse);
                 continue;
+            } else {
+                if (context.getDeprecatedStatus() == DeprecatedStatus.LIVE) {
+                    // now we need to check any deprecated versions as well
+                    context.setDeprecatedStatus(DeprecatedStatus.DEPRECATED);
+                    listApi = listApi.rebindModel(callResponse);
+                    continue;
+                }
             }
 
             String arn = latest.arn();
@@ -140,6 +151,8 @@ public class CreateHandler extends BaseHandlerStd {
     ProgressEvent<ResourceModel, CallbackContext> stabilizeOnCreate(
         final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator,
         final String registrationToken) {
+
+        this.logger.log("Stabilizing Registration: " + initiator.getCallbackContext().getRegistrationToken());
 
         return initiator.initiate("stabilize")
             .translateToServiceRequest(m ->

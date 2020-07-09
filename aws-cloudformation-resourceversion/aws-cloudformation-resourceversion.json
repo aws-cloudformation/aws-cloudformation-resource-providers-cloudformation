@@ -91,7 +91,7 @@
     },
     "VersionId": {
       "description": "The ID of the version of the type represented by this resource instance.",
-      "pattern": "^[A-Za-z0-9-]{1,128]$",
+      "pattern": "^[A-Za-z0-9-]{1,128}$",
       "type": "string"
     },
     "Visibility": {
@@ -129,9 +129,10 @@
   "handlers": {
     "create": {
       "permissions": [
-        "cloudformation:ListTypeVersions",
         "cloudformation:DescribeTypeRegistration",
-        "cloudformation:RegisterType"
+        "cloudformation:ListTypeVersions",
+        "cloudformation:RegisterType",
+        "iam:PassRole"
       ]
     },
     "read": {

@@ -19,6 +19,9 @@ public class ReadHandler extends BaseHandlerStd {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
 
+        logger.log(String.format("Reading [Arn: %s | Type: %s | Version: %s]",
+            resourceModel.getArn(), resourceModel.getTypeName(), resourceModel.getVersionId()));
+
         return proxy.initiate("AWS-CloudFormation-ResourceDefaultVersion::Read", proxyClient, resourceModel, CallbackContext.builder().build())
             .translateToServiceRequest(Translator::translateToReadRequest)
             .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::describeType))

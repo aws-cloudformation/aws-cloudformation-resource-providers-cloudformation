@@ -44,12 +44,10 @@ class Translator {
    */
   static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model,
                                                     @NonNull final Logger logger) {
-    logger.log("Reading version: " + model.getArn());
+    logger.log("Reading Arn: " + model.getArn());
 
     return DescribeTypeRequest.builder()
         .arn(model.getArn())
-        .type(RegistryType.RESOURCE)
-        .typeName(model.getTypeName())
         .build();
   }
 

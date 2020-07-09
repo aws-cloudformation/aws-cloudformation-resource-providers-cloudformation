@@ -33,11 +33,17 @@ public class Translator {
     * @return awsRequest the aws service request to describe a resource
     */
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
-        return DescribeTypeRequest.builder()
-            .type(RegistryType.RESOURCE)
-            .typeName(model.getTypeName())
-            .versionId(model.getVersionId())
-            .build();
+        if (model.getArn() != null) {
+            return DescribeTypeRequest.builder()
+                .arn(model.getArn())
+                .build();
+        } else {
+            return DescribeTypeRequest.builder()
+                .type(RegistryType.RESOURCE)
+                .typeName(model.getTypeName())
+                .versionId(model.getVersionId())
+                .build();
+        }
     }
 
     /**
