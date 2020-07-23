@@ -27,7 +27,7 @@
         </dependency>
         <!-- Test dependency for Java Providers -->
         <dependency>
-            <groupId>software.amazon.cloudformation.test</groupId>
+            <groupId>software.amazon.cloudformation</groupId>
             <artifactId>cloudformation-cli-java-plugin-testing-support</artifactId>
             <version>1.0.0</version>
         </dependency>
