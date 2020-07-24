@@ -23,7 +23,6 @@ public class DeleteHandler extends BaseHandlerStd {
         // Delete is a no-op for this resource type as a default version must always exist for a type
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(model)
             .status(OperationStatus.SUCCESS)
             .build();
     }

@@ -10,6 +10,7 @@ public class Translator {
 
     /**
      * Request to update a resource
+     *
      * @param model resource model
      * @return awsRequest the aws service request to create a resource
      */
@@ -27,11 +28,12 @@ public class Translator {
         }
     }
 
-   /**
-    * Request to read a resource
-    * @param model resource model
-    * @return awsRequest the aws service request to describe a resource
-    */
+    /**
+     * Request to read a resource
+     *
+     * @param model resource model
+     * @return awsRequest the aws service request to describe a resource
+     */
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
         if (model.getArn() != null) {
             return DescribeTypeRequest.builder()
@@ -48,6 +50,7 @@ public class Translator {
 
     /**
      * Translates resource object from sdk into a resource model
+     *
      * @param awsResponse the aws service describe resource response
      * @return model resource model
      */
