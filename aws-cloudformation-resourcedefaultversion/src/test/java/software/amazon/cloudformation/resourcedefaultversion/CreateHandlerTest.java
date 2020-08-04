@@ -44,14 +44,14 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .thenReturn(setTypeDefaultVersionResponse);
 
         final DescribeTypeResponse describeTypeResponsePre = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
+            .isDefaultVersion(false)
             .type("RESOURCE")
             .typeName("AWS::Demo::Resource")
             .build();
         final DescribeTypeResponse describeTypeResponsePost = DescribeTypeResponse.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
-            .defaultVersionId("00000002")
+            .isDefaultVersion(true)
             .type("RESOURCE")
             .typeName("AWS::Demo::Resource")
             .build();
@@ -68,7 +68,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModelResult = ResourceModel.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
             .typeName("AWS::Demo::Resource")
-            .versionId("00000002")
             .build();
 
         assertThat(response).isNotNull();
@@ -95,14 +94,14 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .thenReturn(setTypeDefaultVersionResponse);
 
         final DescribeTypeResponse describeTypeResponsePre = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
+            .isDefaultVersion(false)
             .type("RESOURCE")
             .typeName("AWS::Demo::Resource")
             .build();
         final DescribeTypeResponse describeTypeResponsePost = DescribeTypeResponse.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
-            .defaultVersionId("00000002")
+            .isDefaultVersion(true)
             .type("RESOURCE")
             .typeName("AWS::Demo::Resource")
             .build();
@@ -117,7 +116,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModelResult = ResourceModel.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
             .typeName("AWS::Demo::Resource")
-            .versionId("00000002")
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
@@ -176,7 +174,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         // verifies behaviour if type was deregistered out of band (timing conflict)
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
+            .isDefaultVersion(false)
             .type("RESOURCE")
             .typeName("AWS::Demo::Resource")
             .build();
@@ -218,7 +216,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
+            .isDefaultVersion(true)
             .type("RESOURCE")
             .typeName("AWS::Demo::Resource")
             .build();
