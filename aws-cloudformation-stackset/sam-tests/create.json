@@ -1,36 +1,36 @@
 {
-    "credentials": {
-        "accessKeyId": "",
-        "secretAccessKey": "",
-        "sessionToken": ""
-    },
-    "action": "CREATE",
-    "request": {
-        "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
-        "desiredResourceState": {
-            "PermissionModel": "SELF_MANAGED",
-            "TemplateBody": "{\n  \"AWSTemplateFormatVersion\": \"2010-09-09\",\n  \"Resources\": {\n    \"IntegrationTestWaitHandle\": {\n      \"Type\": \"AWS::CloudFormation::WaitConditionHandle\",\n      \"Properties\": {}\n    }\n  }\n}\n",
-            "StackInstancesGroup": [
-                {
-                    "Regions": [
-                        "us-east-1",
-                        "us-west-2"
-                    ],
-                    "DeploymentTargets": {
-                        "Accounts": [
-                            111111111111
-                        ]
-                    }
-                }
-            ],
-            "Tags": [
-                {
-                    "Key": "key1",
-                    "Value": "value1"
-                }
+  "credentials": {
+    "accessKeyId": "",
+    "secretAccessKey": "",
+    "sessionToken": ""
+  },
+  "action": "CREATE",
+  "request": {
+    "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
+    "desiredResourceState": {
+      "PermissionModel": "SELF_MANAGED",
+      "TemplateBody": "{\n  \"AWSTemplateFormatVersion\": \"2010-09-09\",\n  \"Resources\": {\n    \"IntegrationTestWaitHandle\": {\n      \"Type\": \"AWS::CloudFormation::WaitConditionHandle\",\n      \"Properties\": {}\n    }\n  }\n}\n",
+      "StackInstancesGroup": [
+        {
+          "Regions": [
+            "us-east-1",
+            "us-west-2"
+          ],
+          "DeploymentTargets": {
+            "Accounts": [
+              111111111111
             ]
-        },
-        "logicalResourceIdentifier": "MyStackSet"
+          }
+        }
+      ],
+      "Tags": [
+        {
+          "Key": "key1",
+          "Value": "value1"
+        }
+      ]
     },
-    "callbackContext": null
+    "logicalResourceIdentifier": "MyStackSet"
+  },
+  "callbackContext": null
 }

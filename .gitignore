@@ -25,6 +25,7 @@ hs_err_pid*
 # IDE configurations
 *.iml
 .vscode/
+.idea/
 
 # Build
 target/
@@ -34,3 +35,4 @@ target/
 .factorypath
 .project
 .settings/
+.hypothesis/
