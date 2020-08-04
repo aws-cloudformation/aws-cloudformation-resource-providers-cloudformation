@@ -1,6 +1,5 @@
 package software.amazon.cloudformation.resourcedefaultversion;
 
-import com.google.common.base.Strings;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
@@ -8,7 +7,6 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionRequest;
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionResponse;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.CallChain;
 import software.amazon.cloudformation.proxy.Logger;
@@ -56,17 +54,6 @@ public class CreateHandler extends BaseHandlerStd {
                              final ResourceModel model) throws AwsServiceException {
         final DescribeTypeRequest translateToReadRequest = Translator.translateToReadRequest(model);
         final DescribeTypeResponse response = proxyClient.injectCredentialsAndInvokeV2(translateToReadRequest, proxyClient.client()::describeType);
-        return response.defaultVersionId().equals(getDefaultVersionId(model));
-    }
-
-    private String getDefaultVersionId(final ResourceModel resourceModel) {
-
-        if (!Strings.isNullOrEmpty(resourceModel.getVersionId())) {
-            return resourceModel.getVersionId();
-        } else if (!Strings.isNullOrEmpty(resourceModel.getArn())) {
-            return resourceModel.getArn().substring(resourceModel.getArn().lastIndexOf("/") + 1);
-        } else {
-            throw new CfnInvalidRequestException("Could not determine version from resource model");
-        }
+        return response.isDefaultVersion();
     }
 }
