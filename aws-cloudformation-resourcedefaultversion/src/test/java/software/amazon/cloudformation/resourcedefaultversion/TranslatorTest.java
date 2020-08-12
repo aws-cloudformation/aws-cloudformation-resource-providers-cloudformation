@@ -20,7 +20,7 @@ public class TranslatorTest {
     public void translateToUpdateRequest_nullResourceModel() {
         assertThatThrownBy(() -> Translator.translateToUpdateRequest(null))
             .hasNoCause()
-            .hasMessage("model is marked @NonNull but is null")
+            .hasMessageStartingWith("model is marked")
             .isExactlyInstanceOf(NullPointerException.class);
     }
 
@@ -56,7 +56,7 @@ public class TranslatorTest {
     public void translateToReadRequest_nullResourceModel() {
         assertThatThrownBy(() -> Translator.translateToReadRequest(null))
             .hasNoCause()
-            .hasMessage("model is marked @NonNull but is null")
+            .hasMessageStartingWith("model is marked")
             .isExactlyInstanceOf(NullPointerException.class);
     }
 
@@ -78,7 +78,7 @@ public class TranslatorTest {
     public void translateForRead_nullResourceModel() {
         assertThatThrownBy(() -> Translator.translateFromReadResponse(null))
             .hasNoCause()
-            .hasMessage("awsResponse is marked @NonNull but is null")
+            .hasMessageStartingWith("awsResponse is marked")
             .isExactlyInstanceOf(NullPointerException.class);
     }
 
