@@ -131,8 +131,7 @@
       "permissions": [
         "cloudformation:DescribeTypeRegistration",
         "cloudformation:ListTypeVersions",
-        "cloudformation:RegisterType",
-        "iam:PassRole"
+        "cloudformation:RegisterType"
       ]
     },
     "read": {
