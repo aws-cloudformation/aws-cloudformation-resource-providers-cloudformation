@@ -21,8 +21,10 @@ public class Validator {
         switch (type) {
             case "AWS::CloudFormation::Stack":
             case "AWS::CloudFormation::StackSet":
+            case "PGE::CloudFormation::Stack":
+            case "PGE::CloudFormation::StackSet":
                 throw new CfnInvalidRequestException(
-                        String.format("Nested %s is not supported in AWS::CloudFormation::StackSet", type));
+                        String.format("Nested %s is not supported in PGE::CloudFormation::StackSet", type));
         }
     }
 

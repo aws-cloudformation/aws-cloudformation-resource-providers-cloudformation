@@ -1,5 +1,6 @@
-# Compiled class file
-*.class
+# macOS
+*.DS_Store
+._*
 
 # Log file
 *.log
@@ -36,3 +37,7 @@ target/
 .project
 .settings/
 .hypothesis/
+
+# environment and package managers
+.venv
+*Pipfile.lock
