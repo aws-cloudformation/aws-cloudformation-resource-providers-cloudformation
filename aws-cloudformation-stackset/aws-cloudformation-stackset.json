@@ -1,7 +1,7 @@
 {
-  "typeName": "AWS::CloudFormation::StackSet",
+  "typeName": "PGE::CloudFormation::StackSet",
   "description": "StackSet as a resource provides one-click experience for provisioning a StackSet and StackInstances",
-  "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-cloudformation.git",
+  "sourceUrl": "https://github.com/citrusoft/aws-cloudformation-resource-providers-cloudformation.git",
   "resourceLink": {
     "templateUri": "/cloudformation/home?region=${awsRegion}#/stacksets/${StackSetId}",
     "mappings": {

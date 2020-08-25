@@ -1,4 +1,4 @@
-# AWS::CloudFormation::StackSet
+# PGE::CloudFormation::StackSet
 
 Congratulations on starting development! Next steps:
 
