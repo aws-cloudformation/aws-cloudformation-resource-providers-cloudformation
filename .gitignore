@@ -36,3 +36,7 @@ target/
 .project
 .settings/
 .hypothesis/
+
+# environment and package managers
+.venv
+*Pipfile.lock
