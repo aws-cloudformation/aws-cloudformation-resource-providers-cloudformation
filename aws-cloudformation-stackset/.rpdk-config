@@ -1,5 +1,5 @@
 {
-    "typeName": "AWS::CloudFormation::StackSet",
+    "typeName": "PGE::CloudFormation::StackSet",
     "language": "java",
     "runtime": "java8",
     "entrypoint": "software.amazon.cloudformation.stackset.HandlerWrapper::handleRequest",
