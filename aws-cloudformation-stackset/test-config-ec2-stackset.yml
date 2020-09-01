@@ -39,14 +39,14 @@ Resources:
           DeploymentTargets:
             OrganizationalUnitIds:
               - ou-nfqe-bfrwogtk
-      # Parameters:
-      #   - ParameterKey: pPgeLambdaS3Bucket
-      #     ParameterValue: !Ref pPgeLambdaS3Bucket
+      Parameters:
+        - ParameterKey: pPgeLambdaS3Bucket
+          ParameterValue: !Ref pPgeLambdaS3Bucket
       # Tags:
       #   - Key: AppID
       #     Value: APP-2772
       #   - Key: Owner
       #     Value: tahv
-# Outputs:
-#   StackSetId:
-#     Value: !Ref ConfigRuleEC2StackSet
+Outputs:
+  StackSetId:
+    Value: !Ref ConfigRuleEC2StackSet

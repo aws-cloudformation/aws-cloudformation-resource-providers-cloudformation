@@ -15,4 +15,4 @@ repos:
     - --indent=2
     - --no-sort-keys
   - id: check-merge-conflict
-  - id: check-yaml
+  # - id: check-yaml
