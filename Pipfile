@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 cloudformation-cli = "*"
-cloudformation-cli-java-plugin = "*"
+cloudformation-cli-java-plugin = "2.0.2"
 cloudformation-cli-python-plugin = "*"
 pre-commit = "*"
 

@@ -1,21 +1,52 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "PGE SAF2.0 Across Organization config rule StackSet."
+Parameters:
+  pPgeLambdaS3Bucket:
+    Description: "S3 Bucket for Lambda zip file"
+    Type: String
+    AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
+    Default: cf-templates-681v3yr6sl6i-us-west-2
 Resources:
   ConfigRuleEC2StackSet:
     Type: PGE::CloudFormation::StackSet
     Properties:
+      StackSetName: ConfigEc2StackSet
       PermissionModel: SERVICE_MANAGED
-      TemplateURL: https://cf-templates-681v3yr6sl6i-us-west-2.s3-us-west-2.amazonaws.com/ec2-config.yml
-      StackInstancesGroup: 
+      AutoDeployment:
+        Enabled: True
+        RetainStacksOnAccountRemoval: False
+      # TemplateURL: https://cf-templates-681v3yr6sl6i-us-west-2.s3-us-west-2.amazonaws.com/ec2-config.yml
+      # TemplateURL: s3://cf-templates-681v3yr6sl6i-us-west-2/ec2-config.yml
+      TemplateBody: |
+        {
+          "AWSTemplateFormatVersion": "2010-09-09",
+          "Parameters": {
+            "pPgeLambdaS3Bucket": {
+              "Type": "String"
+            }
+          },
+          "Resources": {
+            "IntegrationTestWaitHandle": {
+              "Type": "AWS::CloudFormation::WaitConditionHandle",
+              "Properties": {}
+            }
+          }
+        }
+      StackInstancesGroup:
         - Regions:
             # - us-east-1
             - us-west-2
           DeploymentTargets:
             OrganizationalUnitIds:
               - ou-nfqe-bfrwogtk
-      Tags:
-        - Key: AppID
-          Value: APP-2772
-        - Key: Owner
-          Value: tahv
-Outputs:
-  StackSetId:
-    Value: !Ref ConfigRuleEC2StackSet
+      # Parameters:
+      #   - ParameterKey: pPgeLambdaS3Bucket
+      #     ParameterValue: !Ref pPgeLambdaS3Bucket
+      # Tags:
+      #   - Key: AppID
+      #     Value: APP-2772
+      #   - Key: Owner
+      #     Value: tahv
+# Outputs:
+#   StackSetId:
+#     Value: !Ref ConfigRuleEC2StackSet
