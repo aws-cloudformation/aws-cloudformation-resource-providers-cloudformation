@@ -30,6 +30,8 @@ Resources:
                 - "cloudformation:ListTypes"
                 - "cloudformation:RegisterType"
                 - "iam:PassRole"
+                - "s3:GetObject"
+                - "s3:ListBucket"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
