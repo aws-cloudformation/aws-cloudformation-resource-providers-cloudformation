@@ -87,7 +87,7 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException] ErrorCode=[404],  ErrorMessage=[Type not found]");
+        assertThat(response.getMessage()).isEqualTo("Type not found (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 }

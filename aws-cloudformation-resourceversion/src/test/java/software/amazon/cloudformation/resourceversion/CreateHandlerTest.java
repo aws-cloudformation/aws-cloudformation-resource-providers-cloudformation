@@ -66,7 +66,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
+        assertThat(response.getMessage()).isEqualTo("some exception (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
@@ -345,7 +345,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
-        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
+        assertThat(response.getMessage()).isEqualTo("some exception (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
@@ -388,7 +388,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
+        assertThat(response.getMessage()).isEqualTo("some exception (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
