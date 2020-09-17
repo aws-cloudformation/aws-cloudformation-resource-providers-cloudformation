@@ -30,9 +30,13 @@ pylint --rcfile ~/pylintrc *py
 aws cloudformation validate-template --template-body file://test-config-ec2-stackset.yml --profile PGE-Master-Dev
 ```
 
-Package
+Code Generation
 ```
 cfn generate
+```
+
+Package
+```
 mvn package
 ```
 
@@ -47,5 +51,10 @@ cfn test
 Deployment
 ```
 export AWS_PROFILE=PGE-Master-Dev
-cfn submit --set-default -v --region us-west-2
+cfn submit --set-default -v
+```
+
+Test an end-user template
+```
+aws cloudformation validate-template --template-url https://cf-templates-681v3yr6sl6i-us-west-2.s3-us-west-2.amazonaws.com/test-config-ec2-stackset.yml --profile PGE-Master-Dev
 ```

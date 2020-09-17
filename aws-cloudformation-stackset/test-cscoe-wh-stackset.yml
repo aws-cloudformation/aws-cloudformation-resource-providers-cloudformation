@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "PGE SAF2.0 Across Organization config rule StackSet."
+Description: "PGE SAF2.0 across organization wait handle StackSet."
 Parameters:
   pPgeStackSetName:
     Description: Basename of the StackSet and instances
     Type: String
-    Default: cscoe-config-rules-ec2
+    Default: cscoe-wh-test
   pPgeAppId:
     Description: "AMPS Id"
     Type: String
@@ -35,17 +35,29 @@ Parameters:
     AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
     Default: ou-nfqe-9zjup0sq
 Resources:
-  cscoeConfigRuleEC2StackSet:
+  cscoeWaitHandleStackSet:
     Type: PGE::CloudFormation::StackSet
     Properties:
       StackSetName: !Ref pPgeStackSetName
-      Capabilities:
-        - CAPABILITY_IAM
       PermissionModel: SERVICE_MANAGED
       AutoDeployment:
         Enabled: True
         RetainStacksOnAccountRemoval: False
-      TemplateURL: https://cf-templates-681v3yr6sl6i-us-west-2.s3-us-west-2.amazonaws.com/ec2-config.yml
+      TemplateBody: |
+        {
+          "AWSTemplateFormatVersion": "2010-09-09",
+          "Parameters": {
+            "pPgeLambdaS3Bucket": {
+              "Type": "String"
+            }
+          },
+          "Resources": {
+            "IntegrationTestWaitHandle": {
+              "Type": "AWS::CloudFormation::WaitConditionHandle",
+              "Properties": {}
+            }
+          }
+        }
       StackInstancesGroup:
         - Regions:
             # - us-east-1
@@ -79,4 +91,4 @@ Resources:
           Value: "No MCP"
 Outputs:
   StackSetId:
-    Value: !Ref cscoeConfigRuleEC2StackSet
+    Value: !Ref cscoeWaitHandleStackSet

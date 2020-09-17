@@ -309,7 +309,8 @@
         "cloudformation:CreateStackSet",
         "cloudformation:CreateStackInstances",
         "cloudformation:DescribeStackSetOperation",
-        "cloudformation:TagResource"
+        "cloudformation:TagResource",
+        "s3:GetObject"
       ],
       "timeoutInMinutes": 720
     },
@@ -329,7 +330,8 @@
         "cloudformation:UpdateStackInstances",
         "cloudformation:DescribeStackSetOperation",
         "cloudformation:TagResource",
-        "cloudformation:UntagResource"
+        "cloudformation:UntagResource",
+        "s3:GetObject"
       ],
       "timeoutInMinutes": 720
     },

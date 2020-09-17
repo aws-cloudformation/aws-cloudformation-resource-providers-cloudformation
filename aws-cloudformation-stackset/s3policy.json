@@ -5,14 +5,17 @@
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "018250382163",
-          "241689241215"
-        ]
+          "arn:aws:iam::516084212580:root",
+          "arn:aws:iam::956254777756:root",
+          "arn:aws:iam::641213406987:root",
+          "arn:aws:iam::424304752381:root",
+          "arn:aws:iam::018250382163:root",
+          "arn:aws:iam::241689241215:root"
+        ],
+        "Service": "cloudformation.amazonaws.com"
       },
       "Action": "s3:*",
-      "Resource": [
-        "arn:aws:s3:::cf-templates-681v3yr6sl6i-us-west-2/*"
-      ]
+      "Resource": "arn:aws:s3:::cf-templates-681v3yr6sl6i-us-west-2/*"
     },
     {
       "Effect": "Deny",
