@@ -41,6 +41,7 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         final ResourceModel model = ResourceModel.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
             .versionId("00000001")
+            .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
             .typeName("AWS::Demo::Resource")
             .build();
 

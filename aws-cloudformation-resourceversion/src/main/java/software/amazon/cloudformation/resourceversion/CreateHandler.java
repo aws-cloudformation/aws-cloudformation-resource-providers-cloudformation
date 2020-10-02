@@ -1,6 +1,9 @@
 package software.amazon.cloudformation.resourceversion;
 
+import com.amazonaws.util.StringUtils;
+import com.sun.javafx.binding.StringFormatter;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationResponse;
@@ -68,7 +71,7 @@ public class CreateHandler extends BaseHandlerStd {
                     .makeServiceCall((r, c) -> c.injectCredentialsAndInvokeV2(r, c.client()::listTypeVersions))
                     .handleError(
                         (request_, exception, client, model_, context_) -> {
-                            if (exception instanceof TypeNotFoundException) {
+                            if (exception instanceof CfnRegistryException) {
                                 // registration can be assumed to be the first version for a type
                                 return ProgressEvent.success(
                                     ListTypeVersionsResponse.builder().typeVersionSummaries(
@@ -118,9 +121,10 @@ public class CreateHandler extends BaseHandlerStd {
             Integer current = Integer.valueOf(arn.substring(arn.lastIndexOf("/") + 1));
             arn = arn.substring(0, arn.lastIndexOf("/") + 1)
                 .concat(String.format("%08d", current + 1));
-
-            context.setPredictedArn(arn);
-            model.setArn(arn);
+            if(StringUtils.isNullOrEmpty(context.getPredictedArn())) {
+                context.setPredictedArn(arn);
+                model.setArn(arn);
+            }
             return ProgressEvent.progress(model, context);
 
         } while (true);
@@ -173,6 +177,7 @@ public class CreateHandler extends BaseHandlerStd {
                     logger.log(String.format("Registration request %s failed with '%s'", registrationToken, response.description()));
                     throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, initiator.getResourceModel().getArn());
                 } else {
+                    logger.log(String.format("Stabilization On Create failed with the status %s",response.progressStatusAsString()));
                     return false;
                 }
             })

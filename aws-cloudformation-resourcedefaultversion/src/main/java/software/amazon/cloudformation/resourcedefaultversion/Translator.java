@@ -1,5 +1,6 @@
 package software.amazon.cloudformation.resourcedefaultversion;
 
+import com.amazonaws.util.StringUtils;
 import lombok.NonNull;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
@@ -58,6 +59,7 @@ public class Translator {
         return ResourceModel.builder()
             .arn(awsResponse.arn())
             .versionId(awsResponse.defaultVersionId())
+            .typeArn(StringUtils.isNullOrEmpty(awsResponse.arn())? null :awsResponse.arn().substring(0,awsResponse.arn().lastIndexOf("/")))
             .typeName(awsResponse.typeName())
             .build();
     }
