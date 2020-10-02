@@ -1,7 +1,6 @@
 package software.amazon.cloudformation.resourceversion;
 
 import com.amazonaws.util.StringUtils;
-import com.sun.javafx.binding.StringFormatter;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
@@ -11,7 +10,6 @@ import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsRequ
 import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
 import software.amazon.awssdk.services.cloudformation.model.RegistryType;
-import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.awssdk.services.cloudformation.model.TypeVersionSummary;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
