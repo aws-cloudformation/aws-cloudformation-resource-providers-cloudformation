@@ -12,22 +12,22 @@ public class UpdateHandler extends BaseHandlerStd {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final ProxyClient<CloudFormationClient> proxyClient,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final Logger logger) {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
         final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator =
-            proxy.newInitiator(proxyClient, resourceModel, callbackContext);
+                proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
         logger.log(String.format("Updating [Arn: %s | Type: %s | Version: %s]",
-            resourceModel.getArn(), resourceModel.getTypeName(), resourceModel.getVersionId()));
+                resourceModel.getTypeVersionArn(), resourceModel.getTypeName(), resourceModel.getVersionId()));
 
         return initiator
-            .translateToServiceRequest(Translator::translateToUpdateRequest)
-            .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::setTypeDefaultVersion))
-            .done(setTypeDefaultVersionResponse -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+                .translateToServiceRequest(Translator::translateToUpdateRequest)
+                .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::setTypeDefaultVersion))
+                .done(setTypeDefaultVersionResponse -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 }

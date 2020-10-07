@@ -30,27 +30,27 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         final CloudFormationClient client = getServiceClient();
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
-            .type("RESOURCE")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .defaultVersionId("00000001")
+                .type("RESOURCE")
+                .typeName("AWS::Demo::Resource")
+                .build();
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenReturn(describeTypeResponse);
+                .thenReturn(describeTypeResponse);
 
         final ResourceModel model = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .versionId("00000001")
-            .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .versionId("00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeName("AWS::Demo::Resource")
+                .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
-            .build();
+                .desiredResourceState(model)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, loggerProxy);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -67,18 +67,18 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .build();
 
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenThrow(make(
-                TypeNotFoundException.builder(), 404, "Type not found",
-                TypeNotFoundException.class));
+                .thenThrow(make(
+                        TypeNotFoundException.builder(), 404, "Type not found",
+                        TypeNotFoundException.class));
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .build();
+                .desiredResourceState(resourceModel)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
