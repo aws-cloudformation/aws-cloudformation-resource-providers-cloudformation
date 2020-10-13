@@ -21,7 +21,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     return handleRequest(
       proxy,
       request,
-      callbackContext != null ? callbackContext : CallbackContext.builder().build(),
+      callbackContext != null ? callbackContext : new CallbackContext(),
       proxy.newProxy(ClientBuilder::getClient),
       logger
     );

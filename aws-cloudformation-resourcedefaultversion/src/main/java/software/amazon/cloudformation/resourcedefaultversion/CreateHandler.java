@@ -2,6 +2,8 @@ package software.amazon.cloudformation.resourcedefaultversion;
 
 import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -18,8 +20,9 @@ public class CreateHandler extends BaseHandlerStd {
             final ProxyClient<CloudFormationClient> proxyClient,
             final Logger logger) {
         final ResourceModel resourceModel = request.getDesiredResourceState();
-        if (StringUtils.isNullOrEmpty(resourceModel.getArn())) {
+        if (StringUtils.isNullOrEmpty(callbackContext.getArn())) {
             String generatedArn = createArn(request);
+            callbackContext.setArn(generatedArn);
             resourceModel.setArn(generatedArn);
             return ProgressEvent.progress(resourceModel, callbackContext);
         }
@@ -31,6 +34,12 @@ public class CreateHandler extends BaseHandlerStd {
                     return proxy.initiate("resourceDefaultVersion::Create", proxyClient, model, progress.getCallbackContext())
                             .translateToServiceRequest(Translator::translateToUpdateRequest)
                             .makeServiceCall((setTypeDefaultVersionRequest, client) -> proxyClient.injectCredentialsAndInvokeV2(setTypeDefaultVersionRequest, proxyClient.client()::setTypeDefaultVersion))
+                            .handleError((setTypeDefaultVersionRequest, exception, clientProxy, resourcemodel, context) -> {
+                                if(exception instanceof TypeNotFoundException)
+                                    throw new CfnNotFoundException(exception);
+                                else
+                                    throw exception;
+                            })
                             .progress();
                 })
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
@@ -41,7 +50,7 @@ public class CreateHandler extends BaseHandlerStd {
         if (!StringUtils.isNullOrEmpty(resourceModel.getTypeVersionArn())) {
             return resourceModel.getTypeVersionArn().substring(0, resourceModel.getTypeVersionArn().lastIndexOf("/"));
         } else {
-            // generating Arn from the TypeName and versionID
+            // generating Arn from the TypeName
             String arn = String.format("arn:%s:cloudformation:%s:%s:type/resource/%s",
                     request.getAwsPartition(),
                     request.getRegion(),

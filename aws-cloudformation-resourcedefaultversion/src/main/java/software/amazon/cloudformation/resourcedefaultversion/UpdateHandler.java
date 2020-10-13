@@ -1,6 +1,8 @@
 package software.amazon.cloudformation.resourcedefaultversion;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.CallChain;
 import software.amazon.cloudformation.proxy.Logger;
@@ -28,6 +30,12 @@ public class UpdateHandler extends BaseHandlerStd {
         return initiator
                 .translateToServiceRequest(Translator::translateToUpdateRequest)
                 .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::setTypeDefaultVersion))
+                .handleError((setTypeDefaultVersionRequest, exception, clientProxy, model, context) -> {
+                    if (exception instanceof TypeNotFoundException)
+                        throw new CfnNotFoundException(exception);
+                    else
+                        throw exception;
+                })
                 .done(setTypeDefaultVersionResponse -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 }

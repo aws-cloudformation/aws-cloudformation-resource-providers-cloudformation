@@ -61,8 +61,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(resourceModel)
                 .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
+        CallbackContext context = new CallbackContext();
+        context.setArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, context, loggerProxy);
 
         final ResourceModel resourceModelResult = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
@@ -119,8 +120,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .typeName("AWS::Demo::Resource")
                 .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
+        CallbackContext context = new CallbackContext();
+        context.setArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, context, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -152,7 +154,10 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .desiredResourceState(resourceModel)
                 .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
+        CallbackContext context = new CallbackContext();
+        context.setArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, context, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
@@ -161,7 +166,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
         assertThat(response.getMessage()).isEqualTo("Type not found (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 
     @Test
@@ -193,7 +198,10 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .desiredResourceState(resourceModel)
                 .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
+        CallbackContext context = new CallbackContext();
+        context.setArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, context, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
@@ -202,7 +210,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
         assertThat(response.getMessage()).isEqualTo("Type not found (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 
     @Test

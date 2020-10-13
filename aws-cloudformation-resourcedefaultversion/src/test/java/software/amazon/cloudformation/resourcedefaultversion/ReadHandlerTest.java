@@ -89,6 +89,6 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
         assertThat(response.getMessage()).isEqualTo("Type not found (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 }
