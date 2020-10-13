@@ -20,5 +20,5 @@ Resources:
     DefaultVersion:
         Type: AWS::CloudFormation::ResourceDefaultVersion
         Properties:
-            Arn: !Ref UpdatedType
+            TypeVersionArn: !Ref UpdatedType
 ```
