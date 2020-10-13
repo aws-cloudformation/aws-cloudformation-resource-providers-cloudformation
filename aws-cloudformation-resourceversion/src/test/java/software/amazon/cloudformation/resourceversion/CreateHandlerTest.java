@@ -15,7 +15,6 @@ import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsResp
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
-import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.TypeVersionSummary;
 import software.amazon.awssdk.services.cloudformation.model.Visibility;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
@@ -66,7 +65,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getMessage()).isEqualTo("some exception (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
@@ -345,7 +343,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
-        assertThat(response.getMessage()).isEqualTo("some exception (Service: null, Status Code: 0, Request ID: null, Extended Request ID: null)");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
