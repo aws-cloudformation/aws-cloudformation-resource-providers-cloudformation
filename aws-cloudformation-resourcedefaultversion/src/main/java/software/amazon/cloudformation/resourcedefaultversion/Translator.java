@@ -1,5 +1,6 @@
 package software.amazon.cloudformation.resourcedefaultversion;
 
+import com.amazonaws.util.StringUtils;
 import lombok.NonNull;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
@@ -15,16 +16,16 @@ public class Translator {
      * @return awsRequest the aws service request to create a resource
      */
     static SetTypeDefaultVersionRequest translateToUpdateRequest(@NonNull final ResourceModel model) {
-        if (model.getArn() != null) {
+        if (model.getTypeVersionArn() != null) {
             return SetTypeDefaultVersionRequest.builder()
-                .arn(model.getArn())
-                .build();
+                    .arn(model.getTypeVersionArn())
+                    .build();
         } else {
             return SetTypeDefaultVersionRequest.builder()
-                .type(RegistryType.RESOURCE)
-                .typeName(model.getTypeName())
-                .versionId(model.getVersionId())
-                .build();
+                    .type(RegistryType.RESOURCE)
+                    .typeName(model.getTypeName())
+                    .versionId(model.getVersionId())
+                    .build();
         }
     }
 
@@ -35,16 +36,16 @@ public class Translator {
      * @return awsRequest the aws service request to describe a resource
      */
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
-        if (model.getArn() != null) {
+        if (model.getTypeVersionArn() != null) {
             return DescribeTypeRequest.builder()
-                .arn(model.getArn())
-                .build();
+                    .arn(model.getTypeVersionArn())
+                    .build();
         } else {
             return DescribeTypeRequest.builder()
-                .type(RegistryType.RESOURCE)
-                .typeName(model.getTypeName())
-                .versionId(model.getVersionId())
-                .build();
+                    .type(RegistryType.RESOURCE)
+                    .typeName(model.getTypeName())
+                    .versionId(model.getVersionId())
+                    .build();
         }
     }
 
@@ -56,9 +57,10 @@ public class Translator {
      */
     static ResourceModel translateFromReadResponse(@NonNull final DescribeTypeResponse awsResponse) {
         return ResourceModel.builder()
-            .arn(awsResponse.arn())
-            .versionId(awsResponse.defaultVersionId())
-            .typeName(awsResponse.typeName())
-            .build();
+                .typeVersionArn(awsResponse.arn())
+                .versionId(awsResponse.defaultVersionId())
+                .arn(StringUtils.isNullOrEmpty(awsResponse.arn()) ? null : awsResponse.arn().substring(0, awsResponse.arn().lastIndexOf("/")))
+                .typeName(awsResponse.typeName())
+                .build();
     }
 }

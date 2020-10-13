@@ -12,7 +12,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 {
     "Type" : "AWS::CloudFormation::ResourceDefaultVersion",
     "Properties" : {
-        "<a href="#arn" title="Arn">Arn</a>" : <i>String</i>,
+        "<a href="#typeversionarn" title="TypeVersionArn">TypeVersionArn</a>" : <i>String</i>,
         "<a href="#typename" title="TypeName">TypeName</a>" : <i>String</i>,
         "<a href="#versionid" title="VersionId">VersionId</a>" : <i>String</i>
     }
@@ -24,14 +24,14 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 <pre>
 Type: AWS::CloudFormation::ResourceDefaultVersion
 Properties:
-    <a href="#arn" title="Arn">Arn</a>: <i>String</i>
+    <a href="#typeversionarn" title="TypeVersionArn">TypeVersionArn</a>: <i>String</i>
     <a href="#typename" title="TypeName">TypeName</a>: <i>String</i>
     <a href="#versionid" title="VersionId">VersionId</a>: <i>String</i>
 </pre>
 
 ## Properties
 
-#### Arn
+#### TypeVersionArn
 
 The Amazon Resource Name (ARN) of the type version.
 
@@ -74,3 +74,13 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 ### Ref
 
 When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the Arn.
+
+### Fn::GetAtt
+
+The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of this type. The following are the available attributes and sample return values.
+
+For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::GetAtt](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html).
+
+#### Arn
+
+The Amazon Resource Name (ARN) of the type. This is used to uniquely identify a ResourceDefaultVersion
