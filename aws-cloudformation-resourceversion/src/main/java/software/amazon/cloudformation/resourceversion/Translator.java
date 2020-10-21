@@ -60,7 +60,7 @@ class Translator {
      * @param awsResponse   the aws service describe resource response
      * @return model resource model
      */
-    static ResourceModel translateFromReadResponse(@NonNull ResourceModel resourceModel, @NonNull final DescribeTypeResponse awsResponse) {
+    static ResourceModel translateFromReadResponse(ResourceModel resourceModel, @NonNull final DescribeTypeResponse awsResponse) {
         final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
                 .arn(awsResponse.arn())
                 .description(awsResponse.description())
