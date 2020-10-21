@@ -1,5 +1,6 @@
 package software.amazon.cloudformation.resourceversion;
 
+import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
@@ -9,6 +10,7 @@ import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundExceptio
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.CallChain;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -30,10 +32,12 @@ public class ReadHandler extends BaseHandlerStd {
         final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator =
             proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
+        if(StringUtils.isNullOrEmpty(resourceModel.getArn()))
+            return ProgressEvent.failed(resourceModel,callbackContext, HandlerErrorCode.NotFound,"Resource does not exists");
         return initiator.initiate("read")
             .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
             .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient , resourceModel))
-            .done(awsResponse -> ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(awsResponse)));
+            .done(awsResponse -> ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(resourceModel,awsResponse)));
     }
 
     /**

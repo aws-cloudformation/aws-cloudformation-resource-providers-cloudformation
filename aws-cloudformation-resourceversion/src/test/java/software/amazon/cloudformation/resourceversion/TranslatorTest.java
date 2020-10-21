@@ -110,7 +110,10 @@ public class TranslatorTest {
 
     @Test
     public void translateFromReadResponse_nullResourceModel() {
-        assertThatThrownBy(() -> Translator.translateFromReadResponse(null))
+        ResourceModel resourceModel = ResourceModel.builder()
+                .schemaHandlerPackage("example-bucket/some/path/code.zip")
+                .build();
+        assertThatThrownBy(() -> Translator.translateFromReadResponse(resourceModel, null))
             .hasNoCause()
             .hasMessageStartingWith("awsResponse is marked")
             .isExactlyInstanceOf(NullPointerException.class);
@@ -132,7 +135,10 @@ public class TranslatorTest {
             .defaultVersionId("1")
             .build();
 
-        ResourceModel model = Translator.translateFromReadResponse(response);
+        ResourceModel resourceModel = ResourceModel.builder()
+                .schemaHandlerPackage("example-bucket/some/path/code.zip")
+                .build();
+        ResourceModel model = Translator.translateFromReadResponse(resourceModel, response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());
@@ -167,7 +173,10 @@ public class TranslatorTest {
             .timeCreated(Instant.now())
             .build();
 
-        ResourceModel model = Translator.translateFromReadResponse(response);
+        ResourceModel resourceModel = ResourceModel.builder()
+                .schemaHandlerPackage("example-bucket/some/path/code.zip")
+                .build();
+        ResourceModel model = Translator.translateFromReadResponse(resourceModel, response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());
@@ -207,7 +216,10 @@ public class TranslatorTest {
             .defaultVersionId("1")
             .build();
 
-        ResourceModel model = Translator.translateFromReadResponse(response);
+        ResourceModel resourceModel = ResourceModel.builder()
+                .schemaHandlerPackage("example-bucket/some/path/code.zip")
+                .build();
+        ResourceModel model = Translator.translateFromReadResponse(resourceModel, response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());
