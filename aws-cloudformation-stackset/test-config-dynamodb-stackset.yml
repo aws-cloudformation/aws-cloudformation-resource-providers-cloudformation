@@ -1,0 +1,112 @@
+---
+# Filename    : cscoe-config-rule-pge-stackset
+# Date        : 22 Sep 2020
+# Author      : Tommy Hunt (tahv@pge.com)
+# Description : Creates the StackSet across OU member accts.
+#
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "PGE SAF2.0 Across Organization config rule StackSet."
+Parameters:
+  pPgeStackSetName:
+    Description: Basename of the StackSet and instances
+    Type: String
+    Default: cscoe-config-rules-ec2
+  pPgeAppId:
+    Description: "AMPS Id"
+    Type: String
+    Default: APP-2772
+    AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
+  pPgeEnv:
+    Description: "Operating environment"
+    Type: String
+    Default: Dev
+    AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
+  pPgeNotify:
+    Description: "Notification for system failure & maintenance"
+    Type: String
+    Default: CYBERSECURITYServicesCloudSecurityEmployees@pge.com
+    AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
+  pPgeOwner:
+    Description: "System or Asset Owner"
+    Type: String
+    Default: nack c1kp j9ge d2wr
+    AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
+  pPgeLambdaS3Bucket:
+    Description: "S3 Bucket for Lambda artifacts."
+    Type: String
+    AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
+    Default: cscoe-master-config-rules-pipeline-artifacts
+  pPgeTemplateKey:
+    Description: "Config Rule Template path, aka Key"
+    Type: String
+    Default: aws-ec2/ec2-config.yml
+    AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
+  pPgeOrganizationUnit:
+    Description: "Deploying to this target OU."
+    Type: String
+    AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
+    Default: ou-nfqe-9zjup0sq
+Resources:
+  cscoeConfigRuleStackSet:
+    Type: PGE::CloudFormation::StackSet
+    Properties:
+      StackSetName: !Ref pPgeStackSetName
+      Capabilities:
+        - CAPABILITY_IAM
+      PermissionModel: SERVICE_MANAGED
+      AutoDeployment:
+        Enabled: True
+        RetainStacksOnAccountRemoval: False
+      TemplateURL: !Sub "https://${pPgeLambdaS3Bucket}.s3-us-west-2.amazonaws.com/${pPgeTemplateKey}"
+      StackInstancesGroup:
+        - Regions:
+            # - us-east-1
+            - us-west-2
+          DeploymentTargets:
+            OrganizationalUnitIds:
+              - !Ref pPgeOrganizationUnit
+      Parameters:
+        - ParameterKey: pPgeName
+          ParameterValue: !Ref pPgeStackSetName
+        - ParameterKey: pPgeAppId
+          ParameterValue: !Ref pPgeAppId
+        - ParameterKey: pPgeEnv
+          ParameterValue: !Ref pPgeEnv
+        - ParameterKey: pPgeNotify
+          ParameterValue: !Ref pPgeNotify
+        - ParameterKey: pPgeOrderNum
+          ParameterValue: 99999999
+        - ParameterKey: pPgeOrg
+          ParameterValue: CSCOE
+        - ParameterKey: pPgeOwner
+          ParameterValue: !Ref pPgeOwner
+        - ParameterKey: pPgeProjectName
+          ParameterValue: !Ref pPgeStackSetName
+        - ParameterKey: pPgeRole
+          ParameterValue: Config
+        - ParameterKey: pPgeLambdaS3Bucket
+          ParameterValue: !Ref pPgeLambdaS3Bucket
+      Tags:
+        - Key: "AppID"
+          Value: !Ref pPgeAppId
+        - Key: "Environment"
+          Value: !Ref pPgeEnv
+        - Key: "Owner"
+          Value: !Ref pPgeOwner
+        - Key: "Compliance"
+          Value: "None"
+        - Key: "Notify"
+          Value: !Ref pPgeNotify
+        - Key: "DataClassification"
+          Value: "Internal"
+        - Key: "BusinessImpact"
+          Value: "No Impact"
+        - Key: "CatalogProvision"
+          Value: "No"
+        - Key: "TrustLevel"
+          Value: "NA"
+        - Key: "MCP"
+          Value: "No MCP"
+Outputs:
+  StackSetId:
+    Value: !Ref cscoeConfigRuleStackSet
