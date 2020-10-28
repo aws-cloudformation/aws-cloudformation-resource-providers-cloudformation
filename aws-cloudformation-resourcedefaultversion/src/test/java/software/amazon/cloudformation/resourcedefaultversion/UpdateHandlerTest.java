@@ -32,35 +32,36 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
-            .versionId("00000002")
-            .build();
+                .typeName("AWS::Demo::Resource")
+                .versionId("00000002")
+                .build();
 
         final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()
-            .build();
+                .build();
         when(client.setTypeDefaultVersion(ArgumentMatchers.any(SetTypeDefaultVersionRequest.class)))
-            .thenReturn(setTypeDefaultVersionResponse);
+                .thenReturn(setTypeDefaultVersionResponse);
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
-            .type("RESOURCE")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .defaultVersionId("00000001")
+                .type("RESOURCE")
+                .typeName("AWS::Demo::Resource")
+                .build();
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenReturn(describeTypeResponse);
+                .thenReturn(describeTypeResponse);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .build();
+                .desiredResourceState(resourceModel)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         final ResourceModel resourceModelResult = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .typeName("AWS::Demo::Resource")
-            .versionId("00000001")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .versionId("00000001")
+                .build();
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -77,34 +78,35 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .build();
 
         final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()
-            .build();
+                .build();
         when(client.setTypeDefaultVersion(ArgumentMatchers.any(SetTypeDefaultVersionRequest.class)))
-            .thenReturn(setTypeDefaultVersionResponse);
+                .thenReturn(setTypeDefaultVersionResponse);
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
-            .type("RESOURCE")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .defaultVersionId("00000001")
+                .type("RESOURCE")
+                .typeName("AWS::Demo::Resource")
+                .build();
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenReturn(describeTypeResponse);
+                .thenReturn(describeTypeResponse);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .build();
+                .desiredResourceState(resourceModel)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         final ResourceModel resourceModelResult = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .typeName("AWS::Demo::Resource")
-            .versionId("00000001")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .versionId("00000001")
+                .build();
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -121,18 +123,18 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .build();
 
         when(client.setTypeDefaultVersion(ArgumentMatchers.any(SetTypeDefaultVersionRequest.class)))
-            .thenThrow(make(
-                TypeNotFoundException.builder(), 404, "Type not found",
-                TypeNotFoundException.class));
+                .thenThrow(make(
+                        TypeNotFoundException.builder(), 404, "Type not found",
+                        TypeNotFoundException.class));
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .build();
+                .desiredResourceState(resourceModel)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
@@ -141,8 +143,6 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException] ErrorCode=[404],  ErrorMessage=[Type not found]");
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 }

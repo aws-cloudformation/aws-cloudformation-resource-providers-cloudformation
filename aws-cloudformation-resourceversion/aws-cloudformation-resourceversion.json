@@ -132,7 +132,9 @@
         "cloudformation:DescribeTypeRegistration",
         "cloudformation:ListTypeVersions",
         "cloudformation:RegisterType",
-        "iam:PassRole"
+        "iam:PassRole",
+        "s3:GetObject",
+        "s3:ListBucket"
       ]
     },
     "read": {

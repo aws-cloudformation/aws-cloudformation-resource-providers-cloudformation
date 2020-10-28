@@ -3,7 +3,7 @@
   "description": "The default version of a resource that has been registered in the CloudFormation Registry.",
   "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-cloudformation",
   "properties": {
-    "Arn": {
+    "TypeVersionArn": {
       "description": "The Amazon Resource Name (ARN) of the type version.",
       "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/resource/.+$",
       "type": "string"
@@ -11,6 +11,11 @@
     "TypeName": {
       "description": "The name of the type being registered.\n\nWe recommend that type names adhere to the following pattern: company_or_organization::service::type.",
       "pattern": "^[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}$",
+      "type": "string"
+    },
+    "Arn": {
+      "description": "The Amazon Resource Name (ARN) of the type. This is used to uniquely identify a ResourceDefaultVersion",
+      "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/resource/.+$",
       "type": "string"
     },
     "VersionId": {
@@ -22,7 +27,7 @@
   "oneOf": [
     {
       "required": [
-        "Arn"
+        "TypeVersionArn"
       ]
     },
     {
@@ -31,6 +36,9 @@
         "VersionId"
       ]
     }
+  ],
+  "readOnlyProperties": [
+    "/properties/Arn"
   ],
   "primaryIdentifier": [
     "/properties/Arn"

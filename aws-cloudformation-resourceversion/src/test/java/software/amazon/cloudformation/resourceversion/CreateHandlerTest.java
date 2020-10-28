@@ -15,7 +15,6 @@ import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsResp
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistrationStatus;
-import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.awssdk.services.cloudformation.model.TypeVersionSummary;
 import software.amazon.awssdk.services.cloudformation.model.Visibility;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
@@ -66,7 +65,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
@@ -87,11 +85,11 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
-        // lack of existing type results in a TypeNotFoundException from ListTypeVersions
+        // lack of existing type results in a CfnRegistryException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
             .thenThrow(make(
-                TypeNotFoundException.builder(), 404, "Type not found",
-                TypeNotFoundException.class));
+                CfnRegistryException.builder(), 404, "Type not found",
+                CfnRegistryException.class));
 
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
             .progressStatus(RegistrationStatus.COMPLETE)
@@ -294,7 +292,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     }
 
     @Test
-    public void handleRequest_PredictArn_TypeNotFoundException() {
+    public void handleRequest_PredictArn_CfnRegistryException1() {
         final CloudFormationClient client = getServiceClient();
         when(client.serviceName()).thenReturn("cloudformation");
 
@@ -310,11 +308,11 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
-        // lack of existing type results in a TypeNotFoundException from ListTypeVersions
+        // lack of existing type results in a CfnRegistryException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
             .thenThrow(make(
-                TypeNotFoundException.builder(), 404, "Type not found",
-                TypeNotFoundException.class));
+                CfnRegistryException.builder(), 404, "Type not found",
+                CfnRegistryException.class));
 
         // throw on DescribeTypeRegistration
         when(client.describeTypeRegistration(ArgumentMatchers.any(DescribeTypeRegistrationRequest.class)))
@@ -345,7 +343,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
-        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
@@ -366,7 +363,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
-        // lack of existing type results in a TypeNotFoundException from ListTypeVersions
+        // lack of existing type results in a CfnRegistryException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
             .thenThrow(make(
                 CfnRegistryException.builder(), 500, "some exception",
@@ -383,13 +380,12 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
+        assertThat(response.getCallbackContext().getPredictedArn()).isNotNull();
         assertThat(response.getCallbackContext().getRegistrationToken()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getMessage()).isEqualTo("Exception=[class software.amazon.awssdk.services.cloudformation.model.CfnRegistryException] ErrorCode=[500],  ErrorMessage=[some exception]");
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 
     @Test
@@ -409,11 +405,11 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
-        // lack of existing type results in a TypeNotFoundException from ListTypeVersions
+        // lack of existing type results in a CfnRegistryException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
             .thenThrow(make(
-                TypeNotFoundException.builder(), 404, "Type not found",
-                TypeNotFoundException.class));
+                CfnRegistryException.builder(), 404, "Type not found",
+                CfnRegistryException.class));
 
         // Registration failure
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
@@ -454,11 +450,11 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
-        // lack of existing type results in a TypeNotFoundException from ListTypeVersions
+        // lack of existing type results in a CfnRegistryException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
             .thenThrow(make(
-                TypeNotFoundException.builder(), 404, "Type not found",
-                TypeNotFoundException.class));
+                CfnRegistryException.builder(), 404, "Type not found",
+                CfnRegistryException.class));
 
         // First registration IN_PROGRESS to force a stabilization loop
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponseInProgress = DescribeTypeRegistrationResponse.builder()
@@ -508,5 +504,45 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_PredictArn_OtherException() {
+        final CloudFormationClient client = getServiceClient();
+        when(client.serviceName()).thenReturn("cloudformation");
+
+        final ResourceModel resourceModel = ResourceModel.builder()
+                .typeName("AWS::Demo::Resource")
+                .visibility("PRIVATE")
+                .sourceUrl("https://github.com/myorg/resource/repo.git")
+                .build();
+
+        final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder()
+                .registrationToken(UUID.randomUUID().toString())
+                .build();
+        when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
+                .thenReturn(registerTypeResponse);
+
+        // lack of existing type results in a CfnRegistryException from ListTypeVersions
+        when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
+                .thenThrow(NullPointerException.class);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(resourceModel)
+                .awsPartition("aws")
+                .region("us-west-2")
+                .awsAccountId("123456789012")
+                .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
+        assertThat(response.getCallbackContext().getRegistrationToken()).isNotNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 }
