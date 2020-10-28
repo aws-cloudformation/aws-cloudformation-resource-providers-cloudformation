@@ -1,8 +1,8 @@
 ---
-# Filename    : cscoe-config-rule-pge-stackset
+# Filename    : test-config-dynamodb-stackset
 # Date        : 22 Sep 2020
 # Author      : Tommy Hunt (tahv@pge.com)
-# Description : Creates the StackSet across OU member accts.
+# Description : Creates the dynamodb StackSet across OU member accts.
 #
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "PGE SAF2.0 Across Organization config rule StackSet."
@@ -10,7 +10,7 @@ Parameters:
   pPgeStackSetName:
     Description: Basename of the StackSet and instances
     Type: String
-    Default: cscoe-config-rules-ec2
+    Default: test-config-dynamodb-stackset
   pPgeAppId:
     Description: "AMPS Id"
     Type: String
@@ -35,11 +35,11 @@ Parameters:
     Description: "S3 Bucket for Lambda artifacts."
     Type: String
     AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
-    Default: cscoe-master-config-rules-pipeline-artifacts
+    Default: cscoe-org-config-rules-pipeline-artifacts
   pPgeTemplateKey:
     Description: "Config Rule Template path, aka Key"
     Type: String
-    Default: aws-ec2/ec2-config.yml
+    Default: aws-dynamodb/dynamodb-config.yml
     AllowedPattern: ^[A-Za-z0-9_.:/=+@\- ]{0,256}$
   pPgeOrganizationUnit:
     Description: "Deploying to this target OU."
