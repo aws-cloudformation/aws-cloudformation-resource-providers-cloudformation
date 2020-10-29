@@ -110,18 +110,21 @@
   "readOnlyProperties": [
     "/properties/Arn",
     "/properties/Description",
-    "/properties/IsDefaultVersion",
-    "/properties/Schema",
-    "/properties/ProvisioningType",
-    "/properties/Visibility",
-    "/properties/SourceUrl",
     "/properties/DocumentationUrl",
+    "/properties/IsDefaultVersion",
     "/properties/LastUpdated",
+    "/properties/ProvisioningType",
+    "/properties/Schema",
+    "/properties/SourceUrl",
     "/properties/TimeCreated",
-    "/properties/VersionId"
+    "/properties/VersionId",
+    "/properties/Visibility"
   ],
-  "writeOnlyProperties": [
-    "/properties/SchemaHandlerPackage"
+  "createOnlyProperties": [
+    "/properties/ExecutionRoleArn",
+    "/properties/LoggingConfig",
+    "/properties/SchemaHandlerPackage",
+    "/properties/TypeName"
   ],
   "primaryIdentifier": [
     "/properties/Arn"
