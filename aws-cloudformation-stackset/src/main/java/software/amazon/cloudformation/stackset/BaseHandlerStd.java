@@ -138,7 +138,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
                         final CreateStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::createStackInstances);
-                        logger.log(String.format("%s CreateStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
+                        logger.log(String.format("%s [%s] CreateStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, model.getStackSetId(), stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
                         return response;
                     })
                     .stabilize((request, response, proxyInvocation, resourceModel, context) -> isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
@@ -180,7 +180,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
                         final DeleteStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::deleteStackInstances);
-                        logger.log(String.format("%s DeleteStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
+                        logger.log(String.format("%s [%s] DeleteStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, model.getStackSetId(), stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
                         return response;
                     })
                     .stabilize((request, response, proxyInvocation, resourceModel, context) -> isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
@@ -233,7 +233,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
                         final UpdateStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackInstances);
-                        logger.log(String.format("%s UpdateStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
+                        logger.log(String.format("%s [%s] UpdateStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, model.getStackSetId(), stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
                         return response;
                     })
                     .stabilize((request, response, proxyInvocation, resourceModel, context) -> isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))

@@ -63,9 +63,10 @@ public class UpdateHandler extends BaseHandlerStd {
         }
         return proxy.initiate("AWS-CloudFormation-StackSet::UpdateStackSet", client, desiredModel, callbackContext)
                 .translateToServiceRequest(modelRequest -> updateStackSetRequest(modelRequest))
+                .backoffDelay(MULTIPLE_OF)
                 .makeServiceCall((modelRequest, proxyInvocation) -> {
                     final UpdateStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackSet);
-                    logger.log(String.format("%s UpdateStackSet initiated", ResourceModel.TYPE_NAME));
+                    logger.log(String.format("%s [%s] UpdateStackSet initiated", ResourceModel.TYPE_NAME, previousModel.getStackSetId()));
                     return response;
                 })
                 .stabilize((request, response, proxyInvocation, resourceModel, context) -> isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
