@@ -17,15 +17,14 @@
           "description": "A string used to identify this tag. You can specify a maximum of 127 characters for a tag key.",
           "type": "string",
           "minLength": 1,
-          "maxLength": 127,
-          "pattern": "^(?!aws:.*)[a-z0-9\\s\\_\\.\\/\\=\\+\\-]+$"
+          "maxLength": 128,
+          "pattern": "^(?!aws:.*)[a-zA-Z0-9\\s\\_\\.\\/\\=\\+\\-]+$"
         },
         "Value": {
           "description": "A string containing the value for this tag. You can specify a maximum of 256 characters for a tag value.",
           "type": "string",
           "minLength": 1,
-          "maxLength": 255,
-          "pattern": "^(?!aws:.*)[a-z0-9\\s\\_\\.\\/\\=\\+\\-]+$"
+          "maxLength": 256
         }
       },
       "required": [
@@ -223,7 +222,7 @@
       "$ref": "#/definitions/OperationPreferences"
     },
     "StackInstancesGroup": {
-      "description": "",
+      "description": "A group of stack instances with parameters in some specific accounts and regions.",
       "type": "array",
       "uniqueItems": true,
       "insertionOrder": false,
