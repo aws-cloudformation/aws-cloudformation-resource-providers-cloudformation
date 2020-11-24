@@ -24,6 +24,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.test.AbstractMockTestBase;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -128,10 +129,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
@@ -153,24 +153,30 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
-        final TypeVersionSummary typeVersionSummary = TypeVersionSummary.builder()
+        final TypeVersionSummary typeVersionSummary1 = TypeVersionSummary.builder()
             .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
             .build();
+        final TypeVersionSummary typeVersionSummary3 = TypeVersionSummary.builder()
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000003")
+                .build();
+        final TypeVersionSummary typeVersionSummary2 = TypeVersionSummary.builder()
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
+                .build();
         final ListTypeVersionsResponse listTypeVersionsResponse = ListTypeVersionsResponse.builder()
-            .typeVersionSummaries(typeVersionSummary)
+            .typeVersionSummaries(Arrays.asList(typeVersionSummary3,typeVersionSummary2,typeVersionSummary1))
             .build();
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
             .thenReturn(listTypeVersionsResponse);
 
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
             .progressStatus(RegistrationStatus.COMPLETE)
-            .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
+            .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000004")
             .build();
         when(client.describeTypeRegistration(ArgumentMatchers.any(DescribeTypeRegistrationRequest.class)))
             .thenReturn(describeTypeRegistrationResponse);
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000004")
             .typeName("AWS::Demo::Resource")
             .sourceUrl("https://github.com/myorg/resource/repo.git")
             .visibility(Visibility.PRIVATE)
@@ -191,8 +197,8 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .visibility("PRIVATE")
             .sourceUrl("https://github.com/myorg/resource/repo.git")
             .isDefaultVersion(false)
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
-            .versionId("00000002") // next version
+            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000004")
+            .versionId("00000004") // next version
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
@@ -337,13 +343,12 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getPredictedArn()).isEqualTo("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001");
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel().getArn()).isEqualTo("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001");
         assertThat(response.getCallbackContext().getRegistrationToken()).isEqualTo(registerTypeResponse.registrationToken());
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.GeneralServiceException);
     }
 
     @Test
@@ -379,13 +384,12 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getPredictedArn()).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
         assertThat(response.getCallbackContext().getRegistrationToken()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 
     @Test
@@ -405,16 +409,19 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
-        // lack of existing type results in a CfnRegistryException from ListTypeVersions
+        final TypeVersionSummary typeVersionSummary = TypeVersionSummary.builder()
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .build();
+        final ListTypeVersionsResponse listTypeVersionsResponse = ListTypeVersionsResponse.builder()
+                .typeVersionSummaries(typeVersionSummary)
+                .build();
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
-            .thenThrow(make(
-                CfnRegistryException.builder(), 404, "Type not found",
-                CfnRegistryException.class));
+                .thenReturn(listTypeVersionsResponse);
 
         // Registration failure
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
             .progressStatus(RegistrationStatus.FAILED)
-            .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+            .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
             .build();
         when(client.describeTypeRegistration(ArgumentMatchers.any(DescribeTypeRegistrationRequest.class)))
             .thenReturn(describeTypeRegistrationResponse);
@@ -426,10 +433,11 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .awsAccountId("123456789012")
             .build();
 
+
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-            .hasNoCause()
-            .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier 'arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001' did not stabilize.")
-            .isExactlyInstanceOf(CfnNotStabilizedException.class);
+                .hasNoCause()
+                .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier 'arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002' did not stabilize.")
+                .isExactlyInstanceOf(CfnNotStabilizedException.class);
     }
 
     @Test
@@ -450,11 +458,14 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
-        // lack of existing type results in a CfnRegistryException from ListTypeVersions
+        final TypeVersionSummary typeVersionSummary = TypeVersionSummary.builder()
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .build();
+        final ListTypeVersionsResponse listTypeVersionsResponse = ListTypeVersionsResponse.builder()
+                .typeVersionSummaries(typeVersionSummary)
+                .build();
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
-            .thenThrow(make(
-                CfnRegistryException.builder(), 404, "Type not found",
-                CfnRegistryException.class));
+                .thenReturn(listTypeVersionsResponse);
 
         // First registration IN_PROGRESS to force a stabilization loop
         final DescribeTypeRegistrationResponse describeTypeRegistrationResponseInProgress = DescribeTypeRegistrationResponse.builder()

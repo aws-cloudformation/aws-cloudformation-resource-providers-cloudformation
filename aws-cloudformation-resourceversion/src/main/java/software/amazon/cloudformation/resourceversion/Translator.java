@@ -1,9 +1,11 @@
 package software.amazon.cloudformation.resourceversion;
 
 import lombok.NonNull;
+import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
 import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
+import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListTypesRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListTypesResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
@@ -155,5 +157,14 @@ class Translator {
                 .logRoleArn(loggingConfig.logRoleArn())
                 .build();
 
+    }
+
+    public static ListTypeVersionsRequest translateToListTypeVersionsRequest(ResourceModel resourceModel, String marker, DeprecatedStatus deprecatedStatus) {
+        return ListTypeVersionsRequest.builder()
+                .nextToken(marker)
+                .deprecatedStatus(deprecatedStatus)
+                .typeName(resourceModel.getTypeName())
+                .type(RegistryType.RESOURCE)
+                .build();
     }
 }
