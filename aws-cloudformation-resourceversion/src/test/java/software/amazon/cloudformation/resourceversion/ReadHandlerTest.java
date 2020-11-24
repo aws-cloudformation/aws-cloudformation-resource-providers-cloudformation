@@ -178,7 +178,7 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isEqualTo("Resource does not exists");
+        assertThat(response.getMessage()).isEqualTo("Resource does not exist");
         assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 }
