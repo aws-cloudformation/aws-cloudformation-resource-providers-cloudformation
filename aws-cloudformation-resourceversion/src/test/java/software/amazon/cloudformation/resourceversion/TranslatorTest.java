@@ -113,7 +113,7 @@ public class TranslatorTest {
         ResourceModel resourceModel = ResourceModel.builder()
                 .schemaHandlerPackage("example-bucket/some/path/code.zip")
                 .build();
-        assertThatThrownBy(() -> Translator.translateFromReadResponse(resourceModel, null))
+        assertThatThrownBy(() -> Translator.translateFromReadResponse( null))
             .hasNoCause()
             .hasMessageStartingWith("awsResponse is marked")
             .isExactlyInstanceOf(NullPointerException.class);
@@ -138,7 +138,7 @@ public class TranslatorTest {
         ResourceModel resourceModel = ResourceModel.builder()
                 .schemaHandlerPackage("example-bucket/some/path/code.zip")
                 .build();
-        ResourceModel model = Translator.translateFromReadResponse(resourceModel, response);
+        ResourceModel model = Translator.translateFromReadResponse( response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());
@@ -176,7 +176,7 @@ public class TranslatorTest {
         ResourceModel resourceModel = ResourceModel.builder()
                 .schemaHandlerPackage("example-bucket/some/path/code.zip")
                 .build();
-        ResourceModel model = Translator.translateFromReadResponse(resourceModel, response);
+        ResourceModel model = Translator.translateFromReadResponse( response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());
@@ -219,7 +219,7 @@ public class TranslatorTest {
         ResourceModel resourceModel = ResourceModel.builder()
                 .schemaHandlerPackage("example-bucket/some/path/code.zip")
                 .build();
-        ResourceModel model = Translator.translateFromReadResponse(resourceModel, response);
+        ResourceModel model = Translator.translateFromReadResponse( response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
         assertThat(model.getDescription()).isEqualTo(response.description());

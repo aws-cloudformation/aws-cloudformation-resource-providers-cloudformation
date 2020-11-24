@@ -37,7 +37,7 @@ public class ReadHandler extends BaseHandlerStd {
         return initiator.initiate("read")
             .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
             .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient , resourceModel))
-            .done(awsResponse -> ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(resourceModel,awsResponse)));
+            .done(awsResponse -> ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(awsResponse)));
     }
 
     /**

@@ -61,7 +61,7 @@ public class CreateHandler extends BaseHandlerStd {
                 listTypeVersionsResponse = proxyClient.injectCredentialsAndInvokeV2(
                         Translator.translateToListTypeVersionsRequest(model, marker, context.getDeprecatedStatus()), proxyClient.client()::listTypeVersions);
             } catch (CfnRegistryException e) {
-                // registration can be assumed to be the first version for a type, the version will be 00000001
+                // registration can be assumed to be the first version for a type, the version will be 00000001.
                 String arn = String.format("arn:%s:cloudformation:%s:%s:type/resource/%s/00000001",
                         request.getAwsPartition(),
                         request.getRegion(),
@@ -75,7 +75,7 @@ public class CreateHandler extends BaseHandlerStd {
             latest = getLatestVersion(latest, currentLatest, listTypeVersionsResponse);
             marker = listTypeVersionsResponse.nextToken();
             if (StringUtils.isNullOrEmpty(marker) && context.getDeprecatedStatus() == DeprecatedStatus.LIVE) {
-                logger.log("changing the status from LIVE to DEPRECATED");
+                logger.log("changing the status from LIVE to DEPRECATED"); //We need to know the highest version ID for deprecated versions as well to predict the arn.
                 context.setDeprecatedStatus(DeprecatedStatus.DEPRECATED);
                 continue;
             }

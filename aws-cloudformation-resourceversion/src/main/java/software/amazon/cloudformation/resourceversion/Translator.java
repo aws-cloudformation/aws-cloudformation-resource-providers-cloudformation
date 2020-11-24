@@ -58,11 +58,11 @@ class Translator {
     /**
      * Translates resource object from sdk into a resource model
      *
-     * @param resourceModel
+     *
      * @param awsResponse   the aws service describe resource response
      * @return model resource model
      */
-    static ResourceModel translateFromReadResponse(ResourceModel resourceModel, @NonNull final DescribeTypeResponse awsResponse) {
+    static ResourceModel translateFromReadResponse(@NonNull final DescribeTypeResponse awsResponse) {
         final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
                 .arn(awsResponse.arn())
                 .description(awsResponse.description())
@@ -74,7 +74,6 @@ class Translator {
                 .sourceUrl(awsResponse.sourceUrl())
                 .typeName(awsResponse.typeName())
                 .versionId(awsResponse.arn().substring(awsResponse.arn().lastIndexOf('/') + 1))
-                .schemaHandlerPackage(resourceModel.getSchemaHandlerPackage())
                 .visibility(awsResponse.visibilityAsString());
 
         if (awsResponse.lastUpdated() != null) {
