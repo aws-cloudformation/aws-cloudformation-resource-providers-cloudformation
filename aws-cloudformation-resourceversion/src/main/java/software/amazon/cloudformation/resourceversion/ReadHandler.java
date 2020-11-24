@@ -33,7 +33,7 @@ public class ReadHandler extends BaseHandlerStd {
             proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
         if(StringUtils.isNullOrEmpty(resourceModel.getArn()))
-            return ProgressEvent.failed(resourceModel,callbackContext, HandlerErrorCode.NotFound,"Resource does not exists");
+            return ProgressEvent.failed(resourceModel,callbackContext, HandlerErrorCode.NotFound,"Resource does not exist");
         return initiator.initiate("read")
             .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
             .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient , resourceModel))
