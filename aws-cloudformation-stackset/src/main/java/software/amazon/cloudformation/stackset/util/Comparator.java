@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Utility class to help comparing previous model and desire model
@@ -17,12 +18,16 @@ public class Comparator {
      *
      * @param previousModel previous {@link ResourceModel}
      * @param desiredModel  desired {@link ResourceModel}
+     * @param previousTags  previous resource and stack tags
+     * @param desiredTags   desired resource and stack tags
      * @return
      */
-    public static boolean isStackSetConfigEquals(
-            final ResourceModel previousModel, final ResourceModel desiredModel) {
+    public static boolean isStackSetConfigEquals(final ResourceModel previousModel,
+                                                 final ResourceModel desiredModel,
+                                                 final Map<String, String> previousTags,
+                                                 final Map<String, String> desiredTags) {
 
-        if (!equals(previousModel.getTags(), desiredModel.getTags()))
+        if (!equals(previousTags, desiredTags))
             return false;
 
         if (StringUtils.compare(previousModel.getAdministrationRoleARN(),
@@ -55,6 +60,23 @@ public class Comparator {
             equals = collection1.size() == collection2.size()
                     && collection1.containsAll(collection2) && collection2.containsAll(collection1);
         } else if (collection1 == null && collection2 == null) {
+            equals = true;
+        }
+        return equals;
+    }
+
+    /**
+     * Compares if two maps equal in a null-safe way.
+     *
+     * @param map1
+     * @param map2
+     * @return boolean indicates if two maps equal.
+     */
+    public static boolean equals(final Map<?, ?> map1, final Map<?, ?> map2) {
+        boolean equals = false;
+        if (map1 != null && map2 != null) {
+            equals = map1.equals(map2);
+        } else if (map1 == null && map2 == null) {
             equals = true;
         }
         return equals;

@@ -33,7 +33,7 @@ public class UpdateHandler extends BaseHandlerStd {
 
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress -> deleteStackInstances(proxy, proxyClient, progress, placeHolder.getDeleteStackInstances(), logger))
-                .then(progress -> updateStackSet(proxy, proxyClient, progress, previousModel))
+                .then(progress -> updateStackSet(proxy, proxyClient, request, progress, previousModel))
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, placeHolder.getCreateStackInstances(), logger))
                 .then(progress -> updateStackInstances(proxy, proxyClient, progress, placeHolder.getUpdateStackInstances(), logger))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
@@ -43,26 +43,27 @@ public class UpdateHandler extends BaseHandlerStd {
      * Implement client invocation of the update request through the proxyClient, which is already initialised with
      * caller credentials, correct region and retry settings
      *
-     * @param proxy         {@link AmazonWebServicesClientProxy} to initiate proxy chain
-     * @param client        the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
-     * @param progress      {@link ProgressEvent<ResourceModel, CallbackContext>} to place hold the current progress data
-     * @param previousModel previous {@link ResourceModel} for comparing with desired model
+     * @param proxy          {@link AmazonWebServicesClientProxy} to initiate proxy chain
+     * @param client         the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
+     * @param handlerRequest Resource handler request {@link ResourceHandlerRequest<ResourceModel>}
+     * @param progress       {@link ProgressEvent<ResourceModel, CallbackContext>} to place hold the current progress data
+     * @param previousModel  previous {@link ResourceModel} for comparing with desired model
      * @return progressEvent indicating success, in progress with delay callback or failed state
      */
     private ProgressEvent<ResourceModel, CallbackContext> updateStackSet(
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<CloudFormationClient> client,
+            final ResourceHandlerRequest<ResourceModel> handlerRequest,
             final ProgressEvent<ResourceModel, CallbackContext> progress,
             final ResourceModel previousModel) {
 
         final ResourceModel desiredModel = progress.getResourceModel();
         final CallbackContext callbackContext = progress.getCallbackContext();
-
-        if (isStackSetConfigEquals(previousModel, desiredModel)) {
+        if (isStackSetConfigEquals(previousModel, desiredModel, handlerRequest.getPreviousResourceTags(), handlerRequest.getDesiredResourceTags())) {
             return ProgressEvent.progress(desiredModel, callbackContext);
         }
         return proxy.initiate("AWS-CloudFormation-StackSet::UpdateStackSet", client, desiredModel, callbackContext)
-                .translateToServiceRequest(modelRequest -> updateStackSetRequest(modelRequest))
+                .translateToServiceRequest(modelRequest -> updateStackSetRequest(modelRequest, handlerRequest.getDesiredResourceTags()))
                 .backoffDelay(MULTIPLE_OF)
                 .makeServiceCall((modelRequest, proxyInvocation) -> {
                     final UpdateStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackSet);

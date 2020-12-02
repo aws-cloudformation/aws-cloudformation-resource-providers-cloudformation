@@ -16,6 +16,8 @@ import software.amazon.cloudformation.stackset.OperationPreferences;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
 
+import java.util.Map;
+
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkDeploymentTargets;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkOperationPreferences;
@@ -27,7 +29,7 @@ public class RequestTranslator {
     private static final int LIST_MAX_ITEMS = 100;
 
     public static CreateStackSetRequest createStackSetRequest(
-            final ResourceModel model, final String requestToken) {
+            final ResourceModel model, final String requestToken, final Map<String, String> tags) {
         return CreateStackSetRequest.builder()
                 .stackSetName(model.getStackSetName())
                 .administrationRoleARN(model.getAdministrationRoleARN())
@@ -38,7 +40,7 @@ public class RequestTranslator {
                 .description(model.getDescription())
                 .executionRoleName(model.getExecutionRoleName())
                 .parameters(translateToSdkParameters(model.getParameters()))
-                .tags(translateToSdkTags(model.getTags()))
+                .tags(translateToSdkTags(tags))
                 .templateBody(model.getTemplateBody())
                 .templateURL(model.getTemplateURL())
                 .build();
@@ -88,7 +90,7 @@ public class RequestTranslator {
                 .build();
     }
 
-    public static UpdateStackSetRequest updateStackSetRequest(final ResourceModel model) {
+    public static UpdateStackSetRequest updateStackSetRequest(final ResourceModel model, final Map<String, String> tags) {
         return UpdateStackSetRequest.builder()
                 .stackSetName(model.getStackSetId())
                 .administrationRoleARN(model.getAdministrationRoleARN())
@@ -99,7 +101,7 @@ public class RequestTranslator {
                 .parameters(translateToSdkParameters(model.getParameters()))
                 .templateURL(model.getTemplateURL())
                 .templateBody(model.getTemplateBody())
-                .tags(translateToSdkTags(model.getTags()))
+                .tags(translateToSdkTags(tags))
                 .build();
     }
 
