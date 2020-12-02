@@ -74,10 +74,15 @@ public class CreateHandler extends BaseHandlerStd {
             final TypeVersionSummary currentLatest = latest;
             latest = getLatestVersion(latest, currentLatest, listTypeVersionsResponse);
             marker = listTypeVersionsResponse.nextToken();
-            if (StringUtils.isNullOrEmpty(marker) && context.getDeprecatedStatus() == DeprecatedStatus.LIVE) {
-                logger.log("changing the status from LIVE to DEPRECATED"); //We need to know the highest version ID for deprecated versions as well to predict the arn.
-                context.setDeprecatedStatus(DeprecatedStatus.DEPRECATED);
+            if(!StringUtils.isNullOrEmpty(marker)) {
                 continue;
+            }
+            else {
+                if (context.getDeprecatedStatus() == DeprecatedStatus.LIVE) {
+                    logger.log("changing the status from LIVE to DEPRECATED"); //We need to know the highest version ID for deprecated versions as well to predict the arn.
+                    context.setDeprecatedStatus(DeprecatedStatus.DEPRECATED);
+                    continue;
+                }
             }
             String arn = getCurrentArn(latest, currentLatest); //returns the largest version ID +1
             if (StringUtils.isNullOrEmpty(context.getPredictedArn())) {
@@ -107,6 +112,7 @@ public class CreateHandler extends BaseHandlerStd {
                     int first = getVersion(summary.arn());
                     int second = getVersion(next.arn());
                     int latestVersion = getVersion(currentLatest.arn());
+                    logger.log("first second and latest is "+first+" "+second+" "+latestVersion);
                     if (second > first) {
                         return latestVersion < second ? next : currentLatest;
                     } else {
