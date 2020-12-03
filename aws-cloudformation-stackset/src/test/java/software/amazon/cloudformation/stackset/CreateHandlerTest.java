@@ -8,11 +8,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetRequest;
-import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
-import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
-import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -32,16 +29,7 @@ import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InternalFailure;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_1;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_2;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_3;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_4;
-import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_EMPTY_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_ONE_INSTANCES_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SERVICE_MANAGED_STACK_SET_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LOGICAL_ID;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_STOPPED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
@@ -49,13 +37,9 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.REQUEST_TOK
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_DUPLICATE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_INVALID_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_FOR_READ;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_NO_INSTANCES_FOR_READ;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_ONE_INSTANCES_FOR_READ;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_NO_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL_FOR_READ;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK;
 import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
 
@@ -84,6 +68,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(SERVICE_MANAGED_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
@@ -96,15 +81,6 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
         when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
-                .thenReturn(LIST_SERVICE_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().describeStackInstance(any(DescribeStackInstanceRequest.class)))
-                .thenReturn(DESCRIBE_STACK_INSTANCE_RESPONSE_1,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_2,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_3,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_4);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -113,7 +89,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(SERVICE_MANAGED_MODEL_FOR_READ);
+        assertThat(response.getResourceModel()).isEqualTo(SERVICE_MANAGED_MODEL);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
@@ -121,9 +97,6 @@ public class CreateHandlerTest extends AbstractTestBase {
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
-        verify(proxyClient.client(), times(4)).describeStackInstance(any(DescribeStackInstanceRequest.class));
     }
 
     @Test
@@ -132,6 +105,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(SELF_MANAGED_MODEL)
                 .logicalResourceIdentifier(LOGICAL_ID)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
@@ -143,15 +117,6 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
         when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
-                .thenReturn(LIST_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().describeStackInstance(any(DescribeStackInstanceRequest.class)))
-                .thenReturn(DESCRIBE_STACK_INSTANCE_RESPONSE_1,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_2,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_3,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_4);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -160,7 +125,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_MODEL_FOR_READ);
+        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_MODEL);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
@@ -168,9 +133,6 @@ public class CreateHandlerTest extends AbstractTestBase {
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client(), times(2)).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client(), times(2)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
-        verify(proxyClient.client(), times(4)).describeStackInstance(any(DescribeStackInstanceRequest.class));
     }
 
     @Test
@@ -178,6 +140,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(SELF_MANAGED_NO_INSTANCES_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
@@ -186,10 +149,6 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
-                .thenReturn(LIST_SELF_MANAGED_STACK_SET_EMPTY_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -198,14 +157,13 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_MODEL_NO_INSTANCES_FOR_READ);
+        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_NO_INSTANCES_MODEL);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
+
     }
 
     @Test
@@ -214,6 +172,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(SELF_MANAGED_ONE_INSTANCES_MODEL)
                 .logicalResourceIdentifier(LOGICAL_ID)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
         when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
@@ -224,13 +183,6 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
         when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
-                .thenReturn(LIST_SELF_MANAGED_STACK_SET_ONE_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackInstance(any(DescribeStackInstanceRequest.class)))
-                .thenReturn(DESCRIBE_STACK_INSTANCE_RESPONSE_3,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_4);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -239,7 +191,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_MODEL_ONE_INSTANCES_FOR_READ);
+        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_ONE_INSTANCES_MODEL);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
@@ -247,9 +199,6 @@ public class CreateHandlerTest extends AbstractTestBase {
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
-        verify(proxyClient.client(), times(2)).describeStackInstance(any(DescribeStackInstanceRequest.class));
     }
 
     @Test
@@ -257,6 +206,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(SELF_MANAGED_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
@@ -289,6 +239,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(SELF_MANAGED_DUPLICATE_INSTANCES_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
@@ -307,6 +258,7 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(SELF_MANAGED_DUPLICATE_INSTANCES_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();

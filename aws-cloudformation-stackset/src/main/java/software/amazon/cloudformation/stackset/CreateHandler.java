@@ -38,6 +38,6 @@ public class CreateHandler extends BaseHandlerStd {
                 })
                 .progress()
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, placeHolder.getCreateStackInstances(), logger))
-                .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+                .then(progress -> ProgressEvent.defaultSuccessHandler(model));
     }
 }
