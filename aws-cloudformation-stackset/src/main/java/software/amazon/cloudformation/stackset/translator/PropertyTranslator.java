@@ -13,6 +13,8 @@ import software.amazon.cloudformation.stackset.util.StackInstance;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -122,14 +124,14 @@ public class PropertyTranslator {
      * @param tags Tags CFN resource model.
      * @return SDK Tags.
      */
-    static List<Tag> translateToSdkTags(final Collection<software.amazon.cloudformation.stackset.Tag> tags) {
-        // To remove Tags from a StackSet, set it as an empty list
-        if (CollectionUtils.isNullOrEmpty(tags)) return Collections.emptyList();
-        return tags.stream().map(tag -> Tag.builder()
-                .key(tag.getKey())
-                .value(tag.getValue())
-                .build())
-                .collect(Collectors.toList());
+    public static Set<Tag> translateToSdkTags(final Map<String, String> tags) {
+        if (tags == null) {
+            return Collections.emptySet();
+        }
+        return Optional.of(tags.entrySet()).orElse(Collections.emptySet())
+                .stream()
+                .map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
+                .collect(Collectors.toSet());
     }
 
     /**
