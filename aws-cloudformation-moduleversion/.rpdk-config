@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::CloudFormation::ModuleVersion",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.cloudformation.moduleversion.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.cloudformation.moduleversion.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "cloudformation",
+            "moduleversion"
+        ],
+        "codegen_template_path": "guided_aws",
+        "protocolVersion": "2.0.0"
+    }
+}
