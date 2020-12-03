@@ -69,7 +69,7 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isEqualTo(outModel);
         assertThat(response.getResourceModels()).isNull();
@@ -149,16 +149,6 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
             .isExactlyInstanceOf(ResourceNotFoundException.class);
     }
 
-    @Test
-    public void handleRequest_BadInput_NoModel() {
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .build();
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-            .hasNoCause()
-            .hasMessage("Resource Model can not be null")
-            .isExactlyInstanceOf(NullPointerException.class);
-    }
 
     @Test
     public void handleRequest_ResourceNotFound() {

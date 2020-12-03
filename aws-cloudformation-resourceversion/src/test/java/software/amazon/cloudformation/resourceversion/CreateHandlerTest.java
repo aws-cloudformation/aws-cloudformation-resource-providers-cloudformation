@@ -50,8 +50,17 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 CfnRegistryException.builder(), 500, "some exception",
                 CfnRegistryException.class));
 
+        final TypeVersionSummary typeVersionSummary = TypeVersionSummary.builder()
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000003")
+                .build();
+        final ListTypeVersionsResponse listTypeVersionsResponse = ListTypeVersionsResponse.builder()
+                .typeVersionSummaries(Arrays.asList(typeVersionSummary))
+                .build();
+        when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
+                .thenReturn(listTypeVersionsResponse);
+
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(ResourceModel.builder().build())
+            .desiredResourceState(ResourceModel.builder().typeName("AWS::Demo::Resource").build())
             .awsPartition("aws")
             .region("us-west-2")
             .awsAccountId("123456789012")
@@ -61,7 +70,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
+        assertThat(response.getCallbackContext().getPredictedArn()).isEqualTo("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000004");
         assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
@@ -114,15 +123,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .awsPartition("aws")
             .region("us-west-2")
             .awsAccountId("123456789012")
-            .build();
-
-        final ResourceModel resourceModelResult = ResourceModel.builder()
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .isDefaultVersion(false)
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .versionId("00000001")
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
@@ -205,7 +205,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
@@ -289,7 +289,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
@@ -333,6 +333,23 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
             .awsAccountId("123456789012")
             .build();
 
+        final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000004")
+                .typeName("AWS::Demo::Resource")
+                .sourceUrl("https://github.com/myorg/resource/repo.git")
+                .visibility(Visibility.PRIVATE)
+                .isDefaultVersion(false)
+                .build();
+        when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
+                .thenReturn(describeTypeResponse);
+
+        final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
+                .progressStatus(RegistrationStatus.COMPLETE)
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000004")
+                .build();
+        when(client.describeTypeRegistration(ArgumentMatchers.any(DescribeTypeRegistrationRequest.class)))
+                .thenReturn(describeTypeRegistrationResponse);
+
         final ResourceModel resourceModelResult = ResourceModel.builder()
             .typeName("AWS::Demo::Resource")
             .visibility("PRIVATE")
@@ -344,11 +361,10 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getResourceModel().getArn()).isEqualTo("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001");
+        assertThat(response.getResourceModel().getArn()).isEqualTo("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000004");
         assertThat(response.getCallbackContext().getRegistrationToken()).isEqualTo(registerTypeResponse.registrationToken());
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
     }
 
     @Test
@@ -368,6 +384,22 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
             .thenReturn(registerTypeResponse);
 
+        final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
+                .progressStatus(RegistrationStatus.COMPLETE)
+                .build();
+        when(client.describeTypeRegistration(ArgumentMatchers.any(DescribeTypeRegistrationRequest.class)))
+                .thenReturn(describeTypeRegistrationResponse);
+
+        final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .sourceUrl("https://github.com/myorg/resource/repo.git")
+                .visibility(Visibility.PRIVATE)
+                .isDefaultVersion(false)
+                .build();
+        when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
+                .thenReturn(describeTypeResponse);
+
         // lack of existing type results in a CfnRegistryException from ListTypeVersions
         when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
             .thenThrow(make(
@@ -385,11 +417,10 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
+        assertThat(response.getCallbackContext().getPredictedArn()).isNotNull();
         assertThat(response.getCallbackContext().getRegistrationToken()).isNotNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
     }
 
     @Test
@@ -509,51 +540,11 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackContext()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getCallbackContext()).isNotNull();
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModelResult);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
 
-    @Test
-    public void handleRequest_PredictArn_OtherException() {
-        final CloudFormationClient client = getServiceClient();
-        when(client.serviceName()).thenReturn("cloudformation");
-
-        final ResourceModel resourceModel = ResourceModel.builder()
-                .typeName("AWS::Demo::Resource")
-                .visibility("PRIVATE")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
-                .build();
-
-        final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder()
-                .registrationToken(UUID.randomUUID().toString())
-                .build();
-        when(client.registerType(ArgumentMatchers.any(RegisterTypeRequest.class)))
-                .thenReturn(registerTypeResponse);
-
-        // lack of existing type results in a CfnRegistryException from ListTypeVersions
-        when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
-                .thenThrow(NullPointerException.class);
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(resourceModel)
-                .awsPartition("aws")
-                .region("us-west-2")
-                .awsAccountId("123456789012")
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
-        assertThat(response.getCallbackContext().getRegistrationToken()).isNotNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
-    }
 }

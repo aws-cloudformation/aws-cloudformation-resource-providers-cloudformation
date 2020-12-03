@@ -27,14 +27,16 @@ public class CreateHandler extends BaseHandlerStd {
 
         ResourceModel resourceModel = request.getDesiredResourceState();
         return ProgressEvent.progress(resourceModel, callbackContext)
+                .then(progress -> predictArn(progress, proxyClient, request))
                 .then(progress ->
                         proxy.initiate("create", proxyClient, resourceModel, callbackContext)
                                 .translateToServiceRequest(Translator::translateToCreateRequest)
                                 .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::registerType))
                                 .done((registerTypeRequest, registerTypeResponse, sdkProxyClient, model, cc) -> {
-                                    cc.setRegistrationToken(registerTypeResponse.registrationToken());
-                                    return predictArn(progress, proxyClient, request);
-                                })
+                                            cc.setRegistrationToken(registerTypeResponse.registrationToken());
+                                            return ProgressEvent.progress(model, cc);
+                                        }
+                                )
                 )
                 .then(progress -> stabilizeOnCreate(progress, proxy, proxyClient))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, progress.getCallbackContext(), proxyClient, logger));
@@ -68,16 +70,16 @@ public class CreateHandler extends BaseHandlerStd {
                         request.getAwsAccountId(),
                         model.getTypeName().replace("::", "-"));
                 model.setArn(arn);
-                return ProgressEvent.success(model, context);
+                context.setPredictedArn(arn);
+                return ProgressEvent.progress(model, context);
             }
 
             final TypeVersionSummary currentLatest = latest;
             latest = getLatestVersion(latest, currentLatest, listTypeVersionsResponse);
             marker = listTypeVersionsResponse.nextToken();
-            if(!StringUtils.isNullOrEmpty(marker)) {
+            if (!StringUtils.isNullOrEmpty(marker)) {
                 continue;
-            }
-            else {
+            } else {
                 if (context.getDeprecatedStatus() == DeprecatedStatus.LIVE) {
                     logger.log("changing the status from LIVE to DEPRECATED"); //We need to know the highest version ID for deprecated versions as well to predict the arn.
                     context.setDeprecatedStatus(DeprecatedStatus.DEPRECATED);
@@ -112,7 +114,6 @@ public class CreateHandler extends BaseHandlerStd {
                     int first = getVersion(summary.arn());
                     int second = getVersion(next.arn());
                     int latestVersion = getVersion(currentLatest.arn());
-                    logger.log("first second and latest is "+first+" "+second+" "+latestVersion);
                     if (second > first) {
                         return latestVersion < second ? next : currentLatest;
                     } else {
