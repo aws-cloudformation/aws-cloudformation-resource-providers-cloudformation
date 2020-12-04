@@ -21,4 +21,3 @@ Resources:
       Handler: software.amazon.cloudformation.moduledefaultversion.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-cloudformation-moduledefaultversion-handler-1.0-SNAPSHOT.jar
-

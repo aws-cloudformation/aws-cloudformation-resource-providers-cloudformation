@@ -11,15 +11,15 @@ install:
 script:
   - pre-commit run --all-files --verbose
   - cd "$TRAVIS_BUILD_DIR/aws-cloudformation-moduledefaultversion"
-    # from Maven 3.6.1+, should use `--no-transfer-progress` instead of Slf4jMavenTransferListener
-    - >
+  # from Maven 3.6.1+, should use `--no-transfer-progress` instead of Slf4jMavenTransferListener
+  - >
     mvn
     -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
     -B
     clean verify
   - cd "$TRAVIS_BUILD_DIR/aws-cloudformation-moduleversion"
-    # from Maven 3.6.1+, should use `--no-transfer-progress` instead of Slf4jMavenTransferListener
-    - >
+  # from Maven 3.6.1+, should use `--no-transfer-progress` instead of Slf4jMavenTransferListener
+  - >
     mvn
     -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
     -B

@@ -1,6 +1,6 @@
 # AWS::CloudFormation::ModuleDefaultVersion
-	 
-	 
+
+
 ## Sample Usage
 
 ```
@@ -16,7 +16,7 @@ Resources:
             ModuleName: Sample::CloudFormation::Resource::Module
             ModulePackage: s3://<your_s3_bucket_name>/<your_module_package_key>
         DependsOn: InitialModule
-    
+
     DefaultVersion:
         Type: AWS::CloudFormation::ModuleDefaultVersion
         Properties:
