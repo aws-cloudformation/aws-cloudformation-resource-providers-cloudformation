@@ -56,9 +56,11 @@
     }
   },
   "required": [
-    "ModuleName"
+    "ModuleName",
+    "ModulePackage"
   ],
   "createOnlyProperties": [
+    "/properties/ModuleName",
     "/properties/ModulePackage"
   ],
   "readOnlyProperties": [

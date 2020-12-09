@@ -125,14 +125,4 @@ public class CreateHandler extends BaseHandlerStd {
                 throw new CfnGeneralServiceException(String.format("received unexpected module registration status: %s", dtrResponse.progressStatus()));
         }
     }
-
-    @Override
-    protected void validateModel(final ResourceModel model) {
-        if (model == null) {
-            throw new CfnInvalidRequestException("ResourceModel is required");
-        }
-        if (model.getModulePackage() == null) {
-            throw new CfnInvalidRequestException("ModulePackage is required in ResourceModel");
-        }
-    }
 }
