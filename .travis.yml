@@ -10,6 +10,20 @@ install:
   - pip3 install --user pre-commit cloudformation-cli-java-plugin
 script:
   - pre-commit run --all-files --verbose
+  - cd "$TRAVIS_BUILD_DIR/aws-cloudformation-moduledefaultversion"
+  # from Maven 3.6.1+, should use `--no-transfer-progress` instead of Slf4jMavenTransferListener
+  - >
+    mvn
+    -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+    -B
+    clean verify
+  - cd "$TRAVIS_BUILD_DIR/aws-cloudformation-moduleversion"
+  # from Maven 3.6.1+, should use `--no-transfer-progress` instead of Slf4jMavenTransferListener
+  - >
+    mvn
+    -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+    -B
+    clean verify
   - cd "$TRAVIS_BUILD_DIR/aws-cloudformation-resourcedefaultversion"
   # from Maven 3.6.1+, should use `--no-transfer-progress` instead of Slf4jMavenTransferListener
   - >
@@ -32,6 +46,8 @@ script:
     -B
     clean verify
 after_failure:
+  - cat "$TRAVIS_BUILD_DIR/aws-cloudformation-moduledefaultversion/rpdk.log"
+  - cat "$TRAVIS_BUILD_DIR/aws-cloudformation-moduleversion/rpdk.log"
   - cat "$TRAVIS_BUILD_DIR/aws-cloudformation-resourcedefaultversion/rpdk.log"
   - cat "$TRAVIS_BUILD_DIR/aws-cloudformation-resourceversion/rpdk.log"
   - cat "$TRAVIS_BUILD_DIR/aws-cloudformation-stackset/rpdk.log"
