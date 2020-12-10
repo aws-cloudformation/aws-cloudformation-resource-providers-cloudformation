@@ -270,19 +270,19 @@
       "maxLength": 1024
     }
   },
+  "required": [
+    "StackSetName",
+    "PermissionModel"
+  ],
   "oneOf": [
     {
       "required": [
-        "TemplateURL",
-        "StackSetName",
-        "PermissionModel"
+        "TemplateURL"
       ]
     },
     {
       "required": [
-        "TemplateBody",
-        "StackSetName",
-        "PermissionModel"
+        "TemplateBody"
       ]
     }
   ],
