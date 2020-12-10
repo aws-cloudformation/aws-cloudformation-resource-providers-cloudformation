@@ -1,6 +1,6 @@
 {
   "CREATE": {
-    "/Name": "Your::Personal::Test::MODULE",
+    "/ModuleName": "Your::Personal::Test::MODULE",
     "/ModulePackage": "s3://<your_s3_bucket_name>/<your_module_package_key>"
   }
 }
