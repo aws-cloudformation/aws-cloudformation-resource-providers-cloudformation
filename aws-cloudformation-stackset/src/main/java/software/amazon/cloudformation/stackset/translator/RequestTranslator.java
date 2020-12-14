@@ -95,6 +95,7 @@ public class RequestTranslator {
                 .stackSetName(model.getStackSetId())
                 .administrationRoleARN(model.getAdministrationRoleARN())
                 .autoDeployment(translateToSdkAutoDeployment(model.getAutoDeployment()))
+                .operationPreferences(translateToSdkOperationPreferences(model.getOperationPreferences()))
                 .capabilitiesWithStrings(model.getCapabilities())
                 .description(model.getDescription())
                 .executionRoleName(model.getExecutionRoleName())
