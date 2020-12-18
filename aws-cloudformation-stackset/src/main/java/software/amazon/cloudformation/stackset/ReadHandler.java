@@ -27,6 +27,7 @@ public class ReadHandler extends BaseHandlerStd {
                 .resourceModel(ResourceModelBuilder.builder()
                         .proxyClient(proxyClient)
                         .stackSet(describeStackSet(proxyClient, model.getStackSetId()))
+                        .logger(logger)
                         .build().buildModel())
                 .status(OperationStatus.SUCCESS)
                 .build();

@@ -1,6 +1,8 @@
 package software.amazon.cloudformation.stackset.util;
 
 import com.google.common.collect.ImmutableMap;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
@@ -645,5 +647,10 @@ public class TestUtils {
             ListStackSetsResponse.builder()
                     .summaries(STACK_SET_SUMMARY_1)
                     .build();
+
+    public final static AwsServiceException RATE_EXCEEDED_EXCEPTION = CloudFormationException.builder()
+            .message("Rate exceeded")
+            .statusCode(400)
+            .build();
 
 }

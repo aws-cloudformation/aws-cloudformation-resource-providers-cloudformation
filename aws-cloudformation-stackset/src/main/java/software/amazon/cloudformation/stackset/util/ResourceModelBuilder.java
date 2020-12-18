@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
+import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
@@ -23,7 +24,7 @@ import static software.amazon.cloudformation.stackset.translator.PropertyTransla
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackInstanceRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.listStackInstancesRequest;
-import static software.amazon.cloudformation.stackset.util.InstancesAnalyzer.aggregateStackInstancesForRead;
+import static software.amazon.cloudformation.stackset.util.InstancesAnalyzer.aggregateStackInstances;
 
 /**
  * Utility class to construct {@link ResourceModel} for Read/List request based on {@link StackSet}
@@ -35,6 +36,7 @@ public class ResourceModelBuilder {
 
     private ProxyClient<CloudFormationClient> proxyClient;
     private StackSet stackSet;
+    private Logger logger;
     private boolean isSelfManaged;
 
     /**
@@ -74,7 +76,7 @@ public class ResourceModelBuilder {
         } while (token != null);
 
         if (!stackInstanceSet.isEmpty()) {
-            final Set<StackInstances> stackInstancesGroup = aggregateStackInstancesForRead(stackInstanceSet);
+            final Set<StackInstances> stackInstancesGroup = aggregateStackInstances(stackInstanceSet, isSelfManaged);
             model.setStackInstancesGroup(stackInstancesGroup);
         }
 
@@ -105,9 +107,10 @@ public class ResourceModelBuilder {
     }
 
     private List<Parameter> getStackInstance(final StackInstanceSummary summary) {
-        final DescribeStackInstanceResponse describeStackInstanceResponse = proxyClient.injectCredentialsAndInvokeV2(
-                describeStackInstanceRequest(summary.account(), summary.region(), summary.stackSetId()),
-                proxyClient.client()::describeStackInstance);
+        final DescribeStackInstanceResponse describeStackInstanceResponse = new RetryUtils(logger).runWithRetry(
+                () -> proxyClient.injectCredentialsAndInvokeV2(
+                        describeStackInstanceRequest(summary.account(), summary.region(), summary.stackSetId()),
+                        proxyClient.client()::describeStackInstance));
         return describeStackInstanceResponse.stackInstance().parameterOverrides();
     }
 
