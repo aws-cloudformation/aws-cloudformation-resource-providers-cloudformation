@@ -62,11 +62,6 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
                 .thenReturn(LIST_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().describeStackInstance(any(DescribeStackInstanceRequest.class)))
-                .thenReturn(DESCRIBE_STACK_INSTANCE_RESPONSE_1,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_2,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_3,
-                        DESCRIBE_STACK_INSTANCE_RESPONSE_4);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
                 = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -82,6 +77,5 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
-        verify(proxyClient.client(), times(4)).describeStackInstance(any(DescribeStackInstanceRequest.class));
     }
 }

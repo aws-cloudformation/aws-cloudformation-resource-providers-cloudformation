@@ -3,26 +3,20 @@ package software.amazon.cloudformation.stackset.util;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesResponse;
-import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
-import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
-import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkParameters;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkTags;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
-import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackInstanceRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.listStackInstancesRequest;
 import static software.amazon.cloudformation.stackset.util.InstancesAnalyzer.aggregateStackInstances;
 
@@ -36,7 +30,6 @@ public class ResourceModelBuilder {
 
     private ProxyClient<CloudFormationClient> proxyClient;
     private StackSet stackSet;
-    private Logger logger;
     private boolean isSelfManaged;
 
     /**
@@ -101,17 +94,10 @@ public class ResourceModelBuilder {
         token = listStackInstancesResponse.nextToken();
         if (!listStackInstancesResponse.hasSummaries()) return;
         listStackInstancesResponse.summaries().forEach(member -> {
-            final List<Parameter> parameters = getStackInstance(member);
-            stackInstanceSet.add(translateToStackInstance(isSelfManaged, member, parameters));
+            // Parameters are set null as we can't retrieve parameter override from List API.
+            // Retrieving from Describe API requires to brutal force every single stack instance
+            // which will likely cause timeout issue
+            stackInstanceSet.add(translateToStackInstance(isSelfManaged, member, null));
         });
     }
-
-    private List<Parameter> getStackInstance(final StackInstanceSummary summary) {
-        final DescribeStackInstanceResponse describeStackInstanceResponse = new RetryUtils(logger).runWithRetry(
-                () -> proxyClient.injectCredentialsAndInvokeV2(
-                        describeStackInstanceRequest(summary.account(), summary.region(), summary.stackSetId()),
-                        proxyClient.client()::describeStackInstance));
-        return describeStackInstanceResponse.stackInstance().parameterOverrides();
-    }
-
 }

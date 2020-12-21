@@ -161,14 +161,10 @@ public class PropertyTranslator {
             final StackInstanceSummary summary,
             final Collection<Parameter> parameters) {
 
-        final StackInstance stackInstance = StackInstance.builder()
+        return StackInstance.builder()
                 .region(summary.region())
                 .parameters(translateFromSdkParameters(parameters))
+                .deploymentTarget(isSelfManaged ? summary.account() : summary.organizationalUnitId())
                 .build();
-
-        // Currently OrganizationalUnitId is Reserved for internal use. No data returned from this API
-        // TODO: Once OrganizationalUnitId is added back, we need to change to set organizationalUnitId to DeploymentTarget if SERVICE_MANAGED
-        stackInstance.setDeploymentTarget(summary.account());
-        return stackInstance;
     }
 }
