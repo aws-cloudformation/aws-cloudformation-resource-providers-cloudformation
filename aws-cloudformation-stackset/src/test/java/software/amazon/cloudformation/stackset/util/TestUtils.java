@@ -387,6 +387,16 @@ public class TestUtils {
             .tags(TAGGED_RESOURCES)
             .build();
 
+    public final static StackSet NULL_PERMISSION_MODEL_STACK_SET = StackSet.builder()
+            .stackSetId(STACK_SET_ID)
+            .stackSetName(STACK_SET_NAME)
+            .capabilitiesWithStrings(CAPABILITIES)
+            .description(DESCRIPTION)
+            .parameters(SDK_PARAMETER_1, SDK_PARAMETER_2)
+            .templateBody(TEMPLATE_BODY)
+            .tags(TAGGED_RESOURCES)
+            .build();
+
     public final static ResourceModel SERVICE_MANAGED_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
             .permissionModel(SERVICE_MANAGED)
@@ -629,6 +639,11 @@ public class TestUtils {
                     .stackSet(SELF_MANAGED_STACK_SET)
                     .build();
 
+    public final static DescribeStackSetResponse DESCRIBE_NULL_PERMISSION_MODEL_STACK_SET_RESPONSE =
+            DescribeStackSetResponse.builder()
+                    .stackSet(NULL_PERMISSION_MODEL_STACK_SET)
+                    .build();
+
     public final static ListStackInstancesResponse LIST_SELF_MANAGED_STACK_SET_RESPONSE =
             ListStackInstancesResponse.builder()
                     .summaries(SELF_MANAGED_STACK_INSTANCE_SUMMARIES)
@@ -647,10 +662,5 @@ public class TestUtils {
             ListStackSetsResponse.builder()
                     .summaries(STACK_SET_SUMMARY_1)
                     .build();
-
-    public final static AwsServiceException RATE_EXCEEDED_EXCEPTION = CloudFormationException.builder()
-            .message("Rate exceeded")
-            .statusCode(400)
-            .build();
 
 }

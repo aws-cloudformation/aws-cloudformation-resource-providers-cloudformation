@@ -83,6 +83,6 @@ public class Comparator {
     }
 
     public static boolean isSelfManaged(final ResourceModel model) {
-        return PermissionModels.fromValue(model.getPermissionModel()).equals(PermissionModels.SELF_MANAGED);
+        return PermissionModels.SELF_MANAGED.equals(PermissionModels.fromValue(model.getPermissionModel()));
     }
 }
