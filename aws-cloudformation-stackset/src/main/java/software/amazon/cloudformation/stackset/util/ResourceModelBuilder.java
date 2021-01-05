@@ -3,27 +3,22 @@ package software.amazon.cloudformation.stackset.util;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesResponse;
-import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
-import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkParameters;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkTags;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
-import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackInstanceRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.listStackInstancesRequest;
-import static software.amazon.cloudformation.stackset.util.InstancesAnalyzer.aggregateStackInstancesForRead;
+import static software.amazon.cloudformation.stackset.util.InstancesAnalyzer.aggregateStackInstances;
 
 /**
  * Utility class to construct {@link ResourceModel} for Read/List request based on {@link StackSet}
@@ -51,14 +46,15 @@ public class ResourceModelBuilder {
                 .autoDeployment(translateFromSdkAutoDeployment(stackSet.autoDeployment()))
                 .stackSetId(stackSetId)
                 .description(stackSet.description())
-                .permissionModel(stackSet.permissionModelAsString())
+                .permissionModel(stackSet.permissionModelAsString() == null
+                        ? PermissionModels.SELF_MANAGED.toString() : stackSet.permissionModelAsString())
                 .capabilities(stackSet.hasCapabilities() ? new HashSet<>(stackSet.capabilitiesAsStrings()) : null)
                 .tags(translateFromSdkTags(stackSet.tags()))
                 .parameters(translateFromSdkParameters(stackSet.parameters()))
                 .templateBody(stackSet.templateBody())
                 .build();
 
-        isSelfManaged = stackSet.permissionModel().equals(PermissionModels.SELF_MANAGED);
+        isSelfManaged = Comparator.isSelfManaged(model);
 
         if (isSelfManaged) {
             model.setAdministrationRoleARN(stackSet.administrationRoleARN());
@@ -70,11 +66,11 @@ public class ResourceModelBuilder {
         // Retrieves all Stack Instances associated with the StackSet,
         // Attaches regions and deploymentTargets to the constructing model
         do {
-            attachStackInstances(stackSetId, isSelfManaged, stackInstanceSet, token);
+            token = attachStackInstances(stackSetId, isSelfManaged, stackInstanceSet, token);
         } while (token != null);
 
         if (!stackInstanceSet.isEmpty()) {
-            final Set<StackInstances> stackInstancesGroup = aggregateStackInstancesForRead(stackInstanceSet);
+            final Set<StackInstances> stackInstancesGroup = aggregateStackInstances(stackInstanceSet, isSelfManaged);
             model.setStackInstancesGroup(stackInstancesGroup);
         }
 
@@ -87,8 +83,9 @@ public class ResourceModelBuilder {
      * @param stackSetId    {@link ResourceModel#getStackSetId()}
      * @param isSelfManaged if permission model is SELF_MANAGED
      * @param token         {@link ListStackInstancesResponse#nextToken()}
+     * @return String nextToken
      */
-    private void attachStackInstances(
+    private String attachStackInstances(
             final String stackSetId,
             final boolean isSelfManaged,
             final Set<StackInstance> stackInstanceSet,
@@ -96,19 +93,14 @@ public class ResourceModelBuilder {
 
         final ListStackInstancesResponse listStackInstancesResponse = proxyClient.injectCredentialsAndInvokeV2(
                 listStackInstancesRequest(token, stackSetId), proxyClient.client()::listStackInstances);
-        token = listStackInstancesResponse.nextToken();
-        if (!listStackInstancesResponse.hasSummaries()) return;
+        final String nextToken = listStackInstancesResponse.nextToken();
+        if (!listStackInstancesResponse.hasSummaries()) return null;
         listStackInstancesResponse.summaries().forEach(member -> {
-            final List<Parameter> parameters = getStackInstance(member);
-            stackInstanceSet.add(translateToStackInstance(isSelfManaged, member, parameters));
+            // Parameters are set null as we can't retrieve parameter override from List API.
+            // Retrieving from Describe API requires to brutal force every single stack instance
+            // which will likely cause timeout issue
+            stackInstanceSet.add(translateToStackInstance(isSelfManaged, member, null));
         });
+        return nextToken;
     }
-
-    private List<Parameter> getStackInstance(final StackInstanceSummary summary) {
-        final DescribeStackInstanceResponse describeStackInstanceResponse = proxyClient.injectCredentialsAndInvokeV2(
-                describeStackInstanceRequest(summary.account(), summary.region(), summary.stackSetId()),
-                proxyClient.client()::describeStackInstance);
-        return describeStackInstanceResponse.stackInstance().parameterOverrides();
-    }
-
 }

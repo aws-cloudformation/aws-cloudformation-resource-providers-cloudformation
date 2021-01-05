@@ -3,6 +3,8 @@ package software.amazon.cloudformation.stackset.util;
 import org.junit.jupiter.api.Test;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
 import static software.amazon.cloudformation.stackset.util.TestUtils.ADMINISTRATION_ROLE_ARN;
@@ -94,6 +96,7 @@ public class ComparatorTest {
         assertThat(Comparator.equals(TAGS, TAGS_TO_UPDATE)).isFalse();
         assertThat(Comparator.equals(DESIRED_RESOURCE_TAGS, null)).isFalse();
         assertThat(Comparator.equals(null, DESIRED_RESOURCE_TAGS)).isFalse();
+        assertThat(Comparator.equals((Map<?, ?>) null, null)).isTrue();
     }
 
 }

@@ -45,19 +45,6 @@ public class InstancesAnalyzer {
         return aggregateInstancesByRegions(groupedStacks, isSelfManaged);
     }
 
-    /**
-     * Aggregates flat {@link StackInstance} to a group of {@link StackInstances} to construct resource model
-     * <p>Note:</p>
-     * This is being used only because currently we can not retrieve OUs from CloudFormation DescribeStackInstances API
-     * Hence, we are returning AccountIDs for stack instances.
-     *
-     * @param flatStackInstances {@link StackInstance}
-     * @return {@link StackInstances} set
-     */
-    public static Set<StackInstances> aggregateStackInstancesForRead(final Set<StackInstance> flatStackInstances) {
-        final Set<StackInstances> groupedStacksInstances = groupInstancesByTargets(flatStackInstances, true);
-        return aggregateInstancesByRegions(groupedStacksInstances, true);
-    }
 
     /**
      * Group regions by {@link DeploymentTargets} and {@link StackInstance#getParameters()}
