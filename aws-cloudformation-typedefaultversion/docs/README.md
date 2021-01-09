@@ -1,6 +1,6 @@
 # AWS::CloudFormation::TypeDefaultVersion
 
-An example resource schema demonstrating some basic constructs and validation rules.
+A generic resourceType that is used to set default version for any type in CloudFormation Registry
 
 ## Syntax
 
@@ -33,13 +33,13 @@ Properties:
 
 #### TypeVersionArn
 
-The Amazon Resource Name (ARN) of the type version.
+The Amazon Resource Name (ARN) of the TypeVersion.
 
 _Required_: No
 
 _Type_: String
 
-_Pattern_: <code>^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/resource/.+$</code>
+_Pattern_: <code>^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/.+$</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
@@ -59,7 +59,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### VersionId
 
-The ID of an existing version of the resource to set as the default.
+The ID of an existing version of the type to set as the default.
 
 _Required_: No
 
@@ -83,5 +83,5 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 
 #### TypeArn
 
-The Amazon Resource Name (ARN) of the type without the versionID. This is used to uniquely identify a ResourceDefaultVersion
+The Amazon Resource Name (ARN) of the type without the versionID. This is used to uniquely identify a TypeDefaultVersion
 
