@@ -1,6 +1,6 @@
 # AWS::CloudFormation::TypeVersion
 
-A generic type that can be registered in CloudFormation Registry
+A generic resourceType that is used to register any type in CloudFormation Registry
 
 ## Syntax
 
@@ -165,5 +165,5 @@ When the specified type version was registered.
 
 #### VersionId
 
-The ID of the version of the type represented by this resource instance.
+The ID of the version of the type represented by this type instance.
 
