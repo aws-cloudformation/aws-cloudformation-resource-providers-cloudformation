@@ -84,4 +84,3 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 #### TypeArn
 
 The Amazon Resource Name (ARN) of the type without the versionID. This is used to uniquely identify a TypeDefaultVersion
-
