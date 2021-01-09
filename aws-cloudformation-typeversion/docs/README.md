@@ -166,4 +166,3 @@ When the specified type version was registered.
 #### VersionId
 
 The ID of the version of the type represented by this type instance.
-
