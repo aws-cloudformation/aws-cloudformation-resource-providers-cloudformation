@@ -1,6 +1,6 @@
 {
     "typeName": "AWS::CloudFormation::TypeVersion",
-    "description": "A generic type that can be registered in CloudFormation Registry",
+    "description": "A generic resourceType that is used to register any type in CloudFormation Registry",
     "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
     "definitions": {
         "LoggingConfig": {

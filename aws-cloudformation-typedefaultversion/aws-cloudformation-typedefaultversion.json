@@ -1,6 +1,6 @@
 {
     "typeName": "AWS::CloudFormation::TypeDefaultVersion",
-    "description": "An example resource schema demonstrating some basic constructs and validation rules.",
+    "description": "A generic resourceType that is used to set default version for any type in CloudFormation Registry",
     "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
     "properties": {
         "TypeVersionArn": {
