@@ -148,7 +148,8 @@
         "cloudformation:RegisterType",
         "iam:PassRole",
         "s3:GetObject",
-        "s3:ListBucket"
+        "s3:ListBucket",
+        "kms:Decrypt"
       ]
     },
     "read": {

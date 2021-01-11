@@ -30,6 +30,7 @@ Resources:
                 - "cloudformation:ListTypes"
                 - "cloudformation:RegisterType"
                 - "iam:PassRole"
+                - "kms:Decrypt"
                 - "s3:GetObject"
                 - "s3:ListBucket"
                 Resource: "*"
