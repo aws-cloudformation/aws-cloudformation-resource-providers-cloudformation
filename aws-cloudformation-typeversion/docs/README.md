@@ -117,7 +117,11 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 
 #### TypeVersionArn
 
+<<<<<<< HEAD
 The Amazon Resource Name (ARN) of the type, here the TypeVersion. This is used to uniquely identify a TypeVersion resource
+=======
+The Amazon Resource Name (ARN) of the type, here the TypeVersion
+>>>>>>> c59a4c88cc6bf2fdb668b328db4c824a2ff821c6
 
 #### Description
 

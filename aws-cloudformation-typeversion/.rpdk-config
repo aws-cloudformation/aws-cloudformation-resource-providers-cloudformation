@@ -4,7 +4,11 @@
     "language": "java",
     "runtime": "java8",
     "entrypoint": "software.amazon.cloudformation.typeversion.HandlerWrapper::handleRequest",
+<<<<<<< HEAD
     "testEntrypoint": "software.amazon.cloudformation.typeversion.HandlerWrapper::handleRequest",
+=======
+    "testEntrypoint": "software.amazon.cloudformation.typeversion.HandlerWrapper::testEntrypoint",
+>>>>>>> c59a4c88cc6bf2fdb668b328db4c824a2ff821c6
     "settings": {
         "version": false,
         "subparser_name": null,
