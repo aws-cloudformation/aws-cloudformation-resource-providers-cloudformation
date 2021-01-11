@@ -14,7 +14,8 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "Properties" : {
         "<a href="#typeversionarn" title="TypeVersionArn">TypeVersionArn</a>" : <i>String</i>,
         "<a href="#typename" title="TypeName">TypeName</a>" : <i>String</i>,
-        "<a href="#versionid" title="VersionId">VersionId</a>" : <i>String</i>
+        "<a href="#versionid" title="VersionId">VersionId</a>" : <i>String</i>,
+        "<a href="#type" title="Type">Type</a>" : <i>String</i>
     }
 }
 </pre>
@@ -27,6 +28,7 @@ Properties:
     <a href="#typeversionarn" title="TypeVersionArn">TypeVersionArn</a>: <i>String</i>
     <a href="#typename" title="TypeName">TypeName</a>: <i>String</i>
     <a href="#versionid" title="VersionId">VersionId</a>: <i>String</i>
+    <a href="#type" title="Type">Type</a>: <i>String</i>
 </pre>
 
 ## Properties
@@ -69,6 +71,18 @@ _Pattern_: <code>^[A-Za-z0-9-]{1,128}$</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
+#### Type
+
+The kind of extension.
+
+_Required_: No
+
+_Type_: String
+
+_Allowed Values_: <code>RESOURCE</code> | <code>MODULE</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
 ## Return Values
 
 ### Ref
@@ -83,4 +97,4 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 
 #### TypeArn
 
-The Amazon Resource Name (ARN) of the type without the versionID. This is used to uniquely identify a TypeDefaultVersion
+The Amazon Resource Name (ARN) of the type without the versionID. This is used to uniquely identify a TypeDefaultVersion resource

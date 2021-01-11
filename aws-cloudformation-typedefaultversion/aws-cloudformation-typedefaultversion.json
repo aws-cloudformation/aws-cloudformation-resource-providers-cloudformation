@@ -14,13 +14,21 @@
       "type": "string"
     },
     "TypeArn": {
-      "description": "The Amazon Resource Name (ARN) of the type without the versionID. This is used to uniquely identify a TypeDefaultVersion",
+      "description": "The Amazon Resource Name (ARN) of the type without the versionID. This is used to uniquely identify a TypeDefaultVersion resource",
       "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/.+$",
       "type": "string"
     },
     "VersionId": {
       "description": "The ID of an existing version of the type to set as the default.",
       "pattern": "^[A-Za-z0-9-]{1,128}$",
+      "type": "string"
+    },
+    "Type": {
+      "description": "The kind of extension.",
+      "enum": [
+        "RESOURCE",
+        "MODULE"
+      ],
       "type": "string"
     }
   },
@@ -33,7 +41,8 @@
     {
       "required": [
         "TypeName",
-        "VersionId"
+        "VersionId",
+        "Type"
       ]
     }
   ],

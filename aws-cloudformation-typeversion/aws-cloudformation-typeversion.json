@@ -25,7 +25,7 @@
   },
   "properties": {
     "TypeVersionArn": {
-      "description": "The Amazon Resource Name (ARN) of the type, here the TypeVersion",
+      "description": "The Amazon Resource Name (ARN) of the type, here the TypeVersion. This is used to uniquely identify a TypeVersion resource",
       "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/.+$",
       "type": "string"
     },
