@@ -34,11 +34,7 @@
         <dependency>
             <groupId>software.amazon.cloudformation</groupId>
             <artifactId>aws-cloudformation-rpdk-java-plugin</artifactId>
-<<<<<<< HEAD
             <version>2.0.3</version>
-=======
-            <version>2.0.2</version>
->>>>>>> c59a4c88cc6bf2fdb668b328db4c824a2ff821c6
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
@@ -79,11 +75,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>cloudformation</artifactId>
-<<<<<<< HEAD
             <version>2.15.19</version>
-=======
-            <version>2.13.18</version>
->>>>>>> c59a4c88cc6bf2fdb668b328db4c824a2ff821c6
             <scope>compile</scope>
         </dependency>
     </dependencies>
