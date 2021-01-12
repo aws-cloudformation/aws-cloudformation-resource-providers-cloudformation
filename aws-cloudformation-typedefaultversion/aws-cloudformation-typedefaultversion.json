@@ -1,0 +1,78 @@
+{
+  "typeName": "AWS::CloudFormation::TypeDefaultVersion",
+  "description": "A generic resourceType that is used to set default version for any type in CloudFormation Registry",
+  "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
+  "properties": {
+    "TypeVersionArn": {
+      "description": "The Amazon Resource Name (ARN) of the TypeVersion.",
+      "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/.+$",
+      "type": "string"
+    },
+    "TypeName": {
+      "description": "The name of the type being registered.\n\nWe recommend that type names adhere to the following pattern: company_or_organization::service::type.",
+      "pattern": "^[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}$",
+      "type": "string"
+    },
+    "TypeArn": {
+      "description": "The Amazon Resource Name (ARN) of the type without the versionID. This is used to uniquely identify a TypeDefaultVersion resource",
+      "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/.+$",
+      "type": "string"
+    },
+    "VersionId": {
+      "description": "The ID of an existing version of the type to set as the default.",
+      "pattern": "^[A-Za-z0-9-]{1,128}$",
+      "type": "string"
+    },
+    "Type": {
+      "description": "The kind of extension.",
+      "enum": [
+        "RESOURCE",
+        "MODULE"
+      ],
+      "type": "string"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "TypeVersionArn"
+      ]
+    },
+    {
+      "required": [
+        "TypeName",
+        "VersionId",
+        "Type"
+      ]
+    }
+  ],
+  "readOnlyProperties": [
+    "/properties/TypeArn"
+  ],
+  "primaryIdentifier": [
+    "/properties/TypeArn"
+  ],
+  "handlers": {
+    "create": {
+      "permissions": [
+        "cloudformation:SetTypeDefaultVersion"
+      ]
+    },
+    "read": {
+      "permissions": [
+        "cloudformation:DescribeType"
+      ]
+    },
+    "update": {
+      "permissions": [
+        "cloudformation:SetTypeDefaultVersion"
+      ]
+    },
+    "delete": {
+      "permissions": [
+        ""
+      ]
+    }
+  },
+  "additionalProperties": false
+}
