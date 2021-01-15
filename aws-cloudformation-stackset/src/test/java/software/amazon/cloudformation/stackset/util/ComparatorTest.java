@@ -1,16 +1,24 @@
 package software.amazon.cloudformation.stackset.util;
 
+import org.assertj.core.util.Sets;
 import org.junit.jupiter.api.Test;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
-import java.util.Map;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
 import static software.amazon.cloudformation.stackset.util.TestUtils.ADMINISTRATION_ROLE_ARN;
+import static software.amazon.cloudformation.stackset.util.TestUtils.AUTO_DEPLOYMENT_DISABLED;
+import static software.amazon.cloudformation.stackset.util.TestUtils.AUTO_DEPLOYMENT_ENABLED;
+import static software.amazon.cloudformation.stackset.util.TestUtils.AUTO_DEPLOYMENT_ENABLED_COPY;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIPTION;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.EXECUTION_ROLE_NAME;
+import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1;
+import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1_COPY;
+import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1_UPDATED;
+import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PREVIOUS_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TAGS_TO_UPDATE;
@@ -50,6 +58,28 @@ public class ComparatorTest {
         assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel, DESIRED_RESOURCE_TAGS, DESIRED_RESOURCE_TAGS)).isFalse();
 
         testDesiredModel.setExecutionRoleName(EXECUTION_ROLE_NAME);
+        // Different parameters key/value pairs should not equal
+        testDesiredModel.setParameters(Sets.newHashSet(Arrays.asList(PARAMETER_1, PARAMETER_2)));
+        testPreviousModel.setParameters(Sets.newHashSet(Arrays.asList(PARAMETER_1_UPDATED, PARAMETER_2)));
+
+        assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel, DESIRED_RESOURCE_TAGS, DESIRED_RESOURCE_TAGS)).isFalse();
+
+        // Same parameters key/value pairs should equal
+        testDesiredModel.setParameters(Sets.newHashSet(Arrays.asList(PARAMETER_1, PARAMETER_2)));
+        testPreviousModel.setParameters(Sets.newHashSet(Arrays.asList(PARAMETER_1_COPY, PARAMETER_2)));
+
+        assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel, DESIRED_RESOURCE_TAGS, DESIRED_RESOURCE_TAGS)).isTrue();
+
+        // Testing AutoDeployment objects not equal
+        testDesiredModel.setAutoDeployment(AUTO_DEPLOYMENT_DISABLED);
+        testPreviousModel.setAutoDeployment(AUTO_DEPLOYMENT_ENABLED);
+        assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel, DESIRED_RESOURCE_TAGS, DESIRED_RESOURCE_TAGS)).isFalse();
+
+        // Testing AutoDeployment objects equal
+        testDesiredModel.setAutoDeployment(AUTO_DEPLOYMENT_ENABLED);
+        testPreviousModel.setAutoDeployment(AUTO_DEPLOYMENT_ENABLED_COPY);
+        assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel, DESIRED_RESOURCE_TAGS, DESIRED_RESOURCE_TAGS)).isTrue();
+
         testDesiredModel.setTemplateURL(UPDATED_TEMPLATE_URL);
         testPreviousModel.setTemplateURL(TEMPLATE_URL);
 
@@ -96,7 +126,10 @@ public class ComparatorTest {
         assertThat(Comparator.equals(TAGS, TAGS_TO_UPDATE)).isFalse();
         assertThat(Comparator.equals(DESIRED_RESOURCE_TAGS, null)).isFalse();
         assertThat(Comparator.equals(null, DESIRED_RESOURCE_TAGS)).isFalse();
-        assertThat(Comparator.equals((Map<?, ?>) null, null)).isTrue();
+        assertThat(Comparator.equals(null, null)).isTrue();
+        assertThat(Comparator.equals(null, AUTO_DEPLOYMENT_ENABLED)).isFalse();
+        assertThat(Comparator.equals(AUTO_DEPLOYMENT_ENABLED, null)).isFalse();
+        assertThat(Comparator.equals(Arrays.asList(PARAMETER_1, PARAMETER_2), Arrays.asList(PARAMETER_1))).isFalse();
     }
 
 }

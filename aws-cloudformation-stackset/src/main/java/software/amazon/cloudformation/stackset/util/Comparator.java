@@ -43,6 +43,12 @@ public class Comparator {
         if (StringUtils.compare(previousModel.getTemplateBody(), desiredModel.getTemplateBody()) != 0)
             return false;
 
+        if (!equals(previousModel.getParameters(), desiredModel.getParameters()))
+            return false;
+
+        if (!equals(previousModel.getAutoDeployment(), desiredModel.getAutoDeployment()))
+            return false;
+
         // If TemplateURL is specified, always call Update API, Service client will decide if it is updatable
         return desiredModel.getTemplateURL() == null;
     }
@@ -66,17 +72,17 @@ public class Comparator {
     }
 
     /**
-     * Compares if two maps equal in a null-safe way.
+     * Compares if two objects equal in a null-safe way.
      *
-     * @param map1
-     * @param map2
-     * @return boolean indicates if two maps equal.
+     * @param object1
+     * @param object2
+     * @return boolean indicates if two objects equal.
      */
-    public static boolean equals(final Map<?, ?> map1, final Map<?, ?> map2) {
+    public static boolean equals(final Object object1, final Object object2) {
         boolean equals = false;
-        if (map1 != null && map2 != null) {
-            equals = map1.equals(map2);
-        } else if (map1 == null && map2 == null) {
+        if (object1 != null && object2 != null) {
+            equals = object1.equals(object2);
+        } else if (object1 == null && object2 == null) {
             equals = true;
         }
         return equals;
