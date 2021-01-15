@@ -1,8 +1,6 @@
 package software.amazon.cloudformation.stackset.util;
 
 import com.google.common.collect.ImmutableMap;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
-import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
@@ -124,6 +122,18 @@ public class TestUtils {
                     .parameterValue(PARAMETER_VALUE_1)
                     .build();
 
+    public final static software.amazon.cloudformation.stackset.Parameter PARAMETER_1_COPY =
+            software.amazon.cloudformation.stackset.Parameter.builder()
+                    .parameterKey(PARAMETER_KEY_1)
+                    .parameterValue(PARAMETER_VALUE_1)
+                    .build();
+
+    public final static software.amazon.cloudformation.stackset.Parameter PARAMETER_1_UPDATED =
+            software.amazon.cloudformation.stackset.Parameter.builder()
+                    .parameterKey(PARAMETER_KEY_1)
+                    .parameterValue(PARAMETER_VALUE_2)
+                    .build();
+
     public final static software.amazon.cloudformation.stackset.Parameter PARAMETER_2 =
             software.amazon.cloudformation.stackset.Parameter.builder()
                     .parameterKey(PARAMETER_KEY_2)
@@ -212,9 +222,19 @@ public class TestUtils {
             Tag.builder().key("key-2").value("val2").build(),
             Tag.builder().key("key-3").value("val3").build()));
 
-    public final static AutoDeployment AUTO_DEPLOYMENT = AutoDeployment.builder()
+    public final static AutoDeployment AUTO_DEPLOYMENT_ENABLED = AutoDeployment.builder()
             .enabled(true)
             .retainStacksOnAccountRemoval(true)
+            .build();
+
+    public final static AutoDeployment AUTO_DEPLOYMENT_ENABLED_COPY = AutoDeployment.builder()
+            .enabled(true)
+            .retainStacksOnAccountRemoval(true)
+            .build();
+
+    public final static AutoDeployment AUTO_DEPLOYMENT_DISABLED = AutoDeployment.builder()
+            .enabled(false)
+            .retainStacksOnAccountRemoval(false)
             .build();
 
     public final static GetTemplateSummaryResponse VALID_TEMPLATE_SUMMARY_RESPONSE = GetTemplateSummaryResponse.builder()
@@ -402,7 +422,7 @@ public class TestUtils {
             .permissionModel(SERVICE_MANAGED)
             .capabilities(CAPABILITIES)
             .description(DESCRIPTION)
-            .autoDeployment(AUTO_DEPLOYMENT)
+            .autoDeployment(AUTO_DEPLOYMENT_ENABLED)
             .templateBody(TEMPLATE_BODY)
             .stackInstancesGroup(new HashSet<>(Arrays.asList(SERVICE_MANAGED_STACK_INSTANCES_1, SERVICE_MANAGED_STACK_INSTANCES_2)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
@@ -553,7 +573,7 @@ public class TestUtils {
     public final static ResourceModel SERVICE_MANAGED_MODEL_FOR_READ = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
             .permissionModel(SERVICE_MANAGED)
-            .autoDeployment(AUTO_DEPLOYMENT)
+            .autoDeployment(AUTO_DEPLOYMENT_ENABLED)
             .capabilities(CAPABILITIES)
             .templateBody(TEMPLATE_BODY)
             .description(DESCRIPTION)
