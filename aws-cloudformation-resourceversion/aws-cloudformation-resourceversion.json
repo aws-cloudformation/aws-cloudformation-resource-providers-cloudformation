@@ -24,8 +24,13 @@
     }
   },
   "properties": {
-    "Arn": {
-      "description": "The Amazon Resource Name (ARN) of the type.",
+    "TypeVersionArn": {
+      "description": "The Amazon Resource Name (ARN) of the type, here the ResourceVersion. This is used to uniquely identify a ResourceVersion resource",
+      "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/resource/.+$",
+      "type": "string"
+    },
+    "TypeArn": {
+      "description": "The Amazon Resource Name (ARN) of the type without the versionID.",
       "pattern": "^arn:aws[A-Za-z0-9-]{0,64}:cloudformation:[A-Za-z0-9-]{1,64}:([0-9]{12})?:type/resource/.+$",
       "type": "string"
     },
@@ -108,7 +113,7 @@
     "TypeName"
   ],
   "readOnlyProperties": [
-    "/properties/Arn",
+    "/properties/TypeVersionArn",
     "/properties/Description",
     "/properties/IsDefaultVersion",
     "/properties/Schema",
@@ -118,23 +123,24 @@
     "/properties/DocumentationUrl",
     "/properties/LastUpdated",
     "/properties/TimeCreated",
-    "/properties/VersionId"
+    "/properties/VersionId",
+    "/properties/TypeArn"
   ],
   "writeOnlyProperties": [
     "/properties/SchemaHandlerPackage"
   ],
   "primaryIdentifier": [
-    "/properties/Arn"
+    "/properties/TypeVersionArn"
   ],
   "handlers": {
     "create": {
       "permissions": [
         "cloudformation:DescribeTypeRegistration",
-        "cloudformation:ListTypeVersions",
         "cloudformation:RegisterType",
         "iam:PassRole",
         "s3:GetObject",
-        "s3:ListBucket"
+        "s3:ListBucket",
+        "kms:Decrypt"
       ]
     },
     "read": {

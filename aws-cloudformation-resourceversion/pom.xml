@@ -23,7 +23,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>cloudformation</artifactId>
-            <version>2.13.18</version>
+            <version>2.15.19</version>
         </dependency>
         <!-- Test dependency for Java Providers -->
         <dependency>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>software.amazon.cloudformation</groupId>
             <artifactId>aws-cloudformation-rpdk-java-plugin</artifactId>
-            <version>2.0.2</version>
+            <version>2.0.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>

@@ -20,33 +20,25 @@ import java.util.Objects;
 public class ReadHandler extends BaseHandlerStd {
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final ProxyClient<CloudFormationClient> proxyClient,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final Logger logger) {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
         final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator =
-            proxy.newInitiator(proxyClient, resourceModel, callbackContext);
-
-        return initiator.initiate("read")
-            .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
-            .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient , resourceModel))
-            .done(awsResponse -> ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(awsResponse)));
+                proxy.newInitiator(proxyClient, resourceModel, callbackContext);
+        return initiator.initiate("AWS-CloudFormation-ResourceVersion::Read")
+                .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
+                .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient, resourceModel))
+                .done(awsResponse -> ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(awsResponse)));
     }
 
-    /**
-     * Implement client invocation of the read request through the proxyClient, which is already initialised with
-     * caller credentials, correct region and retry settings
-     * @param describeTypeRequest the aws service request to describe a resource
-     * @param proxyClient the aws service client to make the call
-     * @return describe resource response
-     */
     private DescribeTypeResponse readResource(
-        final DescribeTypeRequest describeTypeRequest,
-        final ProxyClient<CloudFormationClient> proxyClient,
-        final ResourceModel model) {
+            final DescribeTypeRequest describeTypeRequest,
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final ResourceModel model) {
 
         DescribeTypeResponse awsResponse;
         try {
@@ -69,6 +61,6 @@ public class ReadHandler extends BaseHandlerStd {
     private software.amazon.cloudformation.exceptions.ResourceNotFoundException nullSafeNotFoundException(final ResourceModel model) {
         final ResourceModel nullSafeModel = model == null ? ResourceModel.builder().build() : model;
         return new software.amazon.cloudformation.exceptions.ResourceNotFoundException(ResourceModel.TYPE_NAME,
-            Objects.toString(nullSafeModel.getPrimaryIdentifier()));
+                Objects.toString(nullSafeModel.getPrimaryIdentifier()));
     }
 }

@@ -20,16 +20,16 @@ public class CreateHandler extends BaseHandlerStd {
             final ProxyClient<CloudFormationClient> proxyClient,
             final Logger logger) {
         final ResourceModel resourceModel = request.getDesiredResourceState();
-        if (StringUtils.isNullOrEmpty(callbackContext.getArn())) {
+        if (StringUtils.isNullOrEmpty(callbackContext.getTypeArn())) {
             String generatedArn = createArn(request);
-            callbackContext.setArn(generatedArn);
-            resourceModel.setArn(generatedArn);
+            callbackContext.setTypeArn(generatedArn);
+            resourceModel.setTypeArn(generatedArn);
             return ProgressEvent.progress(resourceModel, callbackContext);
         }
         return ProgressEvent.progress(resourceModel, callbackContext)
                 .then(progress -> {
                     final ResourceModel model = progress.getResourceModel();
-                    logger.log(String.format("Creating [Arn: %s | Type: %s | Version: %s]",
+                    logger.log(String.format("Creating [TypeVersionArn: %s | Type: %s | Version: %s]",
                             model.getTypeVersionArn(), model.getTypeName(), model.getVersionId()));
                     return proxy.initiate("resourceDefaultVersion::Create", proxyClient, model, progress.getCallbackContext())
                             .translateToServiceRequest(Translator::translateToUpdateRequest)

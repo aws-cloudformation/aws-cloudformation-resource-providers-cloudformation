@@ -35,32 +35,32 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
-            .deprecatedStatus("LIVE")
-            .isDefaultVersion(false)
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .type("RESOURCE")
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .build();
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .defaultVersionId("00000001")
+                .deprecatedStatus("LIVE")
+                .isDefaultVersion(false)
+                .sourceUrl("https://github.com/myorg/resource/repo.git")
+                .type("RESOURCE")
+                .typeName("AWS::Demo::Resource")
+                .visibility("PRIVATE")
+                .build();
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenReturn(describeTypeResponse);
+                .thenReturn(describeTypeResponse);
 
         final DeregisterTypeResponse deregisterTypeResponse = DeregisterTypeResponse.builder().build();
         when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
-            .thenReturn(deregisterTypeResponse);
+                .thenReturn(deregisterTypeResponse);
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .awsPartition("aws")
-            .region("us-west-2")
-            .awsAccountId("123456789012")
-            .build();
+                .desiredResourceState(resourceModel)
+                .awsPartition("aws")
+                .region("us-west-2")
+                .awsAccountId("123456789012")
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
@@ -79,20 +79,20 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .build();
 
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenThrow(TypeNotFoundException.builder().build());
+                .thenThrow(TypeNotFoundException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .build();
+                .desiredResourceState(resourceModel)
+                .build();
 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-            .hasNoCause()
-            .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier '{\"/properties/Arn\":\"arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001\"}' was not found.")
-            .isExactlyInstanceOf(ResourceNotFoundException.class);
+                .hasNoCause()
+                .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier '{\"/properties/TypeVersionArn\":\"arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001\"}' was not found.")
+                .isExactlyInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -100,36 +100,35 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .build();
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
-            .deprecatedStatus("LIVE")
-            .isDefaultVersion(false)
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .type("RESOURCE")
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .build();
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .defaultVersionId("00000001")
+                .deprecatedStatus("LIVE")
+                .isDefaultVersion(false)
+                .sourceUrl("https://github.com/myorg/resource/repo.git")
+                .type("RESOURCE")
+                .typeName("AWS::Demo::Resource")
+                .visibility("PRIVATE")
+                .build();
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenReturn(describeTypeResponse);
+                .thenReturn(describeTypeResponse);
 
         // throw on DeregisterType
         when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
-            .thenThrow(CfnRegistryException.builder().message("some error").build());
+                .thenThrow(CfnRegistryException.builder().message("some error").build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .build();
+                .desiredResourceState(resourceModel)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
         assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
@@ -143,36 +142,35 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .build();
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
-            .deprecatedStatus("LIVE")
-            .isDefaultVersion(false)
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .type("RESOURCE")
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .build();
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .defaultVersionId("00000001")
+                .deprecatedStatus("LIVE")
+                .isDefaultVersion(false)
+                .sourceUrl("https://github.com/myorg/resource/repo.git")
+                .type("RESOURCE")
+                .typeName("AWS::Demo::Resource")
+                .visibility("PRIVATE")
+                .build();
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenReturn(describeTypeResponse);
+                .thenReturn(describeTypeResponse);
 
         // type deregistered out of band
         when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
-            .thenThrow(TypeNotFoundException.builder().build());
+                .thenThrow(TypeNotFoundException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .build();
+                .desiredResourceState(resourceModel)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
         assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();
@@ -187,36 +185,35 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .build();
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-            .defaultVersionId("00000001")
-            .deprecatedStatus("LIVE")
-            .isDefaultVersion(true)
-            .sourceUrl("https://github.com/myorg/resource/repo.git")
-            .type("RESOURCE")
-            .typeName("AWS::Demo::Resource")
-            .visibility("PRIVATE")
-            .build();
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .defaultVersionId("00000001")
+                .deprecatedStatus("LIVE")
+                .isDefaultVersion(true)
+                .sourceUrl("https://github.com/myorg/resource/repo.git")
+                .type("RESOURCE")
+                .typeName("AWS::Demo::Resource")
+                .visibility("PRIVATE")
+                .build();
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-            .thenReturn(describeTypeResponse);
+                .thenReturn(describeTypeResponse);
 
         // type deregistered out of band
         when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
-            .thenThrow(TypeNotFoundException.builder().build());
+                .thenThrow(TypeNotFoundException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(resourceModel)
-            .build();
+                .desiredResourceState(resourceModel)
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getPredictedArn()).isNull();
         assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModels()).isNull();

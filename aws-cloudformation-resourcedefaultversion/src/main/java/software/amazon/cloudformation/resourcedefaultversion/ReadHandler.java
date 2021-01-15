@@ -21,7 +21,7 @@ public class ReadHandler extends BaseHandlerStd {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
 
-        logger.log(String.format("Reading [Arn: %s | Type: %s | Version: %s]",
+        logger.log(String.format("Reading [TypeVersionArn: %s | Type: %s | Version: %s]",
                 resourceModel.getTypeVersionArn(), resourceModel.getTypeName(), resourceModel.getVersionId()));
 
         return proxy.initiate("AWS-CloudFormation-ResourceDefaultVersion::Read", proxyClient, resourceModel, callbackContext)

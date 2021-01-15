@@ -11,7 +11,6 @@ import software.amazon.cloudformation.proxy.StdCallbackContext;
 @lombok.AllArgsConstructor
 @lombok.NoArgsConstructor
 public class CallbackContext extends StdCallbackContext {
-    private String predictedArn;
     private String registrationToken;
     private DeprecatedStatus deprecatedStatus;
 }

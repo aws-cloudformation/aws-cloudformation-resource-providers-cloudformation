@@ -15,7 +15,6 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.test.AbstractMockTestBase;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -34,7 +33,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .typeName("AWS::Demo::Resource")
                 .versionId("00000002")
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .build();
 
         final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()
@@ -62,13 +61,13 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .desiredResourceState(resourceModel)
                 .build();
         CallbackContext context = new CallbackContext();
-        context.setArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
+        context.setTypeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, context, loggerProxy);
 
         final ResourceModel resourceModelResult = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
                 .typeName("AWS::Demo::Resource")
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .build();
 
         assertThat(response).isNotNull();
@@ -87,7 +86,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         final ResourceModel resourceModel = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .build();
 
         final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()
@@ -117,11 +116,11 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         final ResourceModel resourceModelResult = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .typeName("AWS::Demo::Resource")
                 .build();
         CallbackContext context = new CallbackContext();
-        context.setArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
+        context.setTypeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, context, loggerProxy);
 
         assertThat(response).isNotNull();
@@ -141,7 +140,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .build();
 
 
@@ -155,7 +154,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         CallbackContext context = new CallbackContext();
-        context.setArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
+        context.setTypeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, context, loggerProxy);
 
@@ -175,7 +174,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
                 .typeName("AWS::Demo::Resource")
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .build();
 
 
@@ -198,7 +197,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         CallbackContext context = new CallbackContext();
-        context.setArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
+        context.setTypeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource");
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, context, loggerProxy);
 
@@ -246,7 +245,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         final ResourceModel resourceModelResult = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000002")
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
@@ -301,7 +300,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModelResult = ResourceModel.builder()
                 .versionId("00000002")
                 .typeName("AWS::Demo::Resource")
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);

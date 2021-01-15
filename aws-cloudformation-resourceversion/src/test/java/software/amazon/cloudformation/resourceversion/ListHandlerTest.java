@@ -33,38 +33,38 @@ public class ListHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         final CloudFormationClient client = getServiceClient();
 
         final TypeSummary type = TypeSummary.builder()
-            .defaultVersionId("00000001")
-            .description("AWS Demo Resource")
-            .lastUpdated(Instant.ofEpochSecond(123456789012L))
-            .type(RegistryType.RESOURCE)
-            .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
-            .typeName("AWS::Demo::Resource")
-            .build();
+                .defaultVersionId("00000001")
+                .description("AWS Demo Resource")
+                .lastUpdated(Instant.ofEpochSecond(123456789012L))
+                .type(RegistryType.RESOURCE)
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeName("AWS::Demo::Resource")
+                .build();
         final TypeSummary type2 = TypeSummary.builder()
-            .defaultVersionId("00000007")
-            .description("My Resource")
-            .lastUpdated(Instant.ofEpochSecond(923456789012L))
-            .type(RegistryType.RESOURCE)
-            .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource")
-            .typeName("My::Demo::Resource")
-            .build();
+                .defaultVersionId("00000007")
+                .description("My Resource")
+                .lastUpdated(Instant.ofEpochSecond(923456789012L))
+                .type(RegistryType.RESOURCE)
+                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource")
+                .typeName("My::Demo::Resource")
+                .build();
         final ListTypesResponse listTypesResponse = ListTypesResponse.builder()
-            .typeSummaries(Arrays.asList(type, type2))
-            .nextToken("token")
-            .build();
+                .typeSummaries(Arrays.asList(type, type2))
+                .nextToken("token")
+                .build();
         when(client.listTypes(ArgumentMatchers.any(ListTypesRequest.class)))
-            .thenReturn(listTypesResponse);
+                .thenReturn(listTypesResponse);
 
         final ResourceModel model1 = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .build();
 
         final ResourceModel model2 = ResourceModel.builder()
-            .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource")
-            .build();
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource")
+                .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .build();
+                .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
