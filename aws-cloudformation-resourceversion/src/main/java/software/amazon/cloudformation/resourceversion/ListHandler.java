@@ -26,8 +26,8 @@ public class ListHandler extends BaseHandlerStd {
                 proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
         return initiator
-                .translateToServiceRequest((model) -> Translator.translateToListRequest(request.getNextToken()))
-                .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::listTypes))
+                .translateToServiceRequest((model) -> Translator.translateToListRequest(resourceModel, request.getNextToken()))
+                .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::listTypeVersions))
                 .done((listTypesRequest, listTypesResponse, sdkProxyClient, model, cc) ->
                         ProgressEvent.<ResourceModel, CallbackContext>builder()
                                 .status(OperationStatus.SUCCESS)

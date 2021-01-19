@@ -6,11 +6,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
-import software.amazon.awssdk.services.cloudformation.model.ListTypesResponse;
+import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsResponse;
 import software.amazon.awssdk.services.cloudformation.model.ProvisioningType;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.RegistryType;
-import software.amazon.awssdk.services.cloudformation.model.TypeSummary;
+import software.amazon.awssdk.services.cloudformation.model.TypeVersionSummary;
 import software.amazon.awssdk.services.cloudformation.model.Visibility;
 import software.amazon.cloudformation.proxy.Logger;
 
@@ -267,7 +267,7 @@ public class TranslatorTest {
 
     @Test
     public void translateFromListResponse_noTypes() {
-        ListTypesResponse response = ListTypesResponse.builder().build();
+        ListTypeVersionsResponse response = ListTypeVersionsResponse.builder().build();
 
         List<ResourceModel> model = Translator.translateFromListResponse(response);
 
@@ -276,12 +276,12 @@ public class TranslatorTest {
 
     @Test
     public void translateFromListResponse_withTypes() {
-        List<TypeSummary> typeSummaries = new ArrayList<>();
-        typeSummaries.add(TypeSummary.builder().typeArn("Type1").build());
-        typeSummaries.add(TypeSummary.builder().typeArn("Type2").build());
+        List<TypeVersionSummary> typeSummaries = new ArrayList<>();
+        typeSummaries.add(TypeVersionSummary.builder().arn("Type1").build());
+        typeSummaries.add(TypeVersionSummary.builder().arn("Type2").build());
 
-        ListTypesResponse response = ListTypesResponse.builder()
-                .typeSummaries(typeSummaries)
+        ListTypeVersionsResponse response = ListTypeVersionsResponse.builder()
+                .typeVersionSummaries(typeSummaries)
                 .build();
 
         List<ResourceModel> model = Translator.translateFromListResponse(response);

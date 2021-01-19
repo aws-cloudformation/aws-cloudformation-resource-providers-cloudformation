@@ -1,12 +1,13 @@
 package software.amazon.cloudformation.resourceversion;
 
+import com.amazonaws.util.StringUtils;
 import lombok.NonNull;
 import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
-import software.amazon.awssdk.services.cloudformation.model.ListTypesRequest;
-import software.amazon.awssdk.services.cloudformation.model.ListTypesResponse;
+import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.RegistryType;
 import software.amazon.cloudformation.proxy.Logger;
@@ -86,17 +87,28 @@ class Translator {
         }
     }
 
-    static ListTypesRequest translateToListRequest(final String nextToken) {
-        return ListTypesRequest.builder()
-                .maxResults(50)
-                .nextToken(nextToken)
-                .build();
+    static ListTypeVersionsRequest translateToListRequest(ResourceModel resourceModel, final String nextToken) {
+
+        if (StringUtils.isNullOrEmpty(resourceModel.getTypeArn())) {
+            return ListTypeVersionsRequest.builder()
+                    .maxResults(50)
+                    .nextToken(nextToken)
+                    .type(RegistryType.RESOURCE)
+                    .typeName(resourceModel.getTypeName())
+                    .build();
+        } else {
+            return ListTypeVersionsRequest.builder()
+                    .maxResults(50)
+                    .nextToken(nextToken)
+                    .arn(resourceModel.getTypeArn())
+                    .build();
+        }
     }
 
-    static List<ResourceModel> translateFromListResponse(@NonNull final ListTypesResponse awsResponse) {
-        return streamOfOrEmpty(awsResponse.typeSummaries())
+    static List<ResourceModel> translateFromListResponse(@NonNull final ListTypeVersionsResponse awsResponse) {
+        return streamOfOrEmpty(awsResponse.typeVersionSummaries())
                 .map(typeSummary -> ResourceModel.builder()
-                        .typeVersionArn(typeSummary.typeArn())
+                        .typeVersionArn(typeSummary.arn())
                         .build())
                 .collect(Collectors.toList());
     }

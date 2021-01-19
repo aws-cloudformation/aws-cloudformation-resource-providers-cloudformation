@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeRespon
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
-import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -92,7 +92,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
                 .hasNoCause()
                 .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier '{\"/properties/TypeVersionArn\":\"arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001\"}' was not found.")
-                .isExactlyInstanceOf(ResourceNotFoundException.class);
+                .isExactlyInstanceOf(CfnNotFoundException.class);
     }
 
     @Test

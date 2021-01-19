@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.CallChain;
 import software.amazon.cloudformation.proxy.Logger;
@@ -58,9 +59,9 @@ public class ReadHandler extends BaseHandlerStd {
         return awsResponse;
     }
 
-    private software.amazon.cloudformation.exceptions.ResourceNotFoundException nullSafeNotFoundException(final ResourceModel model) {
+    private CfnNotFoundException nullSafeNotFoundException(final ResourceModel model) {
         final ResourceModel nullSafeModel = model == null ? ResourceModel.builder().build() : model;
-        return new software.amazon.cloudformation.exceptions.ResourceNotFoundException(ResourceModel.TYPE_NAME,
+        return new CfnNotFoundException(ResourceModel.TYPE_NAME,
                 Objects.toString(nullSafeModel.getPrimaryIdentifier()));
     }
 }

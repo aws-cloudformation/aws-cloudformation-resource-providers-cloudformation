@@ -10,7 +10,7 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.ResourceNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -101,7 +101,7 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
                 .desiredResourceState(model)
                 .build();
 
-        assertThrows(ResourceNotFoundException.class,
+        assertThrows(CfnNotFoundException.class,
                 () -> handler.handleRequest(proxy, request, null, loggerProxy));
     }
 
@@ -146,7 +146,7 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
                 .hasNoCause()
                 .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier '{\"/properties/TypeVersionArn\":\"arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001\"}' was not found.")
-                .isExactlyInstanceOf(ResourceNotFoundException.class);
+                .isExactlyInstanceOf(CfnNotFoundException.class);
     }
 
     @Test

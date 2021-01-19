@@ -5,16 +5,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.ListTypesRequest;
-import software.amazon.awssdk.services.cloudformation.model.ListTypesResponse;
+import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListTypeVersionsResponse;
 import software.amazon.awssdk.services.cloudformation.model.RegistryType;
-import software.amazon.awssdk.services.cloudformation.model.TypeSummary;
+import software.amazon.awssdk.services.cloudformation.model.TypeVersionSummary;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.test.AbstractMockTestBase;
 
-import java.time.Instant;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,35 +31,31 @@ public class ListHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
     public void handleRequest_Success() {
         final CloudFormationClient client = getServiceClient();
 
-        final TypeSummary type = TypeSummary.builder()
-                .defaultVersionId("00000001")
+        final TypeVersionSummary type = TypeVersionSummary.builder()
                 .description("AWS Demo Resource")
-                .lastUpdated(Instant.ofEpochSecond(123456789012L))
                 .type(RegistryType.RESOURCE)
-                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
                 .build();
-        final TypeSummary type2 = TypeSummary.builder()
-                .defaultVersionId("00000007")
+        final TypeVersionSummary type2 = TypeVersionSummary.builder()
                 .description("My Resource")
-                .lastUpdated(Instant.ofEpochSecond(923456789012L))
                 .type(RegistryType.RESOURCE)
-                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource/00000002")
                 .typeName("My::Demo::Resource")
                 .build();
-        final ListTypesResponse listTypesResponse = ListTypesResponse.builder()
-                .typeSummaries(Arrays.asList(type, type2))
+        final ListTypeVersionsResponse listTypeVersionsResponse = ListTypeVersionsResponse.builder()
+                .typeVersionSummaries(Arrays.asList(type, type2))
                 .nextToken("token")
                 .build();
-        when(client.listTypes(ArgumentMatchers.any(ListTypesRequest.class)))
-                .thenReturn(listTypesResponse);
+        when(client.listTypeVersions(ArgumentMatchers.any(ListTypeVersionsRequest.class)))
+                .thenReturn(listTypeVersionsResponse);
 
         final ResourceModel model1 = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .build();
 
         final ResourceModel model2 = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource")
+                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource/00000002")
                 .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
