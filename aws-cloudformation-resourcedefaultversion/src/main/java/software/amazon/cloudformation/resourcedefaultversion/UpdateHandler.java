@@ -24,7 +24,7 @@ public class UpdateHandler extends BaseHandlerStd {
         final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator =
                 proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
-        logger.log(String.format("Updating [Arn: %s | Type: %s | Version: %s]",
+        logger.log(String.format("Updating [TypeVersionArn: %s | Type: %s | Version: %s]",
                 resourceModel.getTypeVersionArn(), resourceModel.getTypeName(), resourceModel.getVersionId()));
 
         return initiator

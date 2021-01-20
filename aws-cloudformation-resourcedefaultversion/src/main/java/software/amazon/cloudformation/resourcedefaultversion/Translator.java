@@ -1,6 +1,5 @@
 package software.amazon.cloudformation.resourcedefaultversion;
 
-import com.amazonaws.util.StringUtils;
 import lombok.NonNull;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
@@ -9,12 +8,6 @@ import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersio
 
 public class Translator {
 
-    /**
-     * Request to update a resource
-     *
-     * @param model resource model
-     * @return awsRequest the aws service request to create a resource
-     */
     static SetTypeDefaultVersionRequest translateToUpdateRequest(@NonNull final ResourceModel model) {
         if (model.getTypeVersionArn() != null) {
             return SetTypeDefaultVersionRequest.builder()
@@ -29,12 +22,6 @@ public class Translator {
         }
     }
 
-    /**
-     * Request to read a resource
-     *
-     * @param model resource model
-     * @return awsRequest the aws service request to describe a resource
-     */
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
         if (model.getTypeVersionArn() != null) {
             return DescribeTypeRequest.builder()
@@ -49,17 +36,11 @@ public class Translator {
         }
     }
 
-    /**
-     * Translates resource object from sdk into a resource model
-     *
-     * @param awsResponse the aws service describe resource response
-     * @return model resource model
-     */
     static ResourceModel translateFromReadResponse(@NonNull final DescribeTypeResponse awsResponse) {
         return ResourceModel.builder()
                 .typeVersionArn(awsResponse.arn())
                 .versionId(awsResponse.defaultVersionId())
-                .arn(StringUtils.isNullOrEmpty(awsResponse.arn()) ? null : awsResponse.arn().substring(0, awsResponse.arn().lastIndexOf("/")))
+                .typeArn(awsResponse.arn().substring(0, awsResponse.arn().lastIndexOf("/")))
                 .typeName(awsResponse.typeName())
                 .build();
     }

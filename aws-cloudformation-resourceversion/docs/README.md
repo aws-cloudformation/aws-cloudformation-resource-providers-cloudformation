@@ -81,7 +81,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 ### Ref
 
-When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the Arn.
+When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the TypeVersionArn.
 
 ### Fn::GetAtt
 
@@ -89,23 +89,13 @@ The `Fn::GetAtt` intrinsic function returns a value for a specified attribute of
 
 For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::GetAtt](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html).
 
-#### Arn
+#### TypeVersionArn
 
-The Amazon Resource Name (ARN) of the type.
-
-#### Description
-
-The description of the registered type.
+The Amazon Resource Name (ARN) of the type, here the ResourceVersion. This is used to uniquely identify a ResourceVersion resource
 
 #### IsDefaultVersion
 
 Indicates if this type version is the current default version
-
-#### Schema
-
-The schema that defines the type.
-
-For more information on type schemas, see Resource Provider Schema in the CloudFormation CLI User Guide.
 
 #### ProvisioningType
 
@@ -121,22 +111,10 @@ PRIVATE: The type is only visible and usable within the account in which it is r
 
 PUBLIC: The type is publically visible and usable within any Amazon account.
 
-#### SourceUrl
-
-The URL of the source code for the type.
-
-#### DocumentationUrl
-
-The URL of a page providing detailed documentation for this type.
-
-#### LastUpdated
-
-When the specified type version was registered.
-
-#### TimeCreated
-
-When the specified type version was registered.
-
 #### VersionId
 
 The ID of the version of the type represented by this resource instance.
+
+#### TypeArn
+
+The Amazon Resource Name (ARN) of the type without the versionID.

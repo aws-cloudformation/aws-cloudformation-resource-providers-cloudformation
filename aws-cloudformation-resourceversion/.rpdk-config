@@ -1,9 +1,10 @@
 {
+    "artifact_type": "RESOURCE",
     "typeName": "AWS::CloudFormation::ResourceVersion",
     "language": "java",
     "runtime": "java8",
     "entrypoint": "software.amazon.cloudformation.resourceversion.HandlerWrapper::handleRequest",
-    "testEntrypoint": "software.amazon.cloudformation.resourceversion.HandlerWrapper::testEntrypoint",
+    "testEntrypoint": "software.amazon.cloudformation.resourceversion.HandlerWrapper::handleRequest",
     "settings": {
         "namespace": [
             "software",
@@ -13,5 +14,6 @@
         ],
         "codegen_template_path": "guided_aws",
         "protocolVersion": "2.0.0"
-    }
+    },
+    "executableEntrypoint": "software.amazon.cloudformation.resourceversion.HandlerWrapperExecutable"
 }
