@@ -147,18 +147,11 @@ public class TranslatorTest {
         ResourceModel model = Translator.translateFromReadResponse(response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
-        assertThat(model.getDescription()).isEqualTo(response.description());
-        assertThat(model.getDocumentationUrl()).isEqualTo(response.documentationUrl());
         assertThat(model.getExecutionRoleArn()).isEqualTo(response.executionRoleArn());
         assertThat(model.getLoggingConfig()).isNull();
         assertThat(model.getProvisioningType()).isEqualTo(response.provisioningTypeAsString());
-        assertThat(model.getSchema()).isEqualTo(response.schema());
-        assertThat(model.getSourceUrl()).isEqualTo(response.sourceUrl());
         assertThat(model.getTypeName()).isEqualTo(response.typeName());
         assertThat(model.getVisibility()).isEqualTo(response.visibilityAsString());
-
-        assertThat(model.getLastUpdated()).isNull();
-        assertThat(model.getTimeCreated()).isNull();
     }
 
     @Test
@@ -182,18 +175,11 @@ public class TranslatorTest {
         ResourceModel model = Translator.translateFromReadResponse(response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
-        assertThat(model.getDescription()).isEqualTo(response.description());
-        assertThat(model.getDocumentationUrl()).isEqualTo(response.documentationUrl());
         assertThat(model.getExecutionRoleArn()).isEqualTo(response.executionRoleArn());
         assertThat(model.getLoggingConfig()).isNull();
         assertThat(model.getProvisioningType()).isEqualTo(response.provisioningTypeAsString());
-        assertThat(model.getSchema()).isEqualTo(response.schema());
-        assertThat(model.getSourceUrl()).isEqualTo(response.sourceUrl());
         assertThat(model.getTypeName()).isEqualTo(response.typeName());
         assertThat(model.getVisibility()).isEqualTo(response.visibilityAsString());
-
-        assertThat(model.getLastUpdated()).isEqualTo(response.lastUpdated().toString());
-        assertThat(model.getTimeCreated()).isEqualTo(response.timeCreated().toString());
     }
 
     @Test
@@ -222,18 +208,10 @@ public class TranslatorTest {
         ResourceModel model = Translator.translateFromReadResponse(response);
 
         assertThat(model.getIsDefaultVersion()).isEqualTo(response.isDefaultVersion());
-        assertThat(model.getDescription()).isEqualTo(response.description());
-        assertThat(model.getDocumentationUrl()).isEqualTo(response.documentationUrl());
         assertThat(model.getExecutionRoleArn()).isEqualTo(response.executionRoleArn());
         assertThat(model.getProvisioningType()).isEqualTo(response.provisioningTypeAsString());
-        assertThat(model.getSchema()).isEqualTo(response.schema());
-        assertThat(model.getSourceUrl()).isEqualTo(response.sourceUrl());
         assertThat(model.getTypeName()).isEqualTo(response.typeName());
         assertThat(model.getVisibility()).isEqualTo(response.visibilityAsString());
-
-        assertThat(model.getLastUpdated()).isNull();
-        assertThat(model.getTimeCreated()).isNull();
-
         assertThat(model.getLoggingConfig().getLogGroupName()).isEqualTo(loggingConfig.logGroupName());
         assertThat(model.getLoggingConfig().getLogRoleArn()).isEqualTo(loggingConfig.logRoleArn());
     }

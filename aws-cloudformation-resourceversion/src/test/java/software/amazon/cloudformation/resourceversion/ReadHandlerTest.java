@@ -54,7 +54,6 @@ public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .isDefaultVersion(true)
                 .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
                 .typeName("AWS::Demo::Resource")
                 .versionId("00000001")
                 .visibility("PRIVATE")

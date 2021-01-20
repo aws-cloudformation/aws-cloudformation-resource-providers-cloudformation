@@ -76,7 +76,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .typeName("AWS::Demo::Resource")
                 .visibility("PRIVATE")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
                 .build();
 
         final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder()
@@ -114,7 +113,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .typeName("AWS::Demo::Resource")
                 .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .visibility("PRIVATE")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
                 .isDefaultVersion(false)
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .versionId("00000001")
@@ -141,7 +139,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .typeName("AWS::Demo::Resource")
                 .visibility("PRIVATE")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
                 .build();
 
         final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder()
@@ -186,7 +183,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .typeName("AWS::Demo::Resource")
                 .visibility("PRIVATE")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
                 .build();
 
         final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder()
@@ -228,7 +224,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .typeName("AWS::Demo::Resource")
                 .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .visibility("PRIVATE")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
                 .isDefaultVersion(false)
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .versionId("00000001") // next version
@@ -254,7 +249,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .typeName("AWS::Demo::Resource")
                 .visibility("PRIVATE")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
                 .build();
 
         final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder()
@@ -270,16 +264,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .awsPartition("aws")
                 .region("us-west-2")
                 .awsAccountId("123456789012")
-                .build();
-
-        final ResourceModel resourceModelResult = ResourceModel.builder()
-                .typeName("AWS::Demo::Resource")
-                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
-                .visibility("PRIVATE")
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
-                .isDefaultVersion(false)
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-                .versionId("00000001")
                 .build();
 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))

@@ -47,23 +47,13 @@ class Translator {
         final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
                 .typeVersionArn(awsResponse.arn())
                 .typeArn(awsResponse.arn().substring(0, awsResponse.arn().lastIndexOf("/")))
-                .description(awsResponse.description())
-                .documentationUrl(awsResponse.documentationUrl())
                 .executionRoleArn(awsResponse.executionRoleArn())
                 .isDefaultVersion(awsResponse.isDefaultVersion())
                 .provisioningType(awsResponse.provisioningTypeAsString())
-                .schema(awsResponse.schema())
-                .sourceUrl(awsResponse.sourceUrl())
                 .typeName(awsResponse.typeName())
                 .versionId(awsResponse.arn().substring(awsResponse.arn().lastIndexOf('/') + 1))
                 .visibility(awsResponse.visibilityAsString());
 
-        if (awsResponse.lastUpdated() != null) {
-            builder.lastUpdated(awsResponse.lastUpdated().toString());
-        }
-        if (awsResponse.timeCreated() != null) {
-            builder.timeCreated(awsResponse.timeCreated().toString());
-        }
         if (awsResponse.loggingConfig() != null) {
             builder.loggingConfig(translateFromSDK(awsResponse.loggingConfig()));
         }
