@@ -39,7 +39,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     private CloudFormationClient client = getServiceClient();
     private CreateHandler handler;
     private ReadHandler readHandler;
-    private ArnPredictor arnPredictor;
 
     private final String arn              = "arn:aws:cloudformation:us-west-2:123456789012:type/module/My-Test-Resource-MODULE/00000021";
     private final String description      = "This is a test model.";
@@ -53,15 +52,12 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     protected CreateHandlerTest() {
         super(CloudFormationClient.class);
         this.readHandler = mock(ReadHandler.class);
-        this.arnPredictor = mock(ArnPredictor.class);
-        this.handler = new CreateHandler(this.readHandler, this.arnPredictor);
+        this.handler = new CreateHandler(this.readHandler);
     }
 
     @BeforeEach
     public void setup() {
         when(this.client.serviceName()).thenReturn("cloudformation");
-        when(this.arnPredictor.predictArn(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenReturn(arn);
     }
 
     @Test
@@ -351,26 +347,5 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .hasNoCause()
                 .hasMessage("Invalid request provided: ResourceModel is required")
                 .isExactlyInstanceOf(CfnInvalidRequestException.class);
-    }
-
-    @Test
-    public void handleRequest_Failure_ArnPrediction() {
-        final ResourceModel modelIn = ResourceModel
-                .builder()
-                .moduleName(moduleName)
-                .modulePackage(modulePackage)
-                .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(modelIn)
-                .build();
-
-        when(this.arnPredictor.predictArn(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenReturn(null);
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-                .hasNoCause()
-                .hasMessage(String.format("Error occurred during operation 'ARN prediction for new module version of module %s'.", moduleName))
-                .isExactlyInstanceOf(CfnGeneralServiceException.class);
     }
 }
