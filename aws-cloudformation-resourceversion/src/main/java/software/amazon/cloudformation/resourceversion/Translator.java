@@ -36,16 +36,16 @@ class Translator {
 
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model,
                                                       @NonNull final Logger logger) {
-        logger.log("Reading Arn: " + model.getTypeVersionArn());
+        logger.log("Reading Arn: " + model.getArn());
 
         return DescribeTypeRequest.builder()
-                .arn(model.getTypeVersionArn())
+                .arn(model.getArn())
                 .build();
     }
 
     static ResourceModel translateFromReadResponse(@NonNull final DescribeTypeResponse awsResponse) {
         final ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
-                .typeVersionArn(awsResponse.arn())
+                .arn(awsResponse.arn())
                 .typeArn(awsResponse.arn().substring(0, awsResponse.arn().lastIndexOf("/")))
                 .executionRoleArn(awsResponse.executionRoleArn())
                 .isDefaultVersion(awsResponse.isDefaultVersion())
@@ -72,7 +72,7 @@ class Translator {
         } else {
             logger.log("De-registering version");
             return DeregisterTypeRequest.builder()
-                    .arn(model.getTypeVersionArn())
+                    .arn(model.getArn())
                     .build();
         }
     }
@@ -98,7 +98,7 @@ class Translator {
     static List<ResourceModel> translateFromListResponse(@NonNull final ListTypeVersionsResponse awsResponse) {
         return streamOfOrEmpty(awsResponse.typeVersionSummaries())
                 .map(typeSummary -> ResourceModel.builder()
-                        .typeVersionArn(typeSummary.arn())
+                        .arn(typeSummary.arn())
                         .build())
                 .collect(Collectors.toList());
     }

@@ -114,7 +114,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .visibility("PRIVATE")
                 .isDefaultVersion(false)
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .versionId("00000001")
                 .build();
 
@@ -225,7 +225,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .visibility("PRIVATE")
                 .isDefaultVersion(false)
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .versionId("00000001") // next version
                 .build();
 

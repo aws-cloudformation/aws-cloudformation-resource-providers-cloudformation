@@ -99,11 +99,11 @@ public class TranslatorTest {
     public void translateToCreateRequest_notDefaultVersion() {
         ResourceModel model = ResourceModel.builder()
                 .isDefaultVersion(false)
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000001")
                 .build();
         DeregisterTypeRequest request = Translator.translateToDeleteRequest(model, logger);
 
-        assertThat(request.arn()).isEqualTo(model.getTypeVersionArn());
+        assertThat(request.arn()).isEqualTo(model.getArn());
         assertThat(request.type()).isNull();
         assertThat(request.typeName()).isNull();
     }
@@ -112,7 +112,7 @@ public class TranslatorTest {
     public void translateToCreateRequest_notDefaultVersion_nologger() {
         ResourceModel model = ResourceModel.builder()
                 .isDefaultVersion(false)
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000001")
                 .build();
         assertThatThrownBy(() -> Translator.translateToDeleteRequest(model, null))
                 .hasNoCause()
@@ -235,7 +235,7 @@ public class TranslatorTest {
     @Test
     public void translateToReadRequest_noLogger() {
         ResourceModel model = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000003")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Test-Resource/00000003")
                 .build();
         assertThatThrownBy(() -> Translator.translateToReadRequest(model, null))
                 .hasNoCause()
@@ -265,7 +265,7 @@ public class TranslatorTest {
         List<ResourceModel> model = Translator.translateFromListResponse(response);
 
         assertThat(model.size()).isEqualTo(2);
-        assertThat(model.get(0).getTypeVersionArn()).isEqualTo("Type1");
-        assertThat(model.get(1).getTypeVersionArn()).isEqualTo("Type2");
+        assertThat(model.get(0).getArn()).isEqualTo("Type1");
+        assertThat(model.get(1).getArn()).isEqualTo("Type2");
     }
 }

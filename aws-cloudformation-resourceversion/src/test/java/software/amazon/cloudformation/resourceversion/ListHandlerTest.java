@@ -51,11 +51,11 @@ public class ListHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
                 .thenReturn(listTypeVersionsResponse);
 
         final ResourceModel model1 = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .build();
 
         final ResourceModel model2 = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource/00000002")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/My-Demo-Resource/00000002")
                 .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()

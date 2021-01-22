@@ -40,7 +40,7 @@ public class Translator {
         return ResourceModel.builder()
                 .typeVersionArn(awsResponse.arn())
                 .versionId(awsResponse.defaultVersionId())
-                .typeArn(awsResponse.arn().substring(0, awsResponse.arn().lastIndexOf("/")))
+                .arn(awsResponse.arn().substring(0, awsResponse.arn().lastIndexOf("/")))
                 .typeName(awsResponse.typeName())
                 .build();
     }
