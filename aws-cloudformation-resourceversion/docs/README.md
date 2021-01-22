@@ -118,4 +118,3 @@ The ID of the version of the type represented by this resource instance.
 #### TypeArn
 
 The Amazon Resource Name (ARN) of the type without the versionID.
-
