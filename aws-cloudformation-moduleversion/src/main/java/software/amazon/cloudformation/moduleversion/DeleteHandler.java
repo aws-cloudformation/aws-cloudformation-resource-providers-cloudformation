@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 public class DeleteHandler extends BaseHandlerStd {
 
-    private ReadHandler readHandler;
+    private final ReadHandler readHandler;
 
     public DeleteHandler() {
         this(new ReadHandler());
