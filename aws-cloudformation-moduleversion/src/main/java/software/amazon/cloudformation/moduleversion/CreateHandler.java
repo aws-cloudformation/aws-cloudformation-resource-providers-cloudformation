@@ -50,7 +50,7 @@ public class CreateHandler extends BaseHandlerStd {
                 .translateToServiceRequest(Translator::translateToCreateRequest)
                 .backoffDelay(BACKOFF_STRATEGY)
                 .makeServiceCall((registerTypeRequest, client) -> {
-                    final RegisterTypeResponse registerTypeResponse = registerModule(registerTypeRequest, client);
+                    final RegisterTypeResponse registerTypeResponse = registerModule(registerTypeRequest, client, model);
                     callbackContext.setRegistrationToken(registerTypeResponse.registrationToken());
                     return registerTypeResponse;
                 })
@@ -59,12 +59,31 @@ public class CreateHandler extends BaseHandlerStd {
                 .then(progress -> readHandler.handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 
-    private RegisterTypeResponse registerModule(final RegisterTypeRequest request, final ProxyClient<CloudFormationClient> proxyClient) {
+    private RegisterTypeResponse registerModule(
+            final RegisterTypeRequest request,
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final ResourceModel model) {
         RegisterTypeResponse response;
         try {
             response = proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::registerType);
         } catch (final CfnRegistryException exception) {
-            logger.log(String.format("Failed to register module:\n%s", Arrays.toString(exception.getStackTrace())));
+            logger.log(String.format("Failed to register new version of module %s:\n%s",
+                    model.getModuleName(), Arrays.toString(exception.getStackTrace())));
+            throw new CfnGeneralServiceException(exception);
+        }
+        return response;
+    }
+
+    private DescribeTypeRegistrationResponse describeModuleRegistration(
+            final DescribeTypeRegistrationRequest request,
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final ResourceModel model) {
+        DescribeTypeRegistrationResponse response;
+        try {
+            response = proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::describeTypeRegistration);
+        } catch (final CfnRegistryException exception) {
+            logger.log(String.format("Failed to describe registration status for new version of module %s:\n%s",
+                    model.getModuleName(), Arrays.toString(exception.getStackTrace())));
             throw new CfnGeneralServiceException(exception);
         }
         return response;
@@ -79,17 +98,8 @@ public class CreateHandler extends BaseHandlerStd {
 
         final String registrationToken = callbackContext.getRegistrationToken();
 
-        final DescribeTypeRegistrationRequest dtrRequest = Translator
-                .translateToDescribeTypeRegistrationRequest(registrationToken);
-
-        DescribeTypeRegistrationResponse dtrResponse;
-        try {
-            dtrResponse = proxyClient.injectCredentialsAndInvokeV2(dtrRequest, proxyClient.client()::describeTypeRegistration);
-        } catch (final CfnRegistryException exception) {
-            logger.log(String.format("Failed to retrieve registration status for new version of module %s:\n%s",
-                    model.getModuleName(), Arrays.toString(exception.getStackTrace())));
-            throw new CfnGeneralServiceException(exception);
-        }
+        final DescribeTypeRegistrationResponse dtrResponse = describeModuleRegistration(
+                Translator.translateToDescribeTypeRegistrationRequest(registrationToken), proxyClient, model);
 
         final String typeVersionArn = dtrResponse.typeVersionArn();
         if (typeVersionArn != null) {
