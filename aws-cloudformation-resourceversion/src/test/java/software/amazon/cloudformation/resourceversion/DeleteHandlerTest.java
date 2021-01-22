@@ -52,7 +52,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .thenReturn(deregisterTypeResponse);
 
         final ResourceModel resourceModel = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -79,7 +79,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .build();
 
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
@@ -91,7 +91,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
                 .hasNoCause()
-                .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier '{\"/properties/TypeVersionArn\":\"arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001\"}' was not found.")
+                .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier '{\"/properties/Arn\":\"arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001\"}' was not found.")
                 .isExactlyInstanceOf(CfnNotFoundException.class);
     }
 
@@ -100,7 +100,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
                 .build();
 
@@ -142,7 +142,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
                 .build();
 
@@ -185,7 +185,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final CloudFormationClient client = getServiceClient();
 
         final ResourceModel resourceModel = ResourceModel.builder()
-                .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
                 .build();
 

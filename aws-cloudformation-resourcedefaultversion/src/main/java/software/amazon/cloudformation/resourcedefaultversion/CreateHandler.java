@@ -20,10 +20,10 @@ public class CreateHandler extends BaseHandlerStd {
             final ProxyClient<CloudFormationClient> proxyClient,
             final Logger logger) {
         final ResourceModel resourceModel = request.getDesiredResourceState();
-        if (StringUtils.isNullOrEmpty(callbackContext.getTypeArn())) {
+        if (StringUtils.isNullOrEmpty(callbackContext.getArn())) {
             String generatedArn = createArn(request);
-            callbackContext.setTypeArn(generatedArn);
-            resourceModel.setTypeArn(generatedArn);
+            callbackContext.setArn(generatedArn);
+            resourceModel.setArn(generatedArn);
             return ProgressEvent.progress(resourceModel, callbackContext);
         }
         return ProgressEvent.progress(resourceModel, callbackContext)

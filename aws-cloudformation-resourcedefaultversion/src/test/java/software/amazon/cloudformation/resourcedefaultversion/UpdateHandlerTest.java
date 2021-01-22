@@ -59,7 +59,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModelResult = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
-                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .versionId("00000001")
                 .build();
 
@@ -104,7 +104,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModelResult = ResourceModel.builder()
                 .typeVersionArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
-                .typeArn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource")
                 .versionId("00000001")
                 .build();
 

@@ -36,7 +36,7 @@ public class CreateHandler extends BaseHandlerStd {
                                             if (describeTypeRegistrationResponse == null) {
                                                 throw new CfnInternalFailureException();
                                             }
-                                            model.setTypeVersionArn(describeTypeRegistrationResponse.typeVersionArn());
+                                            model.setArn(describeTypeRegistrationResponse.typeVersionArn());
                                             return ProgressEvent.progress(model, cc);
                                         }
                                 )
@@ -68,7 +68,7 @@ public class CreateHandler extends BaseHandlerStd {
                         return true;
                     } else if (response.progressStatus().equals(RegistrationStatus.FAILED)) {
                         logger.log(String.format("Registration request %s failed with '%s'", registrationToken, response.description()));
-                        throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, progress.getResourceModel().getTypeVersionArn());
+                        throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, progress.getResourceModel().getArn());
                     } else {
                         logger.log(String.format("Stabilization On Create failed with the status %s", response.progressStatusAsString()));
                         return false;
