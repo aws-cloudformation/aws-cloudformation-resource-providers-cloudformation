@@ -103,8 +103,10 @@ public class CreateHandler extends BaseHandlerStd {
         final String typeVersionArn = dtrResponse.typeVersionArn();
         if (typeVersionArn != null) {
             if (model.getArn() != null && !model.getArn().equals(typeVersionArn)) {
-                logger.log(String.format("ARN changed during stabilization, module=%s arn_before=%s arn_after=%s",
-                        model.getModuleName(), model.getArn(), typeVersionArn));
+                final String message = String.format("ARN changed during stabilization, module=%s arn_before=%s arn_after=%s",
+                        model.getModuleName(), model.getArn(), typeVersionArn);
+                logger.log(message);
+                throw new CfnGeneralServiceException(message);
             }
             model.setArn(typeVersionArn);
         } else {
