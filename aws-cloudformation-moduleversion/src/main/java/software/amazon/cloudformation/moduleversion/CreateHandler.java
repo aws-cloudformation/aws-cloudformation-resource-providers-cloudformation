@@ -45,7 +45,7 @@ public class CreateHandler extends BaseHandlerStd {
         final ResourceModel model = request.getDesiredResourceState();
         validateModel(model);
 
-        logger.log(String.format("Registering new version of module %s", model.getModuleName()));
+        logger.log(String.format("Registering module version, module=%s", model.getModuleName()));
         return proxy.initiate("AWS-CloudFormation-ModuleVersion::Create", proxyClient, model, callbackContext)
                 .translateToServiceRequest(Translator::translateToCreateRequest)
                 .backoffDelay(BACKOFF_STRATEGY)
@@ -67,7 +67,7 @@ public class CreateHandler extends BaseHandlerStd {
         try {
             response = proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::registerType);
         } catch (final CfnRegistryException exception) {
-            logger.log(String.format("Failed to register new version of module %s:\n%s",
+            logger.log(String.format("Failed to register module version, module=%s\n%s",
                     model.getModuleName(), Arrays.toString(exception.getStackTrace())));
             throw new CfnGeneralServiceException(exception);
         }
@@ -82,7 +82,7 @@ public class CreateHandler extends BaseHandlerStd {
         try {
             response = proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::describeTypeRegistration);
         } catch (final CfnRegistryException exception) {
-            logger.log(String.format("Failed to describe registration status for new version of module %s:\n%s",
+            logger.log(String.format("Failed to describe registration status of module version, module=%s\n%s",
                     model.getModuleName(), Arrays.toString(exception.getStackTrace())));
             throw new CfnGeneralServiceException(exception);
         }
@@ -104,12 +104,12 @@ public class CreateHandler extends BaseHandlerStd {
         final String typeVersionArn = dtrResponse.typeVersionArn();
         if (typeVersionArn != null) {
             if (model.getArn() != null && !model.getArn().equals(typeVersionArn)) {
-                logger.log(String.format("ARN for new version of module %s changed during stabilization, before=%s after=%s",
+                logger.log(String.format("ARN for module version changed during stabilization, module=%s arn_before=%s arn_after=%s",
                         model.getModuleName(), model.getArn(), typeVersionArn));
             }
             model.setArn(typeVersionArn);
         } else {
-            throw new CfnGeneralServiceException(String.format("ARN not provided during stabilization for new version of module %s", model.getModuleName()));
+            throw new CfnGeneralServiceException(String.format("ARN not provided during stabilization for module version, module=%s", model.getModuleName()));
         }
 
         switch (dtrResponse.progressStatus()) {
