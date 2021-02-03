@@ -7,7 +7,6 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistra
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.RegisterTypeResponse;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -45,7 +44,7 @@ public class CreateHandler extends BaseHandlerStd {
         final ResourceModel model = request.getDesiredResourceState();
         validateModel(model);
 
-        logger.log(String.format("Registering module version, module=%s", model.getModuleName()));
+        logger.log(String.format("Registering module version, module=%s arn=%s", model.getModuleName(), model.getArn()));
         return proxy.initiate("AWS-CloudFormation-ModuleVersion::Create", proxyClient, model, callbackContext)
                 .translateToServiceRequest(Translator::translateToCreateRequest)
                 .backoffDelay(BACKOFF_STRATEGY)
@@ -67,7 +66,7 @@ public class CreateHandler extends BaseHandlerStd {
         try {
             response = proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::registerType);
         } catch (final CfnRegistryException exception) {
-            logger.log(String.format("Failed to register module version, module=%s\n%s",
+            logger.log(String.format("Registration request failed, module=%s\n%s",
                     model.getModuleName(), Arrays.toString(exception.getStackTrace())));
             throw new CfnGeneralServiceException(exception);
         }
@@ -82,8 +81,8 @@ public class CreateHandler extends BaseHandlerStd {
         try {
             response = proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::describeTypeRegistration);
         } catch (final CfnRegistryException exception) {
-            logger.log(String.format("Failed to describe registration status of module version, module=%s\n%s",
-                    model.getModuleName(), Arrays.toString(exception.getStackTrace())));
+            logger.log(String.format("Failed to describe registration status, module=%s arn=%s\n%s",
+                    model.getModuleName(), model.getArn(), Arrays.toString(exception.getStackTrace())));
             throw new CfnGeneralServiceException(exception);
         }
         return response;
@@ -104,30 +103,27 @@ public class CreateHandler extends BaseHandlerStd {
         final String typeVersionArn = dtrResponse.typeVersionArn();
         if (typeVersionArn != null) {
             if (model.getArn() != null && !model.getArn().equals(typeVersionArn)) {
-                logger.log(String.format("ARN for module version changed during stabilization, module=%s arn_before=%s arn_after=%s",
+                logger.log(String.format("ARN changed during stabilization, module=%s arn_before=%s arn_after=%s",
                         model.getModuleName(), model.getArn(), typeVersionArn));
             }
             model.setArn(typeVersionArn);
         } else {
-            throw new CfnGeneralServiceException(String.format("ARN not provided during stabilization for module version, module=%s", model.getModuleName()));
+            throw new CfnGeneralServiceException(String.format("ARN not provided during stabilization, module=%s arn=%s",
+                    model.getModuleName(), model.getArn()));
         }
 
+        logger.log(String.format("Polled registration status, status=%s module=%s arn=%s registration_token=%s registration_description=%s",
+                dtrResponse.progressStatus(), model.getModuleName(), model.getArn(), registrationToken, dtrResponse.description()));
         switch (dtrResponse.progressStatus()) {
             case COMPLETE:
-                logger.log(String.format("Module version registration for %s with registration token %s stabilized: %s\nModule version ARN: %s",
-                        model.getModuleName(), registrationToken, dtrResponse.description(), model.getArn()));
                 return true;
             case IN_PROGRESS:
-                logger.log(String.format("Module version registration for %s with registration token %s in progress: %s",
-                        model.getModuleName(), registrationToken, dtrResponse.description()));
                 return false;
             case FAILED:
-                logger.log(String.format("Module version registration for %s with registration token %s failed to stabilize: %s",
-                        model.getModuleName(), registrationToken, dtrResponse.description()));
                 throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, model.getArn());
             default:
-                logger.log(String.format("Unexpected registration status for new version of module %s with registration token %s: %s",
-                        model.getModuleName(), registrationToken, dtrResponse.description()));
+                logger.log(String.format("Unexpected registration status, status=%s module=%s arn=%s registration_token=%s registration_description=%s",
+                        dtrResponse.progressStatus(), model.getModuleName(), model.getArn(), registrationToken, dtrResponse.description()));
                 throw new CfnGeneralServiceException(String.format("received unexpected module registration status: %s", dtrResponse.progressStatus()));
         }
     }
