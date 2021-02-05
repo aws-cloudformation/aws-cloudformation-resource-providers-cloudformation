@@ -39,7 +39,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     private CloudFormationClient client = getServiceClient();
     private CreateHandler handler;
     private ReadHandler readHandler;
-    private ArnPredictor arnPredictor;
 
     private final String arn              = "arn:aws:cloudformation:us-west-2:123456789012:type/module/My-Test-Resource-MODULE/00000021";
     private final String description      = "This is a test model.";
@@ -53,15 +52,12 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     protected CreateHandlerTest() {
         super(CloudFormationClient.class);
         this.readHandler = mock(ReadHandler.class);
-        this.arnPredictor = mock(ArnPredictor.class);
-        this.handler = new CreateHandler(this.readHandler, this.arnPredictor);
+        this.handler = new CreateHandler(this.readHandler);
     }
 
     @BeforeEach
     public void setup() {
         when(this.client.serviceName()).thenReturn("cloudformation");
-        when(this.arnPredictor.predictArn(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenReturn(arn);
     }
 
     @Test
@@ -100,7 +96,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.describeTypeRegistration(any(DescribeTypeRegistrationRequest.class)))
                 .thenReturn(describeTypeRegistrationResponse);
 
-        ProgressEvent<ResourceModel, CallbackContext> progress = ProgressEvent.<ResourceModel, CallbackContext>builder()
+        final ProgressEvent<ResourceModel, CallbackContext> progress = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(modelOut)
                 .status(OperationStatus.SUCCESS)
                 .build();
@@ -111,6 +107,10 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
+        verify(client, times(1))
+                .registerType(any(RegisterTypeRequest.class));
+        verify(client, times(1))
+                .describeTypeRegistration(any(DescribeTypeRegistrationRequest.class));
         verify(readHandler, times(1))
                 .handleRequest(any(AmazonWebServicesClientProxy.class), any(), captor.capture(), any(), any(Logger.class));
         assertEquals(registrationToken, captor.getValue().getRegistrationToken());
@@ -166,7 +166,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 describeTypeRegistrationResponseComplete
         ).when(client).describeTypeRegistration(any(DescribeTypeRegistrationRequest.class));
 
-        ProgressEvent<ResourceModel, CallbackContext> progress = ProgressEvent.<ResourceModel, CallbackContext>builder()
+        final ProgressEvent<ResourceModel, CallbackContext> progress = ProgressEvent.<ResourceModel, CallbackContext>builder()
                 .resourceModel(modelOut)
                 .status(OperationStatus.SUCCESS)
                 .build();
@@ -177,6 +177,8 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
+        verify(client, times(2))
+                .describeTypeRegistration(any(DescribeTypeRegistrationRequest.class));
         verify(readHandler, times(1))
                 .handleRequest(any(AmazonWebServicesClientProxy.class), any(), captor.capture(), any(), any(Logger.class));
         assertEquals(registrationToken, captor.getValue().getRegistrationToken());
@@ -256,6 +258,82 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         verify(readHandler, times(0))
                 .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
+    }
+
+    @Test
+    public void handleRequest_Stabilization_NullArn() {
+        final String arn = null;
+
+        final ResourceModel modelIn = ResourceModel
+                .builder()
+                .moduleName(moduleName)
+                .modulePackage(modulePackage)
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(modelIn)
+                .build();
+
+        final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder()
+                .registrationToken(registrationToken)
+                .build();
+        when(client.registerType(any(RegisterTypeRequest.class)))
+                .thenReturn(registerTypeResponse);
+
+        final DescribeTypeRegistrationResponse describeTypeRegistrationResponse = DescribeTypeRegistrationResponse.builder()
+                .progressStatus(RegistrationStatus.IN_PROGRESS)
+                .typeVersionArn(arn)
+                .build();
+        when(client.describeTypeRegistration(any(DescribeTypeRegistrationRequest.class)))
+                .thenReturn(describeTypeRegistrationResponse);
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .hasNoCause()
+                .hasMessage("Error occurred during operation 'ARN not provided during stabilization, module=My::Test::Resource::MODULE arn=null'.")
+                .isExactlyInstanceOf(CfnGeneralServiceException.class);
+    }
+
+    @Test
+    public void handleRequest_Stabilization_ArnChanged() {
+        final String arnBefore = arn + "before";
+        final String arnAfter = arn + "after";
+
+        final ResourceModel modelIn = ResourceModel
+                .builder()
+                .moduleName(moduleName)
+                .modulePackage(modulePackage)
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(modelIn)
+                .build();
+
+        final RegisterTypeResponse registerTypeResponse = RegisterTypeResponse.builder()
+                .registrationToken(registrationToken)
+                .build();
+        when(client.registerType(any(RegisterTypeRequest.class)))
+                .thenReturn(registerTypeResponse);
+
+        final DescribeTypeRegistrationResponse describeTypeRegistrationResponseInProgress = DescribeTypeRegistrationResponse.builder()
+                .progressStatus(RegistrationStatus.IN_PROGRESS)
+                .typeVersionArn(arnBefore)
+                .build();
+        final DescribeTypeRegistrationResponse describeTypeRegistrationResponseComplete = DescribeTypeRegistrationResponse.builder()
+                .progressStatus(RegistrationStatus.COMPLETE)
+                .typeVersionArn(arnAfter)
+                .build();
+        doReturn(
+                describeTypeRegistrationResponseInProgress,
+                describeTypeRegistrationResponseComplete
+        ).when(client).describeTypeRegistration(any(DescribeTypeRegistrationRequest.class));
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .hasNoCause()
+                .hasMessage("Error occurred during operation 'ARN changed during stabilization, " +
+                        "module=My::Test::Resource::MODULE " +
+                        "arn_before=arn:aws:cloudformation:us-west-2:123456789012:type/module/My-Test-Resource-MODULE/00000021before " +
+                        "arn_after=arn:aws:cloudformation:us-west-2:123456789012:type/module/My-Test-Resource-MODULE/00000021after'.")
+                .isExactlyInstanceOf(CfnGeneralServiceException.class);
     }
 
     @Test
@@ -351,26 +429,5 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .hasNoCause()
                 .hasMessage("Invalid request provided: ResourceModel is required")
                 .isExactlyInstanceOf(CfnInvalidRequestException.class);
-    }
-
-    @Test
-    public void handleRequest_Failure_ArnPrediction() {
-        final ResourceModel modelIn = ResourceModel
-                .builder()
-                .moduleName(moduleName)
-                .modulePackage(modulePackage)
-                .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(modelIn)
-                .build();
-
-        when(this.arnPredictor.predictArn(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenReturn(null);
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-                .hasNoCause()
-                .hasMessage(String.format("Error occurred during operation 'ARN prediction for new module version of module %s'.", moduleName))
-                .isExactlyInstanceOf(CfnGeneralServiceException.class);
     }
 }

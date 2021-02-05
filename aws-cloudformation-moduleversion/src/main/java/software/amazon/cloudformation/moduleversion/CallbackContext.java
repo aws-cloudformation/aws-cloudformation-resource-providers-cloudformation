@@ -16,7 +16,7 @@ public class CallbackContext extends StdCallbackContext {
 
     @Getter
     @Setter
-    private DeprecatedStatus deprecatedStatus; // can be removed once ArnPredictor.java is removed
+    private DeprecatedStatus deprecatedStatus;
 
     @Getter
     @Setter
