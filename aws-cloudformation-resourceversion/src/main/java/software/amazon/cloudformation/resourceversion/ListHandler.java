@@ -25,6 +25,7 @@ public class ListHandler extends BaseHandlerStd {
         final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator =
                 proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
+        logger.log(String.format("List the resource version with identifier %s", resourceModel.getArn()));
         return initiator
                 .translateToServiceRequest((model) -> Translator.translateToListRequest(resourceModel, request.getNextToken()))
                 .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::listTypeVersions))

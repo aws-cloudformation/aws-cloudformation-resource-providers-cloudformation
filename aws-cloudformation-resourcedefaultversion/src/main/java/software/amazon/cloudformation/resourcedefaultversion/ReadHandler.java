@@ -9,6 +9,8 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Arrays;
+
 public class ReadHandler extends BaseHandlerStd {
 
     @Override
@@ -28,8 +30,10 @@ public class ReadHandler extends BaseHandlerStd {
                 .translateToServiceRequest(Translator::translateToReadRequest)
                 .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::describeType))
                 .handleError((describeTypeRequest, exception, clientProxy, resourcemodel, context) -> {
-                    if(exception instanceof TypeNotFoundException)
+                    if(exception instanceof TypeNotFoundException) {
+                        logger.log(String.format("Failed to Read the resource [%s] as it cannot be found %s", resourcemodel.getPrimaryIdentifier().toString(), Arrays.toString(exception.getStackTrace())));
                         throw new CfnNotFoundException(exception);
+                    }
                     else
                         throw exception;
                 })

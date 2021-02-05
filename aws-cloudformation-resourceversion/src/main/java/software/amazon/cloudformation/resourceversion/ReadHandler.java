@@ -30,6 +30,7 @@ public class ReadHandler extends BaseHandlerStd {
         final ResourceModel resourceModel = request.getDesiredResourceState();
         final CallChain.Initiator<CloudFormationClient, ResourceModel, CallbackContext> initiator =
                 proxy.newInitiator(proxyClient, resourceModel, callbackContext);
+        logger.log(String.format("Reading the resource version with identifier %s", resourceModel.getArn()));
         return initiator.initiate("AWS-CloudFormation-ResourceVersion::Read")
                 .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
                 .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient, resourceModel))
@@ -50,6 +51,7 @@ public class ReadHandler extends BaseHandlerStd {
                 throw nullSafeNotFoundException(model);
             }
         } catch (final TypeNotFoundException e) {
+            logger.log(String.format("Failed to read the resource [%s] as it cannot be found", model.getPrimaryIdentifier().toString()));
             throw nullSafeNotFoundException(model);
         } catch (final CfnRegistryException e) {
             logger.log(Arrays.toString(e.getStackTrace()));
