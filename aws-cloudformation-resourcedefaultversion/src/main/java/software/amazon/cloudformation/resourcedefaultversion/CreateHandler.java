@@ -10,6 +10,8 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Arrays;
+
 public class CreateHandler extends BaseHandlerStd {
 
     @Override
@@ -35,10 +37,14 @@ public class CreateHandler extends BaseHandlerStd {
                             .translateToServiceRequest(Translator::translateToUpdateRequest)
                             .makeServiceCall((setTypeDefaultVersionRequest, client) -> proxyClient.injectCredentialsAndInvokeV2(setTypeDefaultVersionRequest, proxyClient.client()::setTypeDefaultVersion))
                             .handleError((setTypeDefaultVersionRequest, exception, clientProxy, resourcemodel, context) -> {
-                                if(exception instanceof TypeNotFoundException)
+                                if(exception instanceof TypeNotFoundException) {
+                                    logger.log(String.format("Failed to set the default version of the resource [%s] as it cannot be found %s", model.getArn(), Arrays.toString(exception.getStackTrace())));
                                     throw new CfnNotFoundException(exception);
-                                else
+                                }
+                                else {
+                                    logger.log(String.format("Failed to set the default version of the resource [%s] and the exception is [%s]", model.getArn(), Arrays.toString(exception.getStackTrace())));
                                     throw exception;
+                                }
                             })
                             .progress();
                 })
@@ -56,6 +62,7 @@ public class CreateHandler extends BaseHandlerStd {
                     request.getRegion(),
                     request.getAwsAccountId(),
                     resourceModel.getTypeName().replace("::", "-"));
+            logger.log(String.format("Arn [%s] generated for the Type [%s] ", arn, resourceModel.getTypeName()));
             return arn;
         }
     }

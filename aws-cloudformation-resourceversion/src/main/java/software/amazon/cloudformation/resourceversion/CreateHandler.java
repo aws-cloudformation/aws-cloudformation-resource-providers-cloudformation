@@ -28,14 +28,18 @@ public class CreateHandler extends BaseHandlerStd {
                                 .translateToServiceRequest(Translator::translateToCreateRequest)
                                 .makeServiceCall((awsRequest, sdkProxyClient) -> sdkProxyClient.injectCredentialsAndInvokeV2(awsRequest, sdkProxyClient.client()::registerType))
                                 .done((registerTypeRequest, registerTypeResponse, sdkProxyClient, model, cc) -> {
+                                            logger.log(String.format("The resource registered successfully. The registrationToken for the Type [%s] is %s", ResourceModel.TYPE_NAME, registerTypeResponse.registrationToken()));
                                             cc.setRegistrationToken(registerTypeResponse.registrationToken());
                                             DescribeTypeRegistrationResponse describeTypeRegistrationResponse =
                                                     proxy.injectCredentialsAndInvokeV2(Translator
                                                                     .translateToDescribeTypeRegistration(cc.getRegistrationToken()),
                                                             proxyClient.client()::describeTypeRegistration);
                                             if (describeTypeRegistrationResponse == null) {
+                                                logger.log(String.format("Failed to describe registration status, invalid response, resource=%s arn=%s",
+                                                        model.getTypeName(), model.getArn()));
                                                 throw new CfnInternalFailureException();
                                             }
+                                            logger.log(String.format("Fetching the TypeVersionArn [%s] from the DescribeTypeRegistrationResponse [%s]", describeTypeRegistrationResponse.typeVersionArn(), describeTypeRegistrationResponse));
                                             model.setArn(describeTypeRegistrationResponse.typeVersionArn());
                                             return ProgressEvent.progress(model, cc);
                                         }

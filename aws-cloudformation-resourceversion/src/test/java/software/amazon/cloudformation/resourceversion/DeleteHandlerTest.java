@@ -5,14 +5,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -75,27 +73,6 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
     }
 
     @Test
-    public void handleRequest_NotFound() {
-        final CloudFormationClient client = getServiceClient();
-
-        final ResourceModel resourceModel = ResourceModel.builder()
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-                .build();
-
-        when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-                .thenThrow(TypeNotFoundException.builder().build());
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(resourceModel)
-                .build();
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-                .hasNoCause()
-                .hasMessage("Resource of type 'AWS::CloudFormation::ResourceVersion' with identifier '{\"/properties/Arn\":\"arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001\"}' was not found.")
-                .isExactlyInstanceOf(CfnNotFoundException.class);
-    }
-
-    @Test
     public void handleRequest_GeneralError() {
         final CloudFormationClient client = getServiceClient();
 
@@ -118,23 +95,18 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .thenReturn(describeTypeResponse);
 
         // throw on DeregisterType
+        final CfnNotFoundException exception = new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceModel.getPrimaryIdentifier().toString());
         when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
-                .thenThrow(CfnRegistryException.builder().message("some error").build());
+                .thenThrow(exception);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(resourceModel)
                 .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .hasNoCause()
+                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + resourceModel.getPrimaryIdentifier().toString() + "' was not found.")
+                .isExactlyInstanceOf(CfnNotFoundException.class);
     }
 
     @Test
@@ -167,16 +139,10 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .desiredResourceState(resourceModel)
                 .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .hasNoCause()
+                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + resourceModel.getPrimaryIdentifier().toString() + "' was not found.")
+                .isExactlyInstanceOf(CfnNotFoundException.class);
     }
 
 
@@ -202,23 +168,17 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
                 .thenReturn(describeTypeResponse);
 
-        // type deregistered out of band
+        final CfnNotFoundException exception = new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceModel.getPrimaryIdentifier().toString());
         when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
-                .thenThrow(TypeNotFoundException.builder().build());
+                .thenThrow(exception);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(resourceModel)
                 .build();
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackContext().getRegistrationToken()).isNull();
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(resourceModel);
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .hasNoCause()
+                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + resourceModel.getPrimaryIdentifier().toString() + "' was not found.")
+                .isExactlyInstanceOf(CfnNotFoundException.class);
     }
 }

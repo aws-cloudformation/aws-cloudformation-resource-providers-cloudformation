@@ -64,13 +64,13 @@ class Translator {
     static DeregisterTypeRequest translateToDeleteRequest(@NonNull final ResourceModel model,
                                                           @NonNull final Logger logger) {
         if (model.getIsDefaultVersion()) {
-            logger.log("De-registering default version");
+            logger.log(String.format("De-registering the default version :: TypeName is %s ", model.getTypeName()));
             return DeregisterTypeRequest.builder()
                     .type(RegistryType.RESOURCE)
                     .typeName(model.getTypeName())
                     .build();
         } else {
-            logger.log("De-registering version");
+            logger.log(String.format("De-registering the default version :: Arn is %s ", model.getArn()));
             return DeregisterTypeRequest.builder()
                     .arn(model.getArn())
                     .build();
