@@ -31,10 +31,9 @@ public class DeleteHandler extends BaseHandlerStd {
                 proxy.newInitiator(proxyClient, resourceModel, callbackContext);
 
         logger.log(String.format("Deregistering the resource version with identifier %s", resourceModel.getArn()));
-        // pre-read to capture required metadata fields in model for Delete
-        return new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger)
-                // now deregister the type
-                .onSuccess(progress ->
+
+        return ProgressEvent.progress(resourceModel, callbackContext)
+                .then(progress ->
                         initiator.initiate("AWS-CloudFormation-ResourceVersion::Delete")
                                 .translateToServiceRequest(model ->
                                         Translator.translateToDeleteRequest(progress.getResourceModel(), logger))
@@ -53,15 +52,18 @@ public class DeleteHandler extends BaseHandlerStd {
         try {
             response = proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::deregisterType);
         } catch (TypeNotFoundException exception) {
-            logger.log(String.format("Failed to deregister the resource [%s] as it cannot be found %s", model.getPrimaryIdentifier().toString(), Arrays.toString(exception.getStackTrace())));
-            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getPrimaryIdentifier().toString());
+            logger.log(String.format("Failed to deregister the resource [%s] as it cannot be found %s", model.getArn(), Arrays.toString(exception.getStackTrace())));
+            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getArn());
         } catch (CfnRegistryException exception) {
             logger.log(
                     String.format("Failed to deregister resource with identifier %s:\n%s",
-                            model.getPrimaryIdentifier().toString(), Arrays.toString(exception.getStackTrace())));
+                            model.getArn(), Arrays.toString(exception.getStackTrace())));
             throw new CfnGeneralServiceException(exception);
+        } catch (Exception exception){
+            logger.log(String.format("Failed to deregister the resource [%s] with a GeneralService exception %s", model.getArn(), Arrays.toString(exception.getStackTrace())));
+            throw new CfnGeneralServiceException(ResourceModel.TYPE_NAME, exception);
         }
-        logger.log(String.format("The resource [%s] is successfully deregistered ", model.getPrimaryIdentifier().toString()));
+        logger.log(String.format("The resource [%s] is successfully deregistered ", model.getArn()));
         return response;
     }
 }

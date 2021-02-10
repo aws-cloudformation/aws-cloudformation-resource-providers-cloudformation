@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.cloudformation.model.DeregisterTypeRespon
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -51,6 +52,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         final ResourceModel resourceModel = ResourceModel.builder()
                 .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .isDefaultVersion(false)
                 .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -79,6 +81,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
+                .isDefaultVersion(true)
                 .build();
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
@@ -95,43 +98,6 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .thenReturn(describeTypeResponse);
 
         // throw on DeregisterType
-        final CfnNotFoundException exception = new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceModel.getPrimaryIdentifier().toString());
-        when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
-                .thenThrow(exception);
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(resourceModel)
-                .build();
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-                .hasNoCause()
-                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + resourceModel.getPrimaryIdentifier().toString() + "' was not found.")
-                .isExactlyInstanceOf(CfnNotFoundException.class);
-    }
-
-    @Test
-    public void handleRequest_NotFoundAfterRead() {
-        final CloudFormationClient client = getServiceClient();
-
-        final ResourceModel resourceModel = ResourceModel.builder()
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-                .typeName("AWS::Demo::Resource")
-                .build();
-
-        final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
-                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
-                .defaultVersionId("00000001")
-                .deprecatedStatus("LIVE")
-                .isDefaultVersion(false)
-                .sourceUrl("https://github.com/myorg/resource/repo.git")
-                .type("RESOURCE")
-                .typeName("AWS::Demo::Resource")
-                .visibility("PRIVATE")
-                .build();
-        when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
-                .thenReturn(describeTypeResponse);
-
-        // type deregistered out of band
         when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
                 .thenThrow(TypeNotFoundException.builder().build());
 
@@ -141,10 +107,9 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
                 .hasNoCause()
-                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + resourceModel.getPrimaryIdentifier().toString() + "' was not found.")
+                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + resourceModel.getArn() + "' was not found.")
                 .isExactlyInstanceOf(CfnNotFoundException.class);
     }
-
 
     @Test
     public void handleRequest_CantDeleteDefaultVersion() {
@@ -153,6 +118,7 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceModel resourceModel = ResourceModel.builder()
                 .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
                 .typeName("AWS::Demo::Resource")
+                .isDefaultVersion(true)
                 .build();
 
         final DescribeTypeResponse describeTypeResponse = DescribeTypeResponse.builder()
@@ -168,9 +134,8 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.describeType(ArgumentMatchers.any(DescribeTypeRequest.class)))
                 .thenReturn(describeTypeResponse);
 
-        final CfnNotFoundException exception = new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceModel.getPrimaryIdentifier().toString());
         when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
-                .thenThrow(exception);
+                .thenThrow(TypeNotFoundException.builder().build());
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(resourceModel)
@@ -178,7 +143,29 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
                 .hasNoCause()
-                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + resourceModel.getPrimaryIdentifier().toString() + "' was not found.")
+                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + resourceModel.getArn() + "' was not found.")
                 .isExactlyInstanceOf(CfnNotFoundException.class);
+    }
+
+
+    @Test
+    public void handleRequest_GeneralServiceException() {
+        final CloudFormationClient client = getServiceClient();
+
+        final ResourceModel resourceModel = ResourceModel.builder()
+                .arn("arn:aws:cloudformation:us-west-2:123456789012:type/resource/AWS-Demo-Resource/00000001")
+                .typeName("AWS::Demo::Resource")
+                .isDefaultVersion(true)
+                .build();
+
+        when(client.deregisterType(ArgumentMatchers.any(DeregisterTypeRequest.class)))
+                .thenThrow(NullPointerException.class);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(resourceModel)
+                .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .isExactlyInstanceOf(CfnGeneralServiceException.class);
     }
 }

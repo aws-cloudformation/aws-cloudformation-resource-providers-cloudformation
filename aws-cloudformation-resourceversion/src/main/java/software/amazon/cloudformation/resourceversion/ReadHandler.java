@@ -54,7 +54,7 @@ public class ReadHandler extends BaseHandlerStd {
             logger.log(String.format("Failed to read the resource [%s] as it cannot be found", model.getPrimaryIdentifier().toString()));
             throw nullSafeNotFoundException(model);
         } catch (final CfnRegistryException e) {
-            logger.log(Arrays.toString(e.getStackTrace()));
+            logger.log(String.format("Failed to read the resource [%s] due to a CfnRegistryException",Arrays.toString(e.getStackTrace())));
             throw new CfnGeneralServiceException(e);
         }
 
