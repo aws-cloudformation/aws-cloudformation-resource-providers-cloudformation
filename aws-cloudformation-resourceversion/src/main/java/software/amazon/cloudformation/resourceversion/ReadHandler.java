@@ -33,14 +33,14 @@ public class ReadHandler extends BaseHandlerStd {
         logger.log(String.format("Reading the resource version with identifier %s", resourceModel.getArn()));
         return initiator.initiate("AWS-CloudFormation-ResourceVersion::Read")
                 .translateToServiceRequest((model) -> Translator.translateToReadRequest(model, logger))
-                .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient, resourceModel))
+                .makeServiceCall((awsRequest, sdkProxyClient) -> readResource(awsRequest, sdkProxyClient, resourceModel, logger))
                 .done(awsResponse -> ProgressEvent.defaultSuccessHandler(Translator.translateFromReadResponse(awsResponse)));
     }
 
     private DescribeTypeResponse readResource(
             final DescribeTypeRequest describeTypeRequest,
             final ProxyClient<CloudFormationClient> proxyClient,
-            final ResourceModel model) {
+            final ResourceModel model, Logger logger) {
 
         DescribeTypeResponse awsResponse;
         try {
@@ -48,16 +48,17 @@ public class ReadHandler extends BaseHandlerStd {
 
             // if the type is deprecated, this will be treated as non-existent for the purposes of CloudFormation
             if (awsResponse.deprecatedStatus() == DeprecatedStatus.DEPRECATED) {
+                logger.log(String.format("Resource with the identifier %s is deprecated", model.getArn()));
                 throw nullSafeNotFoundException(model);
             }
         } catch (final TypeNotFoundException e) {
-            logger.log(String.format("Failed to read the resource [%s] as it cannot be found", model.getPrimaryIdentifier().toString()));
+            logger.log(String.format("Failed to read the resource [%s] as it cannot be found", model.getArn()));
             throw nullSafeNotFoundException(model);
         } catch (final CfnRegistryException e) {
-            logger.log(Arrays.toString(e.getStackTrace()));
+            logger.log(String.format("Failed to read the resource [%s] due to an exception [%s]",model.getArn(), Arrays.toString(e.getStackTrace())));
             throw new CfnGeneralServiceException(e);
         }
-
+        logger.log(String.format("Resource with the identifier [%s] is read successfully", model.getArn()));
         return awsResponse;
     }
 

@@ -39,7 +39,7 @@ public class DeleteHandler extends BaseHandlerStd {
                                 .translateToServiceRequest(model ->
                                         Translator.translateToDeleteRequest(progress.getResourceModel(), logger))
                                 .makeServiceCall((awsRequest, proxyInvocation) ->
-                                        deregisterResource(awsRequest,proxyInvocation, progress.getResourceModel()))
+                                        deregisterResource(awsRequest,proxyInvocation, progress.getResourceModel(), logger))
                                 .done(awsResponse -> ProgressEvent.<ResourceModel, CallbackContext>builder()
                                         .status(OperationStatus.SUCCESS)
                                         .build()));
@@ -48,7 +48,7 @@ public class DeleteHandler extends BaseHandlerStd {
     private DeregisterTypeResponse deregisterResource(
             final DeregisterTypeRequest request,
             final ProxyClient<CloudFormationClient> proxyClient,
-            final ResourceModel model) {
+            final ResourceModel model, Logger logger) {
         DeregisterTypeResponse response;
         try {
             response = proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::deregisterType);
