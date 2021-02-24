@@ -3,13 +3,9 @@ package software.amazon.cloudformation.moduledefaultversion;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
-import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
-import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
-import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionRequest;
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
@@ -18,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -147,7 +142,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     }
 
     @Test
-    public void handleRequest_SetDefaultVersion_NotFound() {
+    public void handleRequest_SetDefaultVersion_NotFound_WithArnInput() {
         final ResourceModel modelIn = ResourceModel.builder()
                 .arn(arn)
                 .build();
@@ -162,6 +157,28 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
                 .hasNoCause()
                 .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + modelIn.getPrimaryIdentifier().toString() + "' was not found.")
+                .isExactlyInstanceOf(CfnNotFoundException.class);
+
+        verify(client, times(1)).setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class));
+    }
+
+    @Test
+    public void handleRequest_SetDefaultVersion_NotFound_ModuleNameVersionIdInput() {
+        final ResourceModel modelIn = ResourceModel.builder()
+                .moduleName("foo")
+                .versionId("00001")
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(modelIn)
+                .build();
+
+        when(client.setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class)))
+                .thenThrow(TypeNotFoundException.builder().build());
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .hasNoCause()
+                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + modelIn.getModuleName() + " v" + modelIn.getVersionId() + "' was not found.")
                 .isExactlyInstanceOf(CfnNotFoundException.class);
 
         verify(client, times(1)).setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class));
