@@ -90,8 +90,11 @@
     "/properties/VersionId",
     "/properties/TypeArn"
   ],
-  "writeOnlyProperties": [
-    "/properties/SchemaHandlerPackage"
+  "createOnlyProperties": [
+    "/properties/ExecutionRoleArn",
+    "/properties/LoggingConfig",
+    "/properties/SchemaHandlerPackage",
+    "/properties/TypeName"
   ],
   "primaryIdentifier": [
     "/properties/Arn"
