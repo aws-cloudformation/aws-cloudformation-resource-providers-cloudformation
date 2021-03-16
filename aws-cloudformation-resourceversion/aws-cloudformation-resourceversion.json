@@ -82,6 +82,9 @@
     "SchemaHandlerPackage",
     "TypeName"
   ],
+  "writeOnlyProperties": [
+    "/properties/SchemaHandlerPackage"
+    ],
   "readOnlyProperties": [
     "/properties/Arn",
     "/properties/IsDefaultVersion",
