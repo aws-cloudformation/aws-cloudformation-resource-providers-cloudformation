@@ -169,8 +169,8 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     @Test
     public void handleRequest_SetDefaultVersion_NotFound_ModuleNameVersionIdInput() {
         final ResourceModel modelIn = ResourceModel.builder()
-                .moduleName("foo")
-                .versionId("00001")
+                .moduleName(moduleName)
+                .versionId(versionId)
                 .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
