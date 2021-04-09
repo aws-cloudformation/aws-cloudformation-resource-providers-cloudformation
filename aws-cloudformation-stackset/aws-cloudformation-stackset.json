@@ -68,6 +68,14 @@
         "CAPABILITY_AUTO_EXPAND"
       ]
     },
+    "RegionConcurrencyType": {
+      "description": "The concurrency type of deploying StackSets operations in regions, could be in parallel or one region at a time",
+      "type": "string",
+      "enum": [
+        "SEQUENTIAL",
+        "PARALLEL"
+      ]
+    },
     "OperationPreferences": {
       "description": "The user-specified preferences for how AWS CloudFormation performs a stack set operation.",
       "type": "object",
@@ -95,6 +103,9 @@
           "items": {
             "$ref": "#/definitions/Region"
           }
+        },
+        "RegionConcurrencyType": {
+          "$ref": "#/definitions/RegionConcurrencyType"
         }
       }
     },
