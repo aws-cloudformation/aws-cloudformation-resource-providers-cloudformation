@@ -68,6 +68,13 @@
         "CAPABILITY_AUTO_EXPAND"
       ]
     },
+    "RegionConcurrencyType": {
+      "type": "string",
+      "enum": [
+        "SEQUENTIAL",
+        "PARALLEL"
+      ]
+    },
     "OperationPreferences": {
       "description": "The user-specified preferences for how AWS CloudFormation performs a stack set operation.",
       "type": "object",
@@ -95,6 +102,9 @@
           "items": {
             "$ref": "#/definitions/Region"
           }
+        },
+        "RegionConcurrencyType": {
+          "$ref": "#/definitions/RegionConcurrencyType"
         }
       }
     },

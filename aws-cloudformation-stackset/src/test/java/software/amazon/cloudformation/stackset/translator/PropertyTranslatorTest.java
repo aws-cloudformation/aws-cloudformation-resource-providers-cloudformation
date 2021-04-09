@@ -1,8 +1,11 @@
 package software.amazon.cloudformation.stackset.translator;
 
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.cloudformation.model.RegionConcurrencyType;
+import software.amazon.awssdk.services.cloudformation.model.StackSetOperationPreferences;
 import software.amazon.cloudformation.stackset.AutoDeployment;
 import software.amazon.cloudformation.stackset.util.StackInstance;
+import software.amazon.cloudformation.stackset.util.TestUtils;
 
 import java.util.Arrays;
 
@@ -10,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkParameters;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkTags;
+import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkOperationPreferences;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkTags;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
 import static software.amazon.cloudformation.stackset.util.TestUtils.EU_EAST_2;
@@ -49,5 +53,16 @@ public class PropertyTranslatorTest {
         assertThat(stackInstance.getRegion()).isEqualTo(EU_EAST_2);
         assertThat(stackInstance.getDeploymentTarget()).isEqualTo(ORGANIZATION_UNIT_ID_2);
         assertThat(stackInstance.getParameters()).contains(PARAMETER_1);
+    }
+
+    @Test
+    public void test_translateToStackSetOperationPreferences(){
+        final StackSetOperationPreferences stackSetOperationPreferences = translateToSdkOperationPreferences(TestUtils.OPERATION_PREFERENCES_FULL);
+        assertThat(stackSetOperationPreferences.failureToleranceCount()).isEqualTo(0);
+        assertThat(stackSetOperationPreferences.failureTolerancePercentage()).isEqualTo(0);
+        assertThat(stackSetOperationPreferences.maxConcurrentCount()).isEqualTo(1);
+        assertThat(stackSetOperationPreferences.maxConcurrentPercentage()).isEqualTo(100);
+        assertThat(stackSetOperationPreferences.regionOrder()).isEqualTo(Arrays.asList(TestUtils.US_WEST_1, TestUtils.US_EAST_1));
+        assertThat(stackSetOperationPreferences.regionConcurrencyType()).isEqualTo(RegionConcurrencyType.PARALLEL);
     }
 }

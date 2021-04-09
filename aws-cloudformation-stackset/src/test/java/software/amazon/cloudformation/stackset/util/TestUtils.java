@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRe
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetsResponse;
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
+import software.amazon.awssdk.services.cloudformation.model.RegionConcurrencyType;
 import software.amazon.awssdk.services.cloudformation.model.StackInstance;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
@@ -200,6 +201,15 @@ public class TestUtils {
     public final static OperationPreferences OPERATION_PREFERENCES = OperationPreferences.builder()
             .failureToleranceCount(0)
             .maxConcurrentCount(1)
+            .build();
+
+    public final static OperationPreferences OPERATION_PREFERENCES_FULL = OperationPreferences.builder()
+            .failureToleranceCount(0)
+            .failureTolerancePercentage(0)
+            .maxConcurrentCount(1)
+            .maxConcurrentPercentage(100)
+            .regionOrder(Arrays.asList(US_WEST_1, US_EAST_1))
+            .regionConcurrencyType(RegionConcurrencyType.PARALLEL.toString())
             .build();
 
     public final static Set<software.amazon.cloudformation.stackset.Tag> TAGS = new HashSet<>(Arrays.asList(
