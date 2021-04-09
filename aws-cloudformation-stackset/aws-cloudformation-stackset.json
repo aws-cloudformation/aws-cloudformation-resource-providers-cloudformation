@@ -69,6 +69,7 @@
       ]
     },
     "RegionConcurrencyType": {
+      "description": "The concurrency type of deploying StackSets operations in regions, could be in parallel or one region at a time",
       "type": "string",
       "enum": [
         "SEQUENTIAL",
