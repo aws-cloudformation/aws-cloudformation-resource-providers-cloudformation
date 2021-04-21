@@ -5,11 +5,9 @@ import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionRequest;
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
