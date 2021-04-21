@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,6 +40,7 @@ public class Translator {
                 .schemaHandlerPackage(model.getModulePackage())
                 .type("MODULE")
                 .typeName(model.getModuleName())
+                .clientRequestToken(UUID.randomUUID().toString())
                 .build();
     }
 

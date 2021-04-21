@@ -50,6 +50,7 @@ public class TranslatorTest {
         assertThat(registerTypeRequest.schemaHandlerPackage()).isEqualTo(model.getModulePackage());
         assertThat(registerTypeRequest.typeAsString()).isEqualTo("MODULE");
         assertThat(registerTypeRequest.typeName()).isEqualTo(model.getModuleName());
+        assertThat(registerTypeRequest.clientRequestToken()).isNotEmpty();
     }
 
     @Test
