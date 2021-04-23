@@ -55,10 +55,11 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     private static StackSetOperationStatus getStackSetOperationStatus(
             final ProxyClient<CloudFormationClient> proxyClient,
             final String stackSetId,
-            final String operationId) {
+            final String operationId,
+            final String callAs) {
 
         final DescribeStackSetOperationResponse response = proxyClient.injectCredentialsAndInvokeV2(
-                describeStackSetOperationRequest(stackSetId, operationId),
+                describeStackSetOperationRequest(stackSetId, operationId, callAs),
                 proxyClient.client()::describeStackSetOperation);
         return response.stackSetOperation().status();
     }
@@ -134,7 +135,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         for (final StackInstances stackInstances : stackInstancesList) {
             final ProgressEvent<ResourceModel, CallbackContext> progressEvent = proxy
                     .initiate("AWS-CloudFormation-StackSet::CreateStackInstances" + stackInstances.hashCode(), client, model, callbackContext)
-                    .translateToServiceRequest(modelRequest -> createStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances))
+                    .translateToServiceRequest(modelRequest -> createStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances, modelRequest.getCallAs()))
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
                         final CreateStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::createStackInstances);
@@ -176,7 +177,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         for (final StackInstances stackInstances : stackInstancesList) {
             final ProgressEvent<ResourceModel, CallbackContext> progressEvent = proxy
                     .initiate("AWS-CloudFormation-StackSet::DeleteStackInstances" + stackInstances.hashCode(), client, model, callbackContext)
-                    .translateToServiceRequest(modelRequest -> deleteStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances))
+                    .translateToServiceRequest(modelRequest -> deleteStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances, modelRequest.getCallAs()))
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
                         final DeleteStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::deleteStackInstances);
@@ -229,7 +230,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         for (final StackInstances stackInstances : stackInstancesList) {
             final ProgressEvent<ResourceModel, CallbackContext> progressEvent = proxy
                     .initiate("AWS-CloudFormation-StackSet::UpdateStackInstances" + stackInstances.hashCode(), client, model, callbackContext)
-                    .translateToServiceRequest(modelRequest -> updateStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances))
+                    .translateToServiceRequest(modelRequest -> updateStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances, modelRequest.getCallAs()))
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
                         final UpdateStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackInstances);
@@ -248,6 +249,10 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         return ProgressEvent.progress(model, callbackContext);
     }
 
+    protected StackSet describeStackSet(final ProxyClient<CloudFormationClient> proxyClient,
+                                        final String stackSetId) {
+        return describeStackSet(proxyClient, stackSetId, null);
+    }
     /**
      * Get {@link StackSet} from service client using stackSetId
      *
@@ -256,10 +261,11 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
      */
     protected StackSet describeStackSet(
             final ProxyClient<CloudFormationClient> proxyClient,
-            final String stackSetId) {
+            final String stackSetId,
+            final String callAs) {
 
         final DescribeStackSetResponse stackSetResponse = proxyClient.injectCredentialsAndInvokeV2(
-                describeStackSetRequest(stackSetId), proxyClient.client()::describeStackSet);
+                describeStackSetRequest(stackSetId, callAs), proxyClient.client()::describeStackSet);
         return stackSetResponse.stackSet();
     }
 
@@ -278,7 +284,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                                             final Logger logger) {
 
         final String stackSetId = model.getStackSetId();
-        final StackSetOperationStatus status = getStackSetOperationStatus(proxyClient, stackSetId, operationId);
+        final String callAs = model.getCallAs();
+        final StackSetOperationStatus status = getStackSetOperationStatus(proxyClient, stackSetId, operationId, callAs);
         return isStackSetOperationDone(status, operationId, logger);
     }
 

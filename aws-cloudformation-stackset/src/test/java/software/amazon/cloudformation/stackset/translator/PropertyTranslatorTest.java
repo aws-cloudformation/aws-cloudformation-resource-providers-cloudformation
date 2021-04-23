@@ -19,9 +19,9 @@ import static software.amazon.cloudformation.stackset.translator.PropertyTransla
 import static software.amazon.cloudformation.stackset.util.TestUtils.EU_EAST_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.ORGANIZATION_UNIT_ID_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SDK_AUTO_DEPLOYMENT;
+import static software.amazon.cloudformation.stackset.util.TestUtils.SDK_AUTO_DEPLOYMENT_ENABLED;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SDK_PARAMETER_1;
-import static software.amazon.cloudformation.stackset.util.TestUtils.STACK_INSTANCE_SUMMARY_4;
+import static software.amazon.cloudformation.stackset.util.TestUtils.STACK_INSTANCE_SUMMARY_OU2_LHR;
 
 public class PropertyTranslatorTest {
 
@@ -42,14 +42,14 @@ public class PropertyTranslatorTest {
 
     @Test
     public void test_translateFromSdkAutoDeployment() {
-        final AutoDeployment autoDeployment = translateFromSdkAutoDeployment(SDK_AUTO_DEPLOYMENT);
+        final AutoDeployment autoDeployment = translateFromSdkAutoDeployment(SDK_AUTO_DEPLOYMENT_ENABLED);
         assertThat(autoDeployment.getEnabled()).isTrue();
         assertThat(autoDeployment.getRetainStacksOnAccountRemoval()).isTrue();
     }
 
     @Test
     public void test_translateToStackInstance() {
-        final StackInstance stackInstance = translateToStackInstance(false, STACK_INSTANCE_SUMMARY_4, Arrays.asList(SDK_PARAMETER_1));
+        final StackInstance stackInstance = translateToStackInstance(false, STACK_INSTANCE_SUMMARY_OU2_LHR, Arrays.asList(SDK_PARAMETER_1));
         assertThat(stackInstance.getRegion()).isEqualTo(EU_EAST_2);
         assertThat(stackInstance.getDeploymentTarget()).isEqualTo(ORGANIZATION_UNIT_ID_2);
         assertThat(stackInstance.getParameters()).contains(PARAMETER_1);

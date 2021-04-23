@@ -43,54 +43,66 @@ public class RequestTranslator {
                 .tags(translateToSdkTags(tags))
                 .templateBody(model.getTemplateBody())
                 .templateURL(model.getTemplateURL())
+                .callAs(model.getCallAs())
                 .build();
     }
 
     public static CreateStackInstancesRequest createStackInstancesRequest(
             final String stackSetName,
             final OperationPreferences operationPreferences,
-            final StackInstances stackInstances) {
+            final StackInstances stackInstances,
+            final String callAs) {
         return CreateStackInstancesRequest.builder()
                 .stackSetName(stackSetName)
                 .regions(stackInstances.getRegions())
                 .operationPreferences(translateToSdkOperationPreferences(operationPreferences))
                 .deploymentTargets(translateToSdkDeploymentTargets(stackInstances.getDeploymentTargets()))
                 .parameterOverrides(translateToSdkParameters(stackInstances.getParameterOverrides()))
+                .callAs(callAs)
                 .build();
     }
 
     public static UpdateStackInstancesRequest updateStackInstancesRequest(
             final String stackSetName,
             final OperationPreferences operationPreferences,
-            final StackInstances stackInstances) {
+            final StackInstances stackInstances,
+            final String callAs) {
         return UpdateStackInstancesRequest.builder()
                 .stackSetName(stackSetName)
                 .regions(stackInstances.getRegions())
                 .operationPreferences(translateToSdkOperationPreferences(operationPreferences))
                 .deploymentTargets(translateToSdkDeploymentTargets(stackInstances.getDeploymentTargets()))
                 .parameterOverrides(translateToSdkParameters(stackInstances.getParameterOverrides()))
+                .callAs(callAs)
                 .build();
     }
 
-    public static DeleteStackSetRequest deleteStackSetRequest(final String stackSetName) {
+    public static DeleteStackSetRequest deleteStackSetRequest(
+            final String stackSetName,
+            final String callAs) {
         return DeleteStackSetRequest.builder()
                 .stackSetName(stackSetName)
+                .callAs(callAs)
                 .build();
     }
 
     public static DeleteStackInstancesRequest deleteStackInstancesRequest(
             final String stackSetName,
             final OperationPreferences operationPreferences,
-            final StackInstances stackInstances) {
+            final StackInstances stackInstances,
+            final String callAs) {
         return DeleteStackInstancesRequest.builder()
                 .stackSetName(stackSetName)
                 .regions(stackInstances.getRegions())
                 .operationPreferences(translateToSdkOperationPreferences(operationPreferences))
                 .deploymentTargets(translateToSdkDeploymentTargets(stackInstances.getDeploymentTargets()))
+                .callAs(callAs)
                 .build();
     }
 
-    public static UpdateStackSetRequest updateStackSetRequest(final ResourceModel model, final Map<String, String> tags) {
+    public static UpdateStackSetRequest updateStackSetRequest(
+            final ResourceModel model,
+            final Map<String, String> tags) {
         return UpdateStackSetRequest.builder()
                 .stackSetName(model.getStackSetId())
                 .administrationRoleARN(model.getAdministrationRoleARN())
@@ -103,10 +115,12 @@ public class RequestTranslator {
                 .templateURL(model.getTemplateURL())
                 .templateBody(model.getTemplateBody())
                 .tags(translateToSdkTags(tags))
+                .callAs(model.getCallAs())
                 .build();
     }
 
-    public static ListStackSetsRequest listStackSetsRequest(final String nextToken) {
+    public static ListStackSetsRequest listStackSetsRequest(
+            final String nextToken) {
         return ListStackSetsRequest.builder()
                 .maxResults(LIST_MAX_ITEMS)
                 .nextToken(nextToken)
@@ -114,41 +128,53 @@ public class RequestTranslator {
     }
 
     public static ListStackInstancesRequest listStackInstancesRequest(
-            final String nextToken, final String stackSetName) {
+            final String nextToken,
+            final String stackSetName,
+            final String callAs) {
         return ListStackInstancesRequest.builder()
                 .maxResults(LIST_MAX_ITEMS)
                 .nextToken(nextToken)
                 .stackSetName(stackSetName)
+                .callAs(callAs)
                 .build();
     }
 
-    public static DescribeStackSetRequest describeStackSetRequest(final String stackSetId) {
+    public static DescribeStackSetRequest describeStackSetRequest(
+            final String stackSetId,
+            final String callAs) {
         return DescribeStackSetRequest.builder()
                 .stackSetName(stackSetId)
+                .callAs(callAs)
                 .build();
     }
 
     public static DescribeStackInstanceRequest describeStackInstanceRequest(
             final String account,
             final String region,
-            final String stackSetId) {
+            final String stackSetId,
+            final String callAs) {
         return DescribeStackInstanceRequest.builder()
                 .stackInstanceAccount(account)
                 .stackInstanceRegion(region)
                 .stackSetName(stackSetId)
+                .callAs(callAs)
                 .build();
     }
 
     public static DescribeStackSetOperationRequest describeStackSetOperationRequest(
-            final String stackSetName, final String operationId) {
+            final String stackSetName,
+            final String operationId,
+            final String callAs) {
         return DescribeStackSetOperationRequest.builder()
                 .stackSetName(stackSetName)
                 .operationId(operationId)
+                .callAs(callAs)
                 .build();
     }
 
     public static GetTemplateSummaryRequest getTemplateSummaryRequest(
-            final String templateBody, final String templateUrl) {
+            final String templateBody,
+            final String templateUrl) {
         return GetTemplateSummaryRequest.builder()
                 .templateBody(templateBody)
                 .templateURL(templateUrl)
