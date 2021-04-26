@@ -1,5 +1,6 @@
 package software.amazon.cloudformation.moduleversion;
 
+import lombok.NonNull;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRegistrationRequest;
@@ -17,6 +18,7 @@ import software.amazon.cloudformation.proxy.delay.Constant;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.UUID;
 
 public class CreateHandler extends BaseHandlerStd {
 
@@ -43,10 +45,11 @@ public class CreateHandler extends BaseHandlerStd {
 
         final ResourceModel model = request.getDesiredResourceState();
         validateModel(model);
-
         logger.log(String.format("Registering module version, module=%s arn=%s", model.getModuleName(), model.getArn()));
         return proxy.initiate("AWS-CloudFormation-ModuleVersion::Create", proxyClient, model, callbackContext)
-                .translateToServiceRequest(Translator::translateToCreateRequest)
+                .translateToServiceRequest(resourceModel -> {
+                    return Translator.translateToCreateRequest(resourceModel, getOrGenerateClientRequestToken(callbackContext));
+                })
                 .backoffDelay(BACKOFF_STRATEGY)
                 .makeServiceCall((registerTypeRequest, client) -> {
                     final RegisterTypeResponse registerTypeResponse = registerModule(registerTypeRequest, client, model);
@@ -56,6 +59,14 @@ public class CreateHandler extends BaseHandlerStd {
                 .stabilize(this::stabilize)
                 .progress()
                 .then(progress -> readHandler.handleRequest(proxy, request, callbackContext, proxyClient, logger));
+    }
+
+    @NonNull
+    private String getOrGenerateClientRequestToken(final CallbackContext callbackContext) {
+        if (callbackContext.getClientRequestToken() == null) {
+            callbackContext.setClientRequestToken(UUID.randomUUID().toString());
+        }
+        return callbackContext.getClientRequestToken();
     }
 
     private RegisterTypeResponse registerModule(

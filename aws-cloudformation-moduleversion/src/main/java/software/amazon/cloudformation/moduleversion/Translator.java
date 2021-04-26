@@ -15,7 +15,6 @@ import software.amazon.awssdk.services.cloudformation.model.RegisterTypeRequest;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,12 +34,12 @@ public class Translator {
     * @param model resource model
     * @return the aws service request to create a resource
     */
-    static RegisterTypeRequest translateToCreateRequest(@NonNull final ResourceModel model) {
+    static RegisterTypeRequest translateToCreateRequest(@NonNull final ResourceModel model, @NonNull final String clientRequestToken) {
         return RegisterTypeRequest.builder()
                 .schemaHandlerPackage(model.getModulePackage())
                 .type("MODULE")
                 .typeName(model.getModuleName())
-                .clientRequestToken(UUID.randomUUID().toString())
+                .clientRequestToken(clientRequestToken)
                 .build();
     }
 
