@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.DescribeStackInstanceRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetsRequest;
@@ -25,12 +24,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_1;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_2;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_3;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_STACK_INSTANCE_RESPONSE_4;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_SELF_MANAGED_STACK_SET_RESPONSE;
-import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_STACK_SETS_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.LIST_STACK_SETS_SELF_MANAGED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.READ_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_FOR_READ;
 
@@ -61,7 +56,7 @@ public class ListHandlerTest extends AbstractTestBase {
     public void handleRequest_SelfManagedSS_Success() {
 
         when(proxyClient.client().listStackSets(any(ListStackSetsRequest.class)))
-                .thenReturn(LIST_STACK_SETS_RESPONSE);
+                .thenReturn(LIST_STACK_SETS_SELF_MANAGED_RESPONSE);
         when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))

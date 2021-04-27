@@ -32,12 +32,15 @@ public class ResourceModelBuilder {
     private StackSet stackSet;
     private boolean isSelfManaged;
 
+    public ResourceModel buildModel() {
+        return buildModel(null);
+    }
     /**
      * Returns the model we construct from StackSet service client using PrimaryIdentifier StackSetId
      *
      * @return {@link ResourceModel}
      */
-    public ResourceModel buildModel() {
+    public ResourceModel buildModel(final String callAs) {
 
         final String stackSetId = stackSet.stackSetId();
 
@@ -52,6 +55,7 @@ public class ResourceModelBuilder {
                 .tags(translateFromSdkTags(stackSet.tags()))
                 .parameters(translateFromSdkParameters(stackSet.parameters()))
                 .templateBody(stackSet.templateBody())
+                .callAs(callAs)
                 .build();
 
         isSelfManaged = Comparator.isSelfManaged(model);
@@ -66,7 +70,7 @@ public class ResourceModelBuilder {
         // Retrieves all Stack Instances associated with the StackSet,
         // Attaches regions and deploymentTargets to the constructing model
         do {
-            token = attachStackInstances(stackSetId, isSelfManaged, stackInstanceSet, token);
+            token = attachStackInstances(stackSetId, isSelfManaged, stackInstanceSet, callAs, token);
         } while (token != null);
 
         if (!stackInstanceSet.isEmpty()) {
@@ -89,10 +93,11 @@ public class ResourceModelBuilder {
             final String stackSetId,
             final boolean isSelfManaged,
             final Set<StackInstance> stackInstanceSet,
+            final String callAs,
             String token) {
 
         final ListStackInstancesResponse listStackInstancesResponse = proxyClient.injectCredentialsAndInvokeV2(
-                listStackInstancesRequest(token, stackSetId), proxyClient.client()::listStackInstances);
+                listStackInstancesRequest(token, stackSetId, callAs), proxyClient.client()::listStackInstances);
         final String nextToken = listStackInstancesResponse.nextToken();
         if (!listStackInstancesResponse.hasSummaries()) return null;
         listStackInstancesResponse.summaries().forEach(member -> {
