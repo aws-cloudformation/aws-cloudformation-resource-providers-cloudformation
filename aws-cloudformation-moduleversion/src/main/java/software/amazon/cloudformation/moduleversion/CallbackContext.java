@@ -23,6 +23,10 @@ public class CallbackContext extends StdCallbackContext {
     private String registrationToken;
 
     @Getter
+    @Setter
+    private String clientRequestToken;
+
+    @Getter
     private List<ResourceModel> modulesToList;
 
     @Getter

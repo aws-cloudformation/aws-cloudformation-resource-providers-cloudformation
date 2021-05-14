@@ -34,11 +34,12 @@ public class Translator {
     * @param model resource model
     * @return the aws service request to create a resource
     */
-    static RegisterTypeRequest translateToCreateRequest(@NonNull final ResourceModel model) {
+    static RegisterTypeRequest translateToCreateRequest(@NonNull final ResourceModel model, @NonNull final String clientRequestToken) {
         return RegisterTypeRequest.builder()
                 .schemaHandlerPackage(model.getModulePackage())
                 .type("MODULE")
                 .typeName(model.getModuleName())
+                .clientRequestToken(clientRequestToken)
                 .build();
     }
 

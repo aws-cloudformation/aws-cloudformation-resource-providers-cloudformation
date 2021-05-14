@@ -18,7 +18,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 128,
-          "pattern": "^(?!aws:.*)[a-zA-Z0-9\\s\\_\\.\\/\\=\\+\\-]+$"
+          "pattern": "^(?!aws:.*)[a-zA-Z0-9\\s\\:\\_\\.\\/\\=\\+\\-]+$"
         },
         "Value": {
           "description": "A string containing the value for this tag. You can specify a maximum of 256 characters for a tag value.",
@@ -68,6 +68,14 @@
         "CAPABILITY_AUTO_EXPAND"
       ]
     },
+    "RegionConcurrencyType": {
+      "description": "The concurrency type of deploying StackSets operations in regions, could be in parallel or one region at a time",
+      "type": "string",
+      "enum": [
+        "SEQUENTIAL",
+        "PARALLEL"
+      ]
+    },
     "OperationPreferences": {
       "description": "The user-specified preferences for how AWS CloudFormation performs a stack set operation.",
       "type": "object",
@@ -95,6 +103,9 @@
           "items": {
             "$ref": "#/definitions/Region"
           }
+        },
+        "RegionConcurrencyType": {
+          "$ref": "#/definitions/RegionConcurrencyType"
         }
       }
     },
@@ -268,6 +279,14 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 1024
+    },
+    "CallAs": {
+      "description": "Specifies the AWS account that you are acting from. By default, SELF is specified. For self-managed permissions, specify SELF; for service-managed permissions, if you are signed in to the organization's management account, specify SELF. If you are signed in to a delegated administrator account, specify DELEGATED_ADMIN.",
+      "type": "string",
+      "enum": [
+        "SELF",
+        "DELEGATED_ADMIN"
+      ]
     }
   },
   "required": [
@@ -293,7 +312,8 @@
   ],
   "writeOnlyProperties": [
     "/properties/TemplateURL",
-    "/properties/OperationPreferences"
+    "/properties/OperationPreferences",
+    "/properties/CallAs"
   ],
   "readOnlyProperties": [
     "/properties/StackSetId"

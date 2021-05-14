@@ -3,13 +3,9 @@ package software.amazon.cloudformation.moduledefaultversion;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
-import software.amazon.awssdk.services.cloudformation.model.DeprecatedStatus;
-import software.amazon.awssdk.services.cloudformation.model.DescribeTypeRequest;
-import software.amazon.awssdk.services.cloudformation.model.DescribeTypeResponse;
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionRequest;
 import software.amazon.awssdk.services.cloudformation.model.SetTypeDefaultVersionResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
@@ -18,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -32,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient> {
@@ -78,8 +74,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
 
-        verify(readHandler, times(1))
-                .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
+        verifyZeroInteractions(readHandler);
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
@@ -133,7 +128,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenThrow(new CfnNotFoundException(ResourceModel.TYPE_NAME, ""))
                 .thenReturn(ProgressEvent.<ResourceModel, CallbackContext>builder().resourceModel(modelOut).build());
 
         final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()
@@ -152,135 +146,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     }
 
     @Test
-    public void handleRequest_ExistenceReadFails_NoErrorCode() {
-        final ResourceModel modelIn = ResourceModel.builder()
-                .moduleName(moduleName)
-                .versionId(versionId)
-                .build();
-
-        final ResourceModel modelOut = ResourceModel.builder()
-                .arn(arn)
-                .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(modelIn)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> firstProgress = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .status(OperationStatus.FAILED)
-                .build();
-        final ProgressEvent<ResourceModel, CallbackContext> secondProgress = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(modelOut)
-                .status(OperationStatus.SUCCESS)
-                .build();
-        when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenReturn(firstProgress)
-                .thenReturn(secondProgress);
-
-        final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()
-                .build();
-        when(client.setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class)))
-                .thenReturn(setTypeDefaultVersionResponse);
-
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, null, loggerProxy);
-
-        verify(readHandler, times(2))
-                .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualToComparingFieldByField(modelOut);
-        assertThat(response.getResourceModels()).isNull();
-        assertThat(response.getMessage()).isNull();
-        assertThat(response.getErrorCode()).isNull();
-    }
-
-    @Test
-    public void handleRequest_ExistenceReadFails_UnexpectedErrorCode() {
-        final ResourceModel modelIn = ResourceModel.builder()
-                .moduleName(moduleName)
-                .versionId(versionId)
-                .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(modelIn)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> progress = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .errorCode(HandlerErrorCode.AccessDenied)
-                .status(OperationStatus.FAILED)
-                .build();
-        when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenReturn(progress);
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-                .hasNoCause()
-                .hasMessage("Error occurred during operation 'module default version existence check'.")
-                .isExactlyInstanceOf(CfnGeneralServiceException.class);
-
-        verify(readHandler, times(1))
-                .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
-        verify(client, times(0)).setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class));
-    }
-
-    @Test
-    public void handleRequest_ExistenceReadFails_ThrowsGeneralError() {
-        final ResourceModel modelIn = ResourceModel.builder()
-                .moduleName(moduleName)
-                .versionId(versionId)
-                .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(modelIn)
-                .build();
-
-        when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenThrow(new CfnGeneralServiceException("test"));
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-                .hasNoCause()
-                .hasMessage("Error occurred during operation 'test'.")
-                .isExactlyInstanceOf(CfnGeneralServiceException.class);
-
-        verify(readHandler, times(1))
-                .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
-        verify(client, times(0)).setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class));
-    }
-
-    @Test
-    public void handleRequest_AlreadyExists() {
-        final ResourceModel modelIn = ResourceModel.builder()
-                .arn(arn)
-                .build();
-
-        final ResourceModel modelOut = ResourceModel.builder()
-                .arn(arn)
-                .moduleName(moduleName)
-                .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(modelIn)
-                .build();
-
-        final ProgressEvent<ResourceModel, CallbackContext> progress = ProgressEvent.<ResourceModel, CallbackContext>builder()
-                .resourceModel(modelOut)
-                .status(OperationStatus.SUCCESS)
-                .build();
-        when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenReturn(progress);
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
-                .hasNoCause()
-                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + modelIn.getPrimaryIdentifier().toString() + "' already exists.")
-                .isExactlyInstanceOf(CfnAlreadyExistsException.class);
-
-        verify(readHandler, times(1))
-                .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
-        verify(client, times(0)).setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class));
-    }
-
-    @Test
-    public void handleRequest_SetDefaultVersion_NotFound() {
+    public void handleRequest_SetDefaultVersion_NotFound_WithArnInput() {
         final ResourceModel modelIn = ResourceModel.builder()
                 .arn(arn)
                 .build();
@@ -288,10 +154,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(modelIn)
                 .build();
-
-        final CfnNotFoundException exception = new CfnNotFoundException(ResourceModel.TYPE_NAME, modelIn.getPrimaryIdentifier().toString());
-        when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenThrow(exception);
 
         when(client.setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class)))
                 .thenThrow(TypeNotFoundException.builder().build());
@@ -301,8 +163,28 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + modelIn.getPrimaryIdentifier().toString() + "' was not found.")
                 .isExactlyInstanceOf(CfnNotFoundException.class);
 
-        verify(readHandler, times(1))
-                .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
+        verify(client, times(1)).setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class));
+    }
+
+    @Test
+    public void handleRequest_SetDefaultVersion_NotFound_ModuleNameVersionIdInput() {
+        final ResourceModel modelIn = ResourceModel.builder()
+                .moduleName(moduleName)
+                .versionId(versionId)
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(modelIn)
+                .build();
+
+        when(client.setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class)))
+                .thenThrow(TypeNotFoundException.builder().build());
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .hasNoCause()
+                .hasMessage("Resource of type '" + ResourceModel.TYPE_NAME + "' with identifier '" + modelIn.getModuleName() + " v" + modelIn.getVersionId() + "' was not found.")
+                .isExactlyInstanceOf(CfnNotFoundException.class);
+
         verify(client, times(1)).setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class));
     }
 
@@ -316,10 +198,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .desiredResourceState(modelIn)
                 .build();
 
-        final CfnNotFoundException notFoundException = new CfnNotFoundException(ResourceModel.TYPE_NAME, modelIn.getPrimaryIdentifier().toString());
-        when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenThrow(notFoundException);
-
         final CfnRegistryException registryException = CfnRegistryException.builder().build();
         when(client.setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class)))
                 .thenThrow(registryException);
@@ -328,8 +206,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .hasCause(registryException)
                 .isExactlyInstanceOf(CfnGeneralServiceException.class);
 
-        verify(readHandler, times(1))
-                .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
+        verifyZeroInteractions(readHandler);
         verify(client, times(1)).setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class));
     }
 
@@ -343,9 +220,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .desiredResourceState(modelIn)
                 .build();
 
-        when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenThrow(new CfnNotFoundException(ResourceModel.TYPE_NAME, modelIn.getPrimaryIdentifier().toString()));
-
         final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()
                 .build();
         when(client.setTypeDefaultVersion(any(SetTypeDefaultVersionRequest.class)))
@@ -353,8 +227,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         handler.handleRequest(proxy, request, null, loggerProxy);
 
-        verify(readHandler, times(1))
-                .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
+        verifyZeroInteractions(readHandler);
     }
 
     @Test
@@ -373,7 +246,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenThrow(new CfnNotFoundException(ResourceModel.TYPE_NAME, ""))
                 .thenReturn(ProgressEvent.<ResourceModel, CallbackContext>builder().resourceModel(modelOut).build());
 
         final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()
@@ -383,7 +255,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         handler.handleRequest(proxy, request, null, loggerProxy);
 
-        verify(readHandler, times(2))
+        verify(readHandler, times(1))
                 .handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class));
     }
 
@@ -399,7 +271,6 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(readHandler.handleRequest(any(AmazonWebServicesClientProxy.class), any(), any(CallbackContext.class), any(), any(Logger.class)))
-                .thenThrow(new CfnNotFoundException(ResourceModel.TYPE_NAME, ""))
                 .thenThrow(new CfnGeneralServiceException("test"));
 
         final SetTypeDefaultVersionResponse setTypeDefaultVersionResponse = SetTypeDefaultVersionResponse.builder()

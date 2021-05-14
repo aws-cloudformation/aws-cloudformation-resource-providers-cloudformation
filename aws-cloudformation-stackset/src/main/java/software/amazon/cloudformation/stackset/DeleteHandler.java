@@ -53,10 +53,11 @@ public class DeleteHandler extends BaseHandlerStd {
         final CallbackContext callbackContext = progress.getCallbackContext();
 
         return proxy.initiate("AWS-CloudFormation-StackSet::DeleteStackSet", client, model, callbackContext)
-                .translateToServiceRequest(modelRequest -> deleteStackSetRequest(modelRequest.getStackSetId()))
+                .translateToServiceRequest(modelRequest -> deleteStackSetRequest(modelRequest.getStackSetId(), model.getCallAs()))
                 .makeServiceCall((modelRequest, proxyInvocation) -> {
                     final DeleteStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(
-                            deleteStackSetRequest(model.getStackSetId()), proxyInvocation.client()::deleteStackSet);
+                            deleteStackSetRequest(model.getStackSetId(), model.getCallAs()),
+                            proxyInvocation.client()::deleteStackSet);
                     logger.log(String.format("%s [%s] has been deleted successfully.", ResourceModel.TYPE_NAME, model.getStackSetId()));
                     return response;
                 })

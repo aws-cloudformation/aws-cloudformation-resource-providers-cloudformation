@@ -5,7 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.http.HttpStatusCode;
+import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.CallAs;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
@@ -22,13 +27,17 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.amazon.cloudformation.proxy.HandlerErrorCode.GeneralServiceException;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InternalFailure;
+import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_SET_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LOGICAL_ID;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_STOPPED_RESPONSE;
@@ -37,9 +46,11 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.REQUEST_TOK
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_DUPLICATE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_INVALID_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_NO_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL_AS_SELF;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK;
 import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
 
@@ -67,7 +78,7 @@ public class CreateHandlerTest extends AbstractTestBase {
     public void handleRequest_ServiceManagedSS_SimpleSuccess() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(SERVICE_MANAGED_MODEL)
+                .desiredResourceState(SERVICE_MANAGED_MODEL_AS_SELF)
                 .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
@@ -89,15 +100,99 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(SERVICE_MANAGED_MODEL);
+        assertThat(response.getResourceModel()).isEqualTo(SERVICE_MANAGED_MODEL_AS_SELF);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
         verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
-        verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
-        verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(proxyClient.client()).createStackSet(argThat(
+                (CreateStackSetRequest req) -> req.callAs() == CallAs.SELF));
+        verify(proxyClient.client()).createStackInstances(argThat(
+                (CreateStackInstancesRequest req) -> req.callAs() == CallAs.SELF));
+        verify(proxyClient.client()).describeStackSetOperation(argThat(
+                (DescribeStackSetOperationRequest req) -> req.callAs() == CallAs.SELF));
     }
+
+    @Test
+    public void handleRequest_ServiceManagedSS_WithCallAsSelf_SimpleSuccess() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(DELEGATED_ADMIN_SERVICE_MANAGED_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+                .thenReturn(CREATE_STACK_SET_RESPONSE);
+        when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
+                .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+                .thenReturn(OPERATION_SUCCEED_RESPONSE);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(DELEGATED_ADMIN_SERVICE_MANAGED_MODEL);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(proxyClient.client()).createStackSet(argThat(
+                (CreateStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
+        verify(proxyClient.client()).createStackInstances(argThat(
+                (CreateStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
+        verify(proxyClient.client()).describeStackSetOperation(argThat(
+                (DescribeStackSetOperationRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
+    }
+
+    @Test
+    public void handleRequest_ServiceManagedSS_WithCallAsDelegatedAdmin_SimpleSuccess() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(DELEGATED_ADMIN_SERVICE_MANAGED_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+                .thenReturn(CREATE_STACK_SET_RESPONSE);
+        when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
+                .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+                .thenReturn(OPERATION_SUCCEED_RESPONSE);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(DELEGATED_ADMIN_SERVICE_MANAGED_MODEL);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(proxyClient.client()).createStackSet(argThat(
+                (CreateStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
+        verify(proxyClient.client()).createStackInstances(argThat(
+                (CreateStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
+        verify(proxyClient.client()).describeStackSetOperation(argThat(
+                (DescribeStackSetOperationRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
+    }
+
 
     @Test
     public void handleRequest_SelfManagedSS_SimpleSuccess() {
@@ -199,6 +294,41 @@ public class CreateHandlerTest extends AbstractTestBase {
         verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
         verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+    }
+
+    @Test
+    public void handleRequest_SelfManagedSS_WithCallAsDelegatedAdmin_Failure() {
+        AwsServiceException e = AwsServiceException.builder()
+                .awsErrorDetails(AwsErrorDetails.builder()
+                        .errorCode("ValidationError")
+                        .sdkHttpResponse(SdkHttpResponse.builder()
+                                .statusCode(HttpStatusCode.BAD_REQUEST)
+                                .build())
+                        .build())
+                .build();
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(DELEGATED_ADMIN_SELF_MANAGED_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+                .thenThrow(e);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getErrorCode()).isEqualTo(InvalidRequest);
+
+        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(proxyClient.client()).createStackSet(argThat(
+                (CreateStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 
     @Test

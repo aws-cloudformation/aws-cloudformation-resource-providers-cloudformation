@@ -32,7 +32,7 @@ public class TranslatorTest {
 
     @Test
     public void translateToCreateRequest_NullResourceModel() {
-        assertThatThrownBy(() -> Translator.translateToCreateRequest(null))
+        assertThatThrownBy(() -> Translator.translateToCreateRequest(null, "clientRequestToken"))
                 .hasNoCause()
                 .hasMessageStartingWith("model is marked")
                 .isExactlyInstanceOf(NullPointerException.class);
@@ -40,16 +40,18 @@ public class TranslatorTest {
 
     @Test
     public void translateToCreateRequest_Success() {
+        final String clientRequestToken = "fuwtvh8";
         final ResourceModel model = ResourceModel.builder()
                 .modulePackage(modulePackage)
                 .moduleName(moduleName)
                 .build();
 
-        final RegisterTypeRequest registerTypeRequest = Translator.translateToCreateRequest(model);
+        final RegisterTypeRequest registerTypeRequest = Translator.translateToCreateRequest(model, clientRequestToken);
 
         assertThat(registerTypeRequest.schemaHandlerPackage()).isEqualTo(model.getModulePackage());
         assertThat(registerTypeRequest.typeAsString()).isEqualTo("MODULE");
         assertThat(registerTypeRequest.typeName()).isEqualTo(model.getModuleName());
+        assertThat(registerTypeRequest.clientRequestToken()).isEqualTo(clientRequestToken);
     }
 
     @Test
