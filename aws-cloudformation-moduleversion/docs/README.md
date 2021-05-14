@@ -100,3 +100,4 @@ The scope at which the type is visible and usable in CloudFormation operations.
 The only allowed value at present is:
 
 PRIVATE: The type is only visible and usable within the account in which it is registered. Currently, AWS CloudFormation marks any types you register as PRIVATE.
+
