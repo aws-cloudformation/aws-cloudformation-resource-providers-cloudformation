@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperation;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationStatus;
+import software.amazon.awssdk.services.cloudformation.model.StackSetStatus;
 import software.amazon.awssdk.services.cloudformation.model.StackSetSummary;
 import software.amazon.awssdk.services.cloudformation.model.Tag;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesResponse;
@@ -341,6 +342,19 @@ public class TestUtils {
             .stackSetName(STACK_SET_NAME)
             .build();
 
+    public final static StackSet DELETED_SERVICE_MANAGED_STACK_SET = StackSet.builder()
+            .status(StackSetStatus.DELETED)
+            .stackSetId(STACK_SET_ID)
+            .stackSetName(STACK_SET_NAME)
+            .capabilitiesWithStrings(CAPABILITIES)
+            .description(DESCRIPTION)
+            .parameters(SDK_PARAMETER_1, SDK_PARAMETER_2)
+            .templateBody(TEMPLATE_BODY)
+            .permissionModel(PermissionModels.SELF_MANAGED)
+            .tags(TAGGED_RESOURCES)
+            .build();
+
+
     public final static StackSet SERVICE_MANAGED_STACK_SET = StackSet.builder()
             .stackSetId(STACK_SET_ID)
             .stackSetName(STACK_SET_NAME)
@@ -527,6 +541,7 @@ public class TestUtils {
             .build();
 
     public final static ResourceModel SELF_MANAGED_MODEL_NO_INSTANCES_FOR_READ = ResourceModel.builder()
+            .stackSetName(STACK_SET_NAME)
             .stackSetId(STACK_SET_ID)
             .permissionModel(SELF_MANAGED)
             .capabilities(CAPABILITIES)
@@ -537,6 +552,7 @@ public class TestUtils {
             .build();
 
     public final static ResourceModel SELF_MANAGED_MODEL_FOR_READ = ResourceModel.builder()
+            .stackSetName(STACK_SET_NAME)
             .stackSetId(STACK_SET_ID)
             .permissionModel(SELF_MANAGED)
             .capabilities(CAPABILITIES)
@@ -549,6 +565,7 @@ public class TestUtils {
             .build();
 
     public final static ResourceModel SERVICE_MANAGED_MODEL_FOR_READ = ResourceModel.builder()
+            .stackSetName(STACK_SET_NAME)
             .stackSetId(STACK_SET_ID)
             .permissionModel(SERVICE_MANAGED)
             .autoDeployment(AUTO_DEPLOYMENT_ENABLED)
@@ -562,6 +579,7 @@ public class TestUtils {
             .build();
 
     public final static ResourceModel DELEGATED_ADMIN_SERVICE_MANAGED_MODEL_FOR_READ = ResourceModel.builder()
+            .stackSetName(STACK_SET_NAME)
             .stackSetId(STACK_SET_ID)
             .permissionModel(SERVICE_MANAGED)
             .autoDeployment(AUTO_DEPLOYMENT_ENABLED)
@@ -573,6 +591,9 @@ public class TestUtils {
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
             .tags(TAGS)
             .callAs(CALL_AS_DA)
+            .build();
+
+    public final static ResourceModel EMPTY_MODEL = ResourceModel.builder()
             .build();
 
     public final static ResourceModel READ_MODEL = ResourceModel.builder()
@@ -652,6 +673,11 @@ public class TestUtils {
     public final static DescribeStackSetResponse DESCRIBE_NULL_PERMISSION_MODEL_STACK_SET_RESPONSE =
             DescribeStackSetResponse.builder()
                     .stackSet(NULL_PERMISSION_MODEL_STACK_SET)
+                    .build();
+
+    public final static DescribeStackSetResponse DESCRIBE_DELETED_STACK_SET_RESPONSE =
+            DescribeStackSetResponse.builder()
+                    .stackSet(DELETED_SERVICE_MANAGED_STACK_SET)
                     .build();
 
     public final static ListStackInstancesResponse LIST_SELF_MANAGED_STACK_SET_RESPONSE =

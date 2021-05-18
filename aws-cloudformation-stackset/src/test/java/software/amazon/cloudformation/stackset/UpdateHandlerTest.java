@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.cloudformation.model.CreateStackInstances
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetRequest;
@@ -38,6 +39,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STAC
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PREVIOUS_RESOURCE_TAGS;
@@ -79,6 +81,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .build();
 
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().updateStackSet(any(UpdateStackSetRequest.class)))
@@ -121,6 +125,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .build();
 
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().updateStackSet(any(UpdateStackSetRequest.class)))
@@ -177,6 +183,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .build();
 
+
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(proxyClient.client().updateStackSet(any(UpdateStackSetRequest.class)))
@@ -205,6 +214,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .build();
 
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
 

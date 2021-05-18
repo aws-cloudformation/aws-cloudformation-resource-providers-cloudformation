@@ -1,0 +1,12 @@
+{
+  "StackSetName": "testStackSet1",
+  "Description": "Description",
+  "PermissionModel": "INVALID",
+  "TemplateBody": "{ \"AWSTemplateFormatVersion\": \"2010-09-09\", \"Resources\": { \"testWaitHandle\": { \"Type\": \"AWS::CloudFormation::WaitConditionHandle\", \"Properties\": {} } } }",
+  "Tags": [
+    {
+      "Key": "key1",
+      "Value": "value1"
+    }
+  ]
+}

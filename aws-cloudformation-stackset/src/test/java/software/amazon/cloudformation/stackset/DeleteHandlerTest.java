@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.cloudformation.model.CallAs;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -29,15 +30,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_SET_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_DELEGATED_ADMIN_SERVICE_MANAGED_STACK_SET_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LOGICAL_ID;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.REQUEST_TOKEN;
-import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SELF_MANAGED_MODEL;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_NO_INSTANCES_FOR_READ;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_NO_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
@@ -70,6 +73,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess() {
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
         when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
@@ -83,11 +88,12 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).deleteStackInstances(any(DeleteStackInstancesRequest.class));
         verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
         verify(proxyClient.client()).deleteStackSet(any(DeleteStackSetRequest.class));
@@ -101,6 +107,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().deleteStackSet(any(DeleteStackSetRequest.class)))
                 .thenReturn(DELETE_STACK_SET_RESPONSE);
 
@@ -110,10 +118,11 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_MODEL_NO_INSTANCES_FOR_READ);
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).deleteStackSet(any(DeleteStackSetRequest.class));
     }
 
@@ -126,6 +135,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
         when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
@@ -139,10 +150,11 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).deleteStackInstances(any(DeleteStackInstancesRequest.class));
         verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
         verify(proxyClient.client()).deleteStackSet(any(DeleteStackSetRequest.class));
@@ -157,6 +169,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
         when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
@@ -170,10 +184,11 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).deleteStackInstances(argThat(
                 (DeleteStackInstancesRequest req) -> req.callAs() == CallAs.SELF));
         verify(proxyClient.client()).describeStackSetOperation(argThat(
@@ -191,6 +206,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
         when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
@@ -204,10 +221,11 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
+        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).deleteStackInstances(argThat(
                 (DeleteStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
         verify(proxyClient.client()).describeStackSetOperation(argThat(
@@ -235,6 +253,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
+        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_DELEGATED_ADMIN_SERVICE_MANAGED_STACK_SET_RESPONSE);
         when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenThrow(e);
 
@@ -246,6 +266,7 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getErrorCode()).isEqualTo(InvalidRequest);
 
+        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
         verify(proxyClient.client()).deleteStackInstances(argThat(
                 (DeleteStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
