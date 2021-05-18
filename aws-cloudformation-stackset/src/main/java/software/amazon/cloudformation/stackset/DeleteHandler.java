@@ -30,9 +30,12 @@ public class DeleteHandler extends BaseHandlerStd {
         analyzeTemplate(proxyClient, request, placeHolder, Action.DELETE);
 
         return ProgressEvent.progress(model, callbackContext)
+                // describe StackSet in case it is DELETED
+                .then(progress -> describeStackSet(proxy, proxyClient, progress, logger))
                 // delete/stabilize progress chain - delete all associated stack instances
                 .then(progress -> deleteStackInstances(proxy, proxyClient, progress, placeHolder.getDeleteStackInstances(), logger))
-                .then(progress -> deleteStackSet(proxy, proxyClient, progress));
+                .then(progress -> deleteStackSet(proxy, proxyClient, progress))
+                .onSuccess(progress -> ProgressEvent.defaultSuccessHandler(null));
     }
 
     /**

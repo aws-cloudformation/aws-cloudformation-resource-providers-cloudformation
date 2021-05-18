@@ -5,7 +5,10 @@ import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CallAs;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetNotFoundException;
+import software.amazon.awssdk.utils.StringUtils;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -24,6 +27,11 @@ public class ReadHandler extends BaseHandlerStd {
 
         final ResourceModel model = request.getDesiredResourceState();
 
+        // Contract test - MUST return FAILED with a NotFound error code
+        if (StringUtils.isEmpty(model.getStackSetId())) {
+            return ProgressEvent.failed(null, callbackContext, HandlerErrorCode.NotFound, "StackSets is not found");
+        }
+
         StackSet stackSet;
         String callAs = null;
 
@@ -38,15 +46,25 @@ public class ReadHandler extends BaseHandlerStd {
         try {
             stackSet = describeStackSet(proxyClient, model.getStackSetId());
         } catch (StackSetNotFoundException notFoundException) {
+            logger.log(String.format("StackSet [%s] not found in SELF mode", model.getStackSetId()));
             callAs = CallAs.DELEGATED_ADMIN.name();
             try {
                 stackSet = describeStackSet(proxyClient, model.getStackSetId(), callAs);
             } catch (AwsServiceException serviceException) {
-                // A validation error here and not in the previous call should be the result from
-                // the user not being a delegated administrator; remap to StackSetNotFoundException
-                if ("ValidationError".equals(serviceException.awsErrorDetails().errorCode())) {
-                    throw notFoundException;
+
+                // Map StackSetNotFoundException to CfnNotFoundException for contract test
+                if (serviceException instanceof StackSetNotFoundException) {
+                    logger.log(String.format("StackSet [%s] not found in DELEGATED_ADMIN mode", model.getStackSetId()));
+                    throw new CfnNotFoundException(serviceException);
                 }
+                // A validation error here and not in the previous call should be the result from
+                // the user not being a delegated administrator; map to CfnNotFoundException
+                if (serviceException.awsErrorDetails() != null
+                        && "ValidationError".equals(serviceException.awsErrorDetails().errorCode())) {
+                    logger.log(String.format("Encountered ValidationError when finding StackSet [%s] in DELEGATED_ADMIN mode", model.getStackSetId()));
+                    throw new CfnNotFoundException(notFoundException);
+                }
+
                 throw serviceException;
             }
         }

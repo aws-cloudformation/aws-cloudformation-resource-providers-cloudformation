@@ -46,6 +46,7 @@ public class ResourceModelBuilder {
 
         // NOTE: TemplateURL from StackSet service client is currently not retrievable
         final ResourceModel model = ResourceModel.builder()
+                .stackSetName(stackSet.stackSetName())
                 .autoDeployment(translateFromSdkAutoDeployment(stackSet.autoDeployment()))
                 .stackSetId(stackSetId)
                 .description(stackSet.description())

@@ -1,4 +1,5 @@
 {
+    "artifact_type": "RESOURCE",
     "typeName": "AWS::CloudFormation::StackSet",
     "language": "java",
     "runtime": "java8",
@@ -13,5 +14,6 @@
         ],
         "protocolVersion": "2.0.0",
         "codegen_template_path": "guided_aws"
-    }
+    },
+    "executableEntrypoint": "software.amazon.cloudformation.stackset.HandlerWrapperExecutable"
 }
