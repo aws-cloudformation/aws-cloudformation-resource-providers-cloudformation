@@ -58,6 +58,11 @@
       "permissions": [
         "cloudformation:DescribeType"
       ]
+    },
+    "list": {
+      "permissions": [
+        "cloudformation:ListTypes"
+      ]
     }
   },
   "additionalProperties": false
