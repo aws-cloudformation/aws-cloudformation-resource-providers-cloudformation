@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.CfnRegistryException;
 import software.amazon.awssdk.services.cloudformation.model.ListTypesRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListTypesResponse;
 import software.amazon.awssdk.services.cloudformation.model.TypeSummary;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -16,7 +18,9 @@ import software.amazon.cloudformation.test.AbstractMockTestBase;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -117,4 +121,16 @@ public class ListHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         assertThat(response.getErrorCode()).isNull();
     }
 
+    @Test
+    public void handleRequest_registryThrowsException_handlerThrowsCfnGeneralServiceException() {
+        doThrow(CfnRegistryException.builder().build()).when(client).listTypes(any(ListTypesRequest.class));
+        final ResourceModel model = ResourceModel.builder()
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request =
+                ResourceHandlerRequest.<ResourceModel>builder().desiredResourceState(model)
+                        .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, loggerProxy))
+                .isExactlyInstanceOf(CfnGeneralServiceException.class);
+    }
 }

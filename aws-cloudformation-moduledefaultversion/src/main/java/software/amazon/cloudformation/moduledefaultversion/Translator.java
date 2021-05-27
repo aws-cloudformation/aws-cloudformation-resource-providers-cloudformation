@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 public class Translator {
 
     private static final int LIST_MAX_RESULTS = 100;
+    private static final String MODULE_TYPE = "MODULE";
 
     /**
     * Request to read a resource
@@ -33,7 +34,7 @@ public class Translator {
     static DescribeTypeRequest translateToReadRequest(@NonNull final ResourceModel model) {
         final DescribeTypeRequest.Builder builder = DescribeTypeRequest.builder();
         if (model.getArn() == null) {
-            builder.type("MODULE")
+            builder.type(MODULE_TYPE)
                     .typeName(model.getModuleName())
                     .versionId(model.getVersionId());
         } else {
@@ -61,7 +62,7 @@ public class Translator {
   static SetTypeDefaultVersionRequest translateToCreateRequest(@NonNull final ResourceModel model) {
       final SetTypeDefaultVersionRequest.Builder builder = SetTypeDefaultVersionRequest.builder();
       if (model.getArn() == null) {
-          builder.type("MODULE")
+          builder.type(MODULE_TYPE)
                   .typeName(model.getModuleName())
                   .versionId(model.getVersionId());
       } else {
@@ -78,9 +79,9 @@ public class Translator {
                 .build();
     }
 
-    static List<ResourceModel> translateFromListTypesResponse(@NonNull final ListTypesResponse response) {
+    static List<ResourceModel> translateToResourceModel(@NonNull final ListTypesResponse response) {
         return streamOfOrEmpty(response.typeSummaries()).filter(summary -> summary.typeAsString()
-                .equals("MODULE"))
+                .equals(MODULE_TYPE))
                 .map(summary -> ResourceModel.builder()
                         .moduleName(summary.typeName())
                         .versionId(summary.defaultVersionId())
