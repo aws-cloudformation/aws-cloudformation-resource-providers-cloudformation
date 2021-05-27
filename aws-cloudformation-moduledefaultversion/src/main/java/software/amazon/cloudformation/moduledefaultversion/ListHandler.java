@@ -21,30 +21,25 @@ public class ListHandler extends BaseHandlerStd {
             final CallbackContext callbackContext,
             final ProxyClient<CloudFormationClient> proxyClient,
             final Logger logger) {
-        final ListTypesResponse awsResponse = listTypes(request, proxyClient);
+        final ListTypesResponse listTypesResponse = listTypes(request, proxyClient);
 
-        final ProgressEvent<ResourceModel, CallbackContext> progressEvent =
-                ProgressEvent.<ResourceModel, CallbackContext>builder().resourceModels(
-                        Translator.translateFromListTypesResponse(awsResponse))
-                        .nextToken(awsResponse.nextToken())
+        return ProgressEvent.<ResourceModel, CallbackContext>builder().resourceModels(
+                        Translator.translateToResourceModel(listTypesResponse))
+                        .nextToken(listTypesResponse.nextToken())
                         .status(OperationStatus.SUCCESS)
                         .build();
-        return progressEvent;
     }
 
     private ListTypesResponse listTypes(ResourceHandlerRequest<ResourceModel> request,
             ProxyClient<CloudFormationClient> proxyClient) {
-        ListTypesResponse awsResponse;
 
         try {
-            awsResponse =
-                    proxyClient.injectCredentialsAndInvokeV2(Translator.translateToListRequest(request.getNextToken()),
-                            proxyClient.client()::listTypes);
-            return awsResponse;
+            return proxyClient.injectCredentialsAndInvokeV2(
+                    Translator.translateToListRequest(request.getNextToken()),
+                    proxyClient.client()::listTypes);
         } catch (final CfnRegistryException exception) {
             logger.log(String.format("Failed to list modules:\n%s", Arrays.toString(exception.getStackTrace())));
             throw new CfnGeneralServiceException(exception);
         }
     }
-
 }
