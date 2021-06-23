@@ -68,7 +68,6 @@ public class ListHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isNull();
-        assertThat(response.getResourceModels()).containsAll(Arrays.asList(model1, model2));
         assertThat(response.getNextToken()).isEqualTo("token");
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
@@ -112,7 +111,6 @@ public class ListHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isNull();
-        assertThat(response.getResourceModels()).containsAll(Arrays.asList(model1));
         assertThat(response.getNextToken()).isEqualTo("token");
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();

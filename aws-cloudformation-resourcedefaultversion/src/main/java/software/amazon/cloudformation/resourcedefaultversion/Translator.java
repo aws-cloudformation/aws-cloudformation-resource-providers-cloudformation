@@ -57,7 +57,7 @@ public class Translator {
     static List<ResourceModel> translateFromListResponse(@NonNull final ListTypeVersionsResponse awsResponse) {
         return streamOfOrEmpty(awsResponse.typeVersionSummaries())
                 .map(typeSummary -> ResourceModel.builder()
-                        .arn(typeSummary.arn())
+                        .arn(typeSummary.arn().substring(0, typeSummary.arn().lastIndexOf("/")))
                         .build())
                 .collect(Collectors.toList());
     }
