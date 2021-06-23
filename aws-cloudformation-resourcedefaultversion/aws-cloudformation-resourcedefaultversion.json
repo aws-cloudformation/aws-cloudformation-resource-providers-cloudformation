@@ -63,6 +63,11 @@
       "permissions": [
         ""
       ]
+    },
+    "list": {
+      "permissions": [
+        "cloudformation:ListTypes"
+      ]
     }
   },
   "additionalProperties": false
