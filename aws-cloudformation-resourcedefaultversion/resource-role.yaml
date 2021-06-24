@@ -24,6 +24,7 @@ Resources:
               - Effect: Allow
                 Action:
                 - "cloudformation:DescribeType"
+                - "cloudformation:ListTypeVersions"
                 - "cloudformation:SetTypeDefaultVersion"
                 Resource: "*"
 Outputs:
