@@ -2,7 +2,6 @@ package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetsResponse;
-import software.amazon.awssdk.services.cloudformation.model.StackSetStatus;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -32,7 +31,6 @@ public class ListHandler extends BaseHandlerStd {
         final List<ResourceModel> models = response
                 .summaries()
                 .stream()
-                .filter(stackSetSummary -> StackSetStatus.DELETED != stackSetSummary.status())
                 .map(stackSetSummary -> ResourceModelBuilder.builder()
                         .proxyClient(proxyClient)
                         .stackSet(describeStackSet(proxyClient, stackSetSummary.stackSetId()))
