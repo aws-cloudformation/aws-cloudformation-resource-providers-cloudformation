@@ -18,6 +18,7 @@ import software.amazon.cloudformation.stackset.StackInstances;
 
 import java.util.Map;
 
+import static software.amazon.awssdk.services.cloudformation.model.StackSetStatus.ACTIVE;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkDeploymentTargets;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkOperationPreferences;
@@ -124,6 +125,7 @@ public class RequestTranslator {
         return ListStackSetsRequest.builder()
                 .maxResults(LIST_MAX_ITEMS)
                 .nextToken(nextToken)
+                .status(ACTIVE)
                 .build();
     }
 
