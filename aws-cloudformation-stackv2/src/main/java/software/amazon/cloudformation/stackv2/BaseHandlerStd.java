@@ -1,6 +1,6 @@
 package software.amazon.cloudformation.stackv2;
 
-import software.amazon.awssdk.core.SdkClient;
+import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -10,6 +10,9 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 // Placeholder for the functionality that could be shared across Create/Read/Update/Delete/List Handlers
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
+
+  public final int STACK_NAME_MAX_LENGTH = 128;
+
   @Override
   public final ProgressEvent<ResourceModel, CallbackContext> handleRequest(
     final AmazonWebServicesClientProxy proxy,
@@ -29,6 +32,6 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     final AmazonWebServicesClientProxy proxy,
     final ResourceHandlerRequest<ResourceModel> request,
     final CallbackContext callbackContext,
-    final ProxyClient<SdkClient> proxyClient,
+    final ProxyClient<CloudFormationClient> proxyClient,
     final Logger logger);
 }

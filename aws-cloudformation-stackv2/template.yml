@@ -5,7 +5,7 @@ Description: AWS SAM template for the AWS::CloudFormation::StackV2 resource type
 Globals:
   Function:
     Timeout: 180  # docker start-up times can be long for SAM CLI
-    MemorySize: 256
+    MemorySize: 512
 
 Resources:
   TypeFunction:

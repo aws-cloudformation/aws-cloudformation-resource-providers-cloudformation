@@ -1,11 +1,18 @@
 package software.amazon.cloudformation.stackv2;
 
-import com.google.common.collect.Lists;
-import software.amazon.awssdk.awscore.AwsRequest;
-import software.amazon.awssdk.awscore.AwsResponse;
+import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
+import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListStacksRequest;
+import software.amazon.awssdk.services.cloudformation.model.Parameter;
+import software.amazon.awssdk.services.cloudformation.model.Stack;
+import software.amazon.awssdk.services.cloudformation.model.Tag;
+import software.amazon.awssdk.services.cloudformation.model.UpdateStackRequest;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,11 +31,25 @@ public class Translator {
    * @param model resource model
    * @return awsRequest the aws service request to create a resource
    */
-  static AwsRequest translateToCreateRequest(final ResourceModel model) {
-    final AwsRequest awsRequest = null;
-    // TODO: construct a request
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L39-L43
-    return awsRequest;
+  static CreateStackRequest translateToCreateRequest(final ResourceModel model) {
+    return CreateStackRequest.builder()
+        .notificationARNs(model.getNotificationARNs())
+        .parameters(translateToSdkParameters(model))
+        .tags(translateToSdkTags(model))
+        .templateURL(model.getTemplateURL())
+        .timeoutInMinutes(model.getTimeoutInMinutes())
+        .stackName(model.getStackName())
+//        .roleARN()
+//        .capabilities()
+//        .disableRollback()
+//        .onFailure()
+//        .enableTerminationProtection()
+//        .resourceTypes()
+//        .templateBody()
+//        .stackPolicyURL()
+//        .stackPolicyBody()
+//        .rollbackConfiguration()
+        .build();
   }
 
   /**
@@ -36,22 +57,45 @@ public class Translator {
    * @param model resource model
    * @return awsRequest the aws service request to describe a resource
    */
-  static AwsRequest translateToReadRequest(final ResourceModel model) {
-    final AwsRequest awsRequest = null;
-    // TODO: construct a request
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L20-L24
-    return awsRequest;
+  static DescribeStacksRequest translateToReadRequest(final ResourceModel model) {
+    return DescribeStacksRequest.builder()
+        .stackName(model.getArn() == null ? model.getStackName() : model.getArn())
+        .build();
   }
 
   /**
    * Translates resource object from sdk into a resource model
-   * @param awsResponse the aws service describe resource response
+   * @param stack stack returned from DescribeStacks response
    * @return model resource model
    */
-  static ResourceModel translateFromReadResponse(final AwsResponse awsResponse) {
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L58-L73
+  static ResourceModel translateFromReadResponse(final Stack stack) {
+    final List<software.amazon.cloudformation.stackv2.Tag> tagsSystemTagsRemoved = stack.tags().stream()
+        .filter(t -> !t.key().startsWith("aws:"))
+        .map(t -> software.amazon.cloudformation.stackv2.Tag.builder().key(t.key()).value(t.value()).build())
+        .collect(Collectors.toList());
+    final Map<String, String> parameters = stack.parameters().stream()
+        .collect(Collectors.toMap(p -> p.parameterKey(), p -> p.parameterValue()));
+//    stack.stackStatus()
+//    stack.capabilities()
+//    stack.creationTime()
+//    stack.description()
+//    stack.enableTerminationProtection()
+//    stack.outputs()
+//    stack.roleARN()
+//    stack.rollbackConfiguration()
+//    stack.disableRollback()
+//    stack.driftInformation()
+//    stack.stackStatusReason()
+//    stack.lastUpdatedTime()
+//    stack.rootId()
+//    stack.parentId()
     return ResourceModel.builder()
-        //.someProperty(response.property())
+        .arn(stack.stackId())
+        .notificationARNs(stack.notificationARNs().isEmpty() ? null : new HashSet<>(stack.notificationARNs()))
+        .parameters(parameters.isEmpty() ? null : parameters)
+        .stackName(stack.stackName())
+        .tags(tagsSystemTagsRemoved.isEmpty() ? null : tagsSystemTagsRemoved)
+        .timeoutInMinutes(stack.timeoutInMinutes())
         .build();
   }
 
@@ -60,11 +104,12 @@ public class Translator {
    * @param model resource model
    * @return awsRequest the aws service request to delete a resource
    */
-  static AwsRequest translateToDeleteRequest(final ResourceModel model) {
-    final AwsRequest awsRequest = null;
-    // TODO: construct a request
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L33-L37
-    return awsRequest;
+  static DeleteStackRequest translateToDeleteRequest(final ResourceModel model) {
+    return DeleteStackRequest.builder()
+        .stackName(model.getArn())
+//        .retainResources()
+//        .roleARN()
+        .build();
   }
 
   /**
@@ -72,22 +117,25 @@ public class Translator {
    * @param model resource model
    * @return awsRequest the aws service request to modify a resource
    */
-  static AwsRequest translateToFirstUpdateRequest(final ResourceModel model) {
-    final AwsRequest awsRequest = null;
-    // TODO: construct a request
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L45-L50
-    return awsRequest;
-  }
-
-  /**
-   * Request to update some other properties that could not be provisioned through first update request
-   * @param model resource model
-   * @return awsRequest the aws service request to modify a resource
-   */
-  static AwsRequest translateToSecondUpdateRequest(final ResourceModel model) {
-    final AwsRequest awsRequest = null;
-    // TODO: construct a request
-    return awsRequest;
+  static UpdateStackRequest translateToUpdateRequest(final ResourceModel model) {
+    return UpdateStackRequest.builder()
+        .notificationARNs(model.getNotificationARNs())
+        .parameters(translateToSdkParameters(model))
+        .tags(translateToSdkTags(model))
+        .templateURL(model.getTemplateURL())
+        .stackName(model.getArn())
+//        .capabilities()
+//        .roleARN()
+//        .rollbackConfiguration()
+//        .stackPolicyURL()
+//        .rollbackConfiguration()
+//        .resourceTypes()
+//        .stackPolicyBody()
+//        .stackPolicyURL()
+//        .stackPolicyDuringUpdateBody()
+//        .stackPolicyDuringUpdateURL()
+//        .templateBody()
+        .build();
   }
 
   /**
@@ -95,30 +143,33 @@ public class Translator {
    * @param nextToken token passed to the aws service list resources request
    * @return awsRequest the aws service request to list resources within aws account
    */
-  static AwsRequest translateToListRequest(final String nextToken) {
-    final AwsRequest awsRequest = null;
-    // TODO: construct a request
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L26-L31
-    return awsRequest;
-  }
-
-  /**
-   * Translates resource objects from sdk into a resource model (primary identifier only)
-   * @param awsResponse the aws service describe resource response
-   * @return list of resource models
-   */
-  static List<ResourceModel> translateFromListRequest(final AwsResponse awsResponse) {
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L75-L82
-    return streamOfOrEmpty(Lists.newArrayList())
-        .map(resource -> ResourceModel.builder()
-            // include only primary identifier
-            .build())
-        .collect(Collectors.toList());
+  static ListStacksRequest translateToListRequest(final String nextToken) {
+    return ListStacksRequest.builder()
+        .nextToken(nextToken)
+        .build();
   }
 
   private static <T> Stream<T> streamOfOrEmpty(final Collection<T> collection) {
     return Optional.ofNullable(collection)
         .map(Collection::stream)
         .orElseGet(Stream::empty);
+  }
+
+  static List<Parameter> translateToSdkParameters(final ResourceModel model) {
+    if (model.getParameters() == null) {
+      return null;
+    }
+    return model.getParameters().entrySet().stream()
+        .map(e -> Parameter.builder().parameterKey(e.getKey()).parameterValue(e.getValue()).build())
+        .collect(Collectors.toList());
+  }
+
+  static List<Tag> translateToSdkTags(final ResourceModel model) {
+    if (model.getTags() == null) {
+      return null;
+    }
+    return model.getTags().stream()
+        .map(t -> Tag.builder().key(t.getKey()).value(t.getValue()).build())
+        .collect(Collectors.toList());
   }
 }

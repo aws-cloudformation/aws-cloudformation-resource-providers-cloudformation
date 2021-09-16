@@ -1,15 +1,17 @@
 package software.amazon.cloudformation.stackv2;
 
-import software.amazon.awssdk.awscore.AwsRequest;
-import software.amazon.awssdk.awscore.AwsResponse;
+import software.amazon.awssdk.services.cloudformation.model.ListStacksRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListStacksResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static software.amazon.awssdk.services.cloudformation.model.StackStatus.DELETE_COMPLETE;
 
 public class ListHandler extends BaseHandler<CallbackContext> {
 
@@ -20,19 +22,13 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext,
         final Logger logger) {
 
-        final List<ResourceModel> models = new ArrayList<>();
-
-        // STEP 1 [TODO: construct a body of a request]
-        final AwsRequest awsRequest = Translator.translateToListRequest(request.getNextToken());
-
-        // STEP 2 [TODO: make an api call]
-        AwsResponse awsResponse = null; // proxy.injectCredentialsAndInvokeV2(awsRequest, ClientBuilder.getClient()::describeLogGroups);
-
-        // STEP 3 [TODO: get a token for the next page]
-        String nextToken = null;
-
-        // STEP 4 [TODO: construct resource models]
-        // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/master/aws-logs-loggroup/src/main/java/software/amazon/logs/loggroup/ListHandler.java#L19-L21
+        final ListStacksRequest awsRequest = Translator.translateToListRequest(request.getNextToken());
+        final ListStacksResponse awsResponse = proxy.injectCredentialsAndInvokeV2(awsRequest, ClientBuilder.getClient()::listStacks);
+        final String nextToken = awsResponse.nextToken();
+        final List<ResourceModel> models = awsResponse.stackSummaries().stream()
+            .filter(ss -> ss.stackStatus() != DELETE_COMPLETE)
+            .map(ss -> ResourceModel.builder().arn(ss.stackId()).build())
+            .collect(Collectors.toList());
 
         return ProgressEvent.<ResourceModel, CallbackContext>builder()
             .resourceModels(models)
