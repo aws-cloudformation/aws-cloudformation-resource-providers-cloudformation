@@ -4,10 +4,15 @@ import java.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
+import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
+import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
+import software.amazon.awssdk.services.cloudformation.model.DeleteStackResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackResponse;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -21,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -62,6 +68,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
                 .build())
             .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_UPDATE_IN_PROGRESS))
+                .build())
+            .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of(STACK_UPDATE_COMPLETE))
                 .build());
 
@@ -89,6 +98,22 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void stackIdAndNameAreMissing_HandlerThrowsCfnNotFoundException() {
+        final UpdateHandler handler = new UpdateHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
+            .isInstanceOf(CfnNotFoundException.class);
+    }
+
+    @Test
+    public void stackReachesUpdateCompleteCleanup_HandlerReturnsSuccess() {
+        // Mocks
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
@@ -96,7 +121,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
                 .build())
             .thenReturn(DescribeStacksResponse.builder()
-                .stacks(ImmutableList.of(STACK_UPDATE_COMPLETE))
+                .stacks(ImmutableList.of(STACK_UPDATE_COMPLETE_CLEANUP_IN_PROGRESS))
                 .build());
 
         final UpdateHandler handler = new UpdateHandler();
@@ -119,5 +144,58 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void serviceExceptionThrown_HandlerThrowsCfnGeneralServiceException() {
+        // Mocks
+        when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
+            .thenThrow(CloudFormationException.builder().message("service error").build());
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
+                .build());
+
+        final UpdateHandler handler = new UpdateHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .arn(STACK_ID)
+            .stackName(STACK_NAME)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
+            .isInstanceOf(CfnGeneralServiceException.class);
+    }
+
+    @Test
+    public void describeStacksResponseIsEmpty_HandlerReturnsSuccess() {
+        // Mocks
+        when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
+            .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
+                .build())
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of())
+                .build());
+
+        final UpdateHandler handler = new UpdateHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .arn(STACK_ID)
+            .stackName(STACK_NAME)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
+            .isInstanceOf(CfnNotFoundException.class);
     }
 }

@@ -5,9 +5,7 @@ import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
-import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -28,28 +26,7 @@ public class DeleteHandler extends BaseHandlerStd {
         this.logger = logger;
 
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
-            .then(progress ->
-                proxy.initiate("AWS-CloudFormation-StackV2::Delete::PreDeletionCheck", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
-                    .translateToServiceRequest(Translator::translateToReadRequest)
-                    .makeServiceCall((awsRequest, client) -> {
-                        DescribeStacksResponse awsResponse = null;
-                        try {
-                            awsResponse = client.injectCredentialsAndInvokeV2(DescribeStacksRequest.builder()
-                                .stackName(progress.getResourceModel().getArn()).build(), proxyClient.client()::describeStacks);
-                        } catch (final AwsServiceException e) {
-                            if (e.getMessage().contains("does not exist")) {
-                                throw new CfnNotFoundException(e);
-                            }
-                            throw new CfnGeneralServiceException(ResourceModel.TYPE_NAME, e);
-                        }
-                        if (awsResponse.stacks().isEmpty() || awsResponse.stacks().get(0).stackStatus() == StackStatus.DELETE_COMPLETE) {
-                            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getArn());
-                        }
-                        logger.log(String.format("%s has successfully been read.", ResourceModel.TYPE_NAME));
-                        return awsResponse;
-                    })
-                    .progress()
-            )
+            .then(progress -> existenceCheck(progress, proxy, proxyClient, callbackContext, request, "AWS-CloudFormation-StackV2::Delete::PreDeletionCheck", logger))
             .then(progress ->
                 proxy.initiate("AWS-CloudFormation-StackV2::Delete", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToDeleteRequest)
@@ -76,7 +53,7 @@ public class DeleteHandler extends BaseHandlerStd {
                             throw new CfnGeneralServiceException(ResourceModel.TYPE_NAME, e);
                         }
                         if (describeStacksResponse.stacks().isEmpty()) {
-                            return false;
+                            return true;
                         }
                         switch(describeStacksResponse.stacks().get(0).stackStatus()) {
                             case DELETE_COMPLETE: return true;

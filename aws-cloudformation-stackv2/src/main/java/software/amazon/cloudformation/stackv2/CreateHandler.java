@@ -14,6 +14,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,11 +39,14 @@ public class CreateHandler extends BaseHandlerStd {
             model.setStackName(RandomStringUtils.randomAlphabetic(STACK_NAME_MAX_LENGTH));
         }
 
+        List<Tag> mergedTags = new ArrayList<>();
         if (request.getSystemTags() != null) {
-            final List<Tag> systemTags = request.getSystemTags().entrySet().stream()
-                .map(e -> Tag.builder().key(e.getKey()).value(e.getValue()).build())
-                .collect(Collectors.toList());
-            model.setTags(Stream.of(model.getTags(), systemTags).flatMap(Collection::stream).collect(Collectors.toList()));
+            request.getSystemTags().forEach((key, value) -> mergedTags.add(Tag.builder().key(key).value(value).build()));
+            model.setTags(mergedTags);
+        }
+        if (request.getDesiredResourceTags() != null) {
+            request.getDesiredResourceTags().forEach((key, value) -> mergedTags.add(Tag.builder().key(key).value(value).build()));
+            model.setTags(mergedTags);
         }
 
         return ProgressEvent.progress(model, callbackContext)

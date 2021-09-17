@@ -21,4 +21,3 @@ Resources:
       Handler: software.amazon.cloudformation.stackv2.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-cloudformation-stackv2-handler-1.0-SNAPSHOT.jar
-

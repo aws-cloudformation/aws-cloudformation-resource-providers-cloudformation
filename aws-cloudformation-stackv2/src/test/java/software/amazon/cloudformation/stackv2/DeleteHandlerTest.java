@@ -10,6 +10,9 @@ import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -22,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -63,12 +67,153 @@ public class DeleteHandlerTest extends AbstractTestBase {
             .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
                 .build())
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_DELETE_IN_PROGRESS))
+                .build())
             .thenThrow(CloudFormationException.builder().message(NOT_FOUND_ERROR_MESSAGE).build());
 
         final DeleteHandler handler = new DeleteHandler();
 
         final ResourceModel model = ResourceModel.builder()
             .arn(STACK_ID)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isNull();
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void stackIdAndNameAreMissing_HandlerThrowsCfnNotFoundException() {
+        final DeleteHandler handler = new DeleteHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
+            .isInstanceOf(CfnNotFoundException.class);
+    }
+
+    @Test
+    public void serviceExceptionThrown_HandlerThrowsCfnGeneralServiceException() {
+        // Mocks
+        when(proxyClient.client().deleteStack(any(DeleteStackRequest.class)))
+            .thenThrow(CloudFormationException.builder().message("service error").build());
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
+                .build())
+            .thenThrow(CloudFormationException.builder().message(NOT_FOUND_ERROR_MESSAGE).build());
+
+        final DeleteHandler handler = new DeleteHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .arn(STACK_ID)
+            .stackName(STACK_NAME)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
+            .isInstanceOf(CfnGeneralServiceException.class);
+    }
+
+    @Test
+    public void stackReachesDeleteComplete_HandlerReturnsSuccess() {
+        // Mocks
+        when(proxyClient.client().deleteStack(any(DeleteStackRequest.class)))
+            .thenReturn(DeleteStackResponse.builder().build());
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_DELETE_IN_PROGRESS))
+                .build())
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_DELETE_COMPLETE))
+                .build());
+
+        final DeleteHandler handler = new DeleteHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .arn(STACK_ID)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isNull();
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void stackReachesDeleteFailed_HandlerThrowsCfnNotStabilizedException() {
+        // Mocks
+        when(proxyClient.client().deleteStack(any(DeleteStackRequest.class)))
+            .thenReturn(DeleteStackResponse.builder().build());
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
+                .build())
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_DELETE_FAILED))
+                .build());
+
+        final DeleteHandler handler = new DeleteHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .arn(STACK_ID)
+            .stackName(STACK_NAME)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
+            .isInstanceOf(CfnNotStabilizedException.class);
+    }
+
+    @Test
+    public void describeStacksResponseIsEmpty_HandlerReturnsSuccess() {
+        // Mocks
+        when(proxyClient.client().deleteStack(any(DeleteStackRequest.class)))
+            .thenReturn(DeleteStackResponse.builder().build());
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
+                .build())
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of())
+                .build());
+
+        final DeleteHandler handler = new DeleteHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .arn(STACK_ID)
+            .stackName(STACK_NAME)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()

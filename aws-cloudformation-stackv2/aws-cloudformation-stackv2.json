@@ -1,102 +1,116 @@
 {
-    "typeName" : "AWS::CloudFormation::StackV2",
-    "description" : "Resource Type definition for AWS::CloudFormation::Stack",
-    "additionalProperties" : false,
-    "properties" : {
-        "StackName": {
-            "type": "string",
-            "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
-            "maxLength": 128
-        },
-        "Arn" : {
-            "type" : "string"
-        },
-        "NotificationARNs" : {
-            "type" : "array",
-            "uniqueItems" : true,
-            "insertionOrder": false,
-            "items" : {
-                "type" : "string"
-            },
-            "maxItems": 5
-        },
-        "Parameters" : {
-            "type" : "object",
-            "additionalProperties": false,
-            "patternProperties" : {
-                "[a-zA-Z0-9]+" : {
-                    "type" : "string"
-                }
-            }
-        },
-        "Tags" : {
-            "type" : "array",
-            "uniqueItems" : false,
-            "insertionOrder": false,
-            "items" : {
-                "$ref" : "#/definitions/Tag"
-            },
-            "maxItems": 50
-        },
-        "TemplateURL" : {
-            "type" : "string",
-            "minLength": 1,
-            "maxLength": 1024
-        },
-        "TimeoutInMinutes" : {
-            "type" : "integer",
-            "minimum": 1
-        }
+  "typeName": "AWS::CloudFormation::StackV2",
+  "description": "Resource Type definition for AWS::CloudFormation::Stack",
+  "additionalProperties": false,
+  "properties": {
+    "StackName": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+      "maxLength": 128
     },
-    "definitions" : {
-        "Tag" : {
-            "type" : "object",
-            "additionalProperties" : false,
-            "properties" : {
-                "Key" : {
-                    "type" : "string"
-                },
-                "Value" : {
-                    "type" : "string"
-                }
-            },
-            "required" : [ "Value", "Key" ]
-        }
+    "Arn": {
+      "type": "string"
     },
-    "required" : [ "TemplateURL" ],
-    "primaryIdentifier" : [ "/properties/Arn" ],
-    "readOnlyProperties" : [ "/properties/Arn" ],
-    "writeOnlyProperties" : [ "/properties/TemplateURL" ],
-    "createOnlyProperties" : [ "/properties/StackName" ],
-    "taggable": true,
-    "handlers": {
-        "create": {
-            "permissions": [
-                "cloudformation:DescribeStacks",
-                "cloudformation:CreateStack"
-            ]
-        },
-        "read": {
-            "permissions": [
-                "cloudformation:DescribeStacks"
-            ]
-        },
-        "update": {
-            "permissions": [
-                "cloudformation:DescribeStacks",
-                "cloudformation:UpdateStack"
-            ]
-        },
-        "delete": {
-            "permissions": [
-                "cloudformation:DescribeStacks",
-                "cloudformation:DeleteStack"
-            ]
-        },
-        "list": {
-            "permissions": [
-                "cloudformation:ListStacks"
-            ]
+    "NotificationARNs": {
+      "type": "array",
+      "uniqueItems": true,
+      "insertionOrder": false,
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 5
+    },
+    "Parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "[a-zA-Z0-9]+": {
+          "type": "string"
         }
+      }
+    },
+    "Tags": {
+      "type": "array",
+      "uniqueItems": false,
+      "insertionOrder": false,
+      "items": {
+        "$ref": "#/definitions/Tag"
+      },
+      "maxItems": 50
+    },
+    "TemplateURL": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "TimeoutInMinutes": {
+      "type": "integer",
+      "minimum": 1
     }
+  },
+  "definitions": {
+    "Tag": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Key": {
+          "type": "string"
+        },
+        "Value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "Value",
+        "Key"
+      ]
+    }
+  },
+  "required": [
+    "TemplateURL"
+  ],
+  "primaryIdentifier": [
+    "/properties/Arn"
+  ],
+  "readOnlyProperties": [
+    "/properties/Arn"
+  ],
+  "writeOnlyProperties": [
+    "/properties/TemplateURL"
+  ],
+  "createOnlyProperties": [
+    "/properties/StackName",
+    "/properties/TimeoutInMinutes"
+  ],
+  "taggable": true,
+  "handlers": {
+    "create": {
+      "permissions": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:CreateStack"
+      ]
+    },
+    "read": {
+      "permissions": [
+        "cloudformation:DescribeStacks"
+      ]
+    },
+    "update": {
+      "permissions": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:UpdateStack"
+      ]
+    },
+    "delete": {
+      "permissions": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:DeleteStack"
+      ]
+    },
+    "list": {
+      "permissions": [
+        "cloudformation:ListStacks"
+      ]
+    }
+  }
 }

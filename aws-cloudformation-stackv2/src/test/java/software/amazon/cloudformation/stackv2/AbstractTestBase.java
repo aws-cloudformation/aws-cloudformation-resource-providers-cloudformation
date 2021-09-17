@@ -27,16 +27,62 @@ public class AbstractTestBase {
       .stackName(STACK_NAME)
       .stackStatus(StackStatus.CREATE_COMPLETE)
       .build();
-  protected static final Stack STACK_DELETE_COMPLETE = Stack.builder()
+  protected static final Stack STACK_CREATE_FAILED = Stack.builder()
       .stackId(STACK_ID)
       .stackName(STACK_NAME)
-      .stackStatus(StackStatus.DELETE_COMPLETE)
+      .stackStatus(StackStatus.CREATE_FAILED)
+      .build();
+  protected static final Stack STACK_CREATE_IN_PROGRESS = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.CREATE_IN_PROGRESS)
       .build();
   protected static final Stack STACK_UPDATE_COMPLETE = Stack.builder()
       .stackId(STACK_ID)
       .stackName(STACK_NAME)
       .stackStatus(StackStatus.UPDATE_COMPLETE)
       .build();
+  protected static final Stack STACK_UPDATE_IN_PROGRESS = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.UPDATE_IN_PROGRESS)
+      .build();
+  protected static final Stack STACK_UPDATE_COMPLETE_CLEANUP_IN_PROGRESS = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.UPDATE_COMPLETE_CLEANUP_IN_PROGRESS)
+      .build();
+  protected static final Stack STACK_UPDATE_ROLLBACK_COMPLETE = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.UPDATE_COMPLETE)
+      .build();
+  protected static final Stack STACK_UPDATE_ROLLBACK_IN_PROGRESS = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.UPDATE_IN_PROGRESS)
+      .build();
+  protected static final Stack STACK_UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.UPDATE_COMPLETE_CLEANUP_IN_PROGRESS)
+      .build();
+  protected static final Stack STACK_DELETE_IN_PROGRESS = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.DELETE_IN_PROGRESS)
+      .build();
+  protected static final Stack STACK_DELETE_FAILED = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.DELETE_FAILED)
+      .build();
+  protected static final Stack STACK_DELETE_COMPLETE = Stack.builder()
+      .stackId(STACK_ID)
+      .stackName(STACK_NAME)
+      .stackStatus(StackStatus.DELETE_COMPLETE)
+      .build();
+
   protected static final String NOT_FOUND_ERROR_MESSAGE = String.format("Stack with id %s does not exist (Service: CloudFormation, Status Code: 400, Request ID: %s, Extended Request ID: null)", STACK_ID, UUID.randomUUID());
 
   static {

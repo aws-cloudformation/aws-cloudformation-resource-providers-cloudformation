@@ -1,16 +1,16 @@
 {
-    "TemplateURL": "{{ContractTestTemplateURL}}",
-    "NotificationARNs": [
-        "{{ContractTestNotificationARN1}}"
-    ],
-    "Parameters": {
-        "Param": "ParamVal"
-    },
-    "Tags": [
-        {
-            "Key" : "tag1",
-            "Value" : "val"
-        }
-    ],
-    "TimeoutInMinutes": 15
+  "TemplateURL": "{{ContractTestTemplateURL}}",
+  "NotificationARNs": [
+    "{{ContractTestNotificationARN1}}"
+  ],
+  "Parameters": {
+    "Param": "ParamVal"
+  },
+  "Tags": [
+    {
+      "Key": "tag1",
+      "Value": "val"
+    }
+  ],
+  "TimeoutInMinutes": 15
 }

@@ -7,23 +7,27 @@ Resources:
     Properties:
       Subscription:
         - Protocol: sqs
-          Endpoint: !GetAtt MyQueue.Arn
+          Endpoint:
+            GetAtt: MyQueue.Arn
   MyTopic2:
     Type: AWS::SNS::Topic
     Properties:
       Subscription:
         - Protocol: sqs
-          Endpoint: !GetAtt MyQueue.Arn
+          Endpoint:
+            GetAtt: MyQueue.Arn
 Outputs:
   TemplateURL:
     Value: <REPLACE WITH YOUR TEMPLATE URL>
     Export:
       Name: ContractTestTemplateURL
   TopicArn1:
-    Value: !Ref MyTopic
+    Value:
+      Ref: MyTopic
     Export:
       Name: ContractTestNotificationARN1
   TopicArn2:
-    Value: !Ref MyTopic2
+    Value:
+      Ref: MyTopic2
     Export:
       Name: ContractTestNotificationARN2

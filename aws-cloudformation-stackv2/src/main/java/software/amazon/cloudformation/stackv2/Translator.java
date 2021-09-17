@@ -39,16 +39,6 @@ public class Translator {
         .templateURL(model.getTemplateURL())
         .timeoutInMinutes(model.getTimeoutInMinutes())
         .stackName(model.getStackName())
-//        .roleARN()
-//        .capabilities()
-//        .disableRollback()
-//        .onFailure()
-//        .enableTerminationProtection()
-//        .resourceTypes()
-//        .templateBody()
-//        .stackPolicyURL()
-//        .stackPolicyBody()
-//        .rollbackConfiguration()
         .build();
   }
 
@@ -75,20 +65,6 @@ public class Translator {
         .collect(Collectors.toList());
     final Map<String, String> parameters = stack.parameters().stream()
         .collect(Collectors.toMap(p -> p.parameterKey(), p -> p.parameterValue()));
-//    stack.stackStatus()
-//    stack.capabilities()
-//    stack.creationTime()
-//    stack.description()
-//    stack.enableTerminationProtection()
-//    stack.outputs()
-//    stack.roleARN()
-//    stack.rollbackConfiguration()
-//    stack.disableRollback()
-//    stack.driftInformation()
-//    stack.stackStatusReason()
-//    stack.lastUpdatedTime()
-//    stack.rootId()
-//    stack.parentId()
     return ResourceModel.builder()
         .arn(stack.stackId())
         .notificationARNs(stack.notificationARNs().isEmpty() ? null : new HashSet<>(stack.notificationARNs()))
@@ -107,8 +83,6 @@ public class Translator {
   static DeleteStackRequest translateToDeleteRequest(final ResourceModel model) {
     return DeleteStackRequest.builder()
         .stackName(model.getArn())
-//        .retainResources()
-//        .roleARN()
         .build();
   }
 
@@ -124,17 +98,6 @@ public class Translator {
         .tags(translateToSdkTags(model))
         .templateURL(model.getTemplateURL())
         .stackName(model.getArn())
-//        .capabilities()
-//        .roleARN()
-//        .rollbackConfiguration()
-//        .stackPolicyURL()
-//        .rollbackConfiguration()
-//        .resourceTypes()
-//        .stackPolicyBody()
-//        .stackPolicyURL()
-//        .stackPolicyDuringUpdateBody()
-//        .stackPolicyDuringUpdateURL()
-//        .templateBody()
         .build();
   }
 
