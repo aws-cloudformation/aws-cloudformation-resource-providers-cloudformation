@@ -33,7 +33,7 @@ public class ListHandler extends BaseHandlerStd {
                 .stream()
                 .map(stackSetSummary -> ResourceModelBuilder.builder()
                         .proxyClient(proxyClient)
-                        .stackSet(describeStackSet(proxyClient, stackSetSummary.stackSetId()))
+                        .stackSet(describeStackSet(proxyClient, stackSetSummary.stackSetId(), logger))
                         .build()
                         .buildModel())
                 .collect(Collectors.toList());
