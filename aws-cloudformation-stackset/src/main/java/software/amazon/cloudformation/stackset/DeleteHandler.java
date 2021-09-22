@@ -28,10 +28,10 @@ public class DeleteHandler extends BaseHandlerStd {
         // Analyzes stack instances group for delete
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         analyzeTemplate(proxyClient, request, placeHolder, Action.DELETE);
+        // describe StackSet in case it is DELETED
+        describeStackSet(proxyClient, model.getStackSetId(), model.getCallAs(), logger);
 
         return ProgressEvent.progress(model, callbackContext)
-                // describe StackSet in case it is DELETED
-                .then(progress -> describeStackSet(proxy, proxyClient, progress, logger))
                 // delete/stabilize progress chain - delete all associated stack instances
                 .then(progress -> deleteStackInstances(proxy, proxyClient, progress, placeHolder.getDeleteStackInstances(), logger))
                 .then(progress -> deleteStackSet(proxy, proxyClient, progress))

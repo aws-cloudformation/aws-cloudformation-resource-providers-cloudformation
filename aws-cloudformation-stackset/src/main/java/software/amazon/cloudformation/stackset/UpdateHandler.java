@@ -30,10 +30,10 @@ public class UpdateHandler extends BaseHandlerStd {
         final ResourceModel previousModel = request.getPreviousResourceState();
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         analyzeTemplate(proxyClient, request, placeHolder, Action.UPDATE);
+        // describe StackSet in case it is DELETED
+        describeStackSet(proxyClient, model.getStackSetId(), model.getCallAs(), logger);
 
         return ProgressEvent.progress(model, callbackContext)
-                // describe StackSet in case it is DELETED
-                .then(progress -> describeStackSet(proxy, proxyClient, progress, logger))
                 .then(progress -> deleteStackInstances(proxy, proxyClient, progress, placeHolder.getDeleteStackInstances(), logger))
                 .then(progress -> updateStackSet(proxy, proxyClient, request, progress, previousModel))
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, placeHolder.getCreateStackInstances(), logger))

@@ -251,70 +251,35 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         return ProgressEvent.progress(model, callbackContext);
     }
 
-    /**
-     * Describe {@link StackSet} from service client using stackSetId
-     *
-     * @param proxy                 {@link AmazonWebServicesClientProxy} to initiate proxy chain
-     * @param client                the aws service client {@link ProxyClient<CloudFormationClient>} to make the call
-     * @param progress              {@link ProgressEvent<ResourceModel, CallbackContext>} to place hold the current progress data
-     * @param logger                {@link Logger}
-     * @throws CfnNotFoundException If the StackSet is DELETED, return NotFound exception
-     * @return {@link ProgressEvent<ResourceModel, CallbackContext>}
-     */
-    protected ProgressEvent<ResourceModel, CallbackContext> describeStackSet(
-            final AmazonWebServicesClientProxy proxy,
-            final ProxyClient<CloudFormationClient> client,
-            final ProgressEvent<ResourceModel, CallbackContext> progress,
-            final Logger logger) {
-
-        final ResourceModel model = progress.getResourceModel();
-        final CallbackContext callbackContext = progress.getCallbackContext();
-
-        final ProgressEvent<ResourceModel, CallbackContext> progressEvent = proxy
-                .newInitiator(client, model, callbackContext)
-                .translateToServiceRequest(modelRequest -> describeStackSetRequest(modelRequest.getStackSetId(), modelRequest.getCallAs()))
-                .backoffDelay(MULTIPLE_OF)
-                .makeServiceCall((modelRequest, proxyInvocation) -> {
-                    final DescribeStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::describeStackSet);
-                    logger.log(String.format("Describe StackSet [%s] successfully", model.getStackSetId()));
-                    if (StackSetStatus.DELETED == response.stackSet().status()) {
-                        logger.log(String.format("StackSet [%s] is %s", model.getStackSetId(), StackSetStatus.DELETED.toString()));
-                        throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getStackSetId());
-                    }
-                    return response;
-                })
-                .progress();
-
-        if (!progressEvent.isSuccess()) {
-            return progressEvent;
-        }
-
-        return ProgressEvent.progress(model, callbackContext);
-    }
-
     protected StackSet describeStackSet(final ProxyClient<CloudFormationClient> proxyClient,
-                                        final String stackSetId) {
-        return describeStackSet(proxyClient, stackSetId, null);
+                                        final String stackSetId,
+                                        final Logger logger) {
+        return describeStackSet(proxyClient, stackSetId, null, logger);
     }
 
     /**
      * Get {@link StackSet} from service client using stackSetId
      *
-     * @param stackSetId StackSet Id
+     * @param stackSetId    StackSet Id
+     * @param callAs        CallAS
+     * @param logger        {@link Logger}
      * @throws CfnNotFoundException If the StackSet is DELETED, return NotFound exception
      * @return {@link StackSet}
      */
     protected StackSet describeStackSet(
             final ProxyClient<CloudFormationClient> proxyClient,
             final String stackSetId,
-            final String callAs) {
+            final String callAs,
+            final Logger logger) {
 
         final DescribeStackSetResponse stackSetResponse = proxyClient.injectCredentialsAndInvokeV2(
                 describeStackSetRequest(stackSetId, callAs), proxyClient.client()::describeStackSet);
+        logger.log(String.format("Describe StackSet [%s] successfully", stackSetId));
         final StackSet stackSet = stackSetResponse.stackSet();
         // Apparently, deleted StackSets would be still retrievable using identifier StackSetId
         // We would need to throw CfnNotFoundException in this case for contract test
         if (StackSetStatus.DELETED == stackSet.status()) {
+            logger.log(String.format("StackSet [%s] is %s", stackSetId, StackSetStatus.DELETED.toString()));
             throw new CfnNotFoundException(ResourceModel.TYPE_NAME, stackSetId);
         }
         return stackSet;

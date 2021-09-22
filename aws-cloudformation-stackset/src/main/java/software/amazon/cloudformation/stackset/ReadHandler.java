@@ -44,12 +44,12 @@ public class ReadHandler extends BaseHandlerStd {
         * so long as the calling account is a management account or a delegated administrator
         */
         try {
-            stackSet = describeStackSet(proxyClient, model.getStackSetId());
+            stackSet = describeStackSet(proxyClient, model.getStackSetId(), logger);
         } catch (StackSetNotFoundException notFoundException) {
             logger.log(String.format("StackSet [%s] not found in SELF mode", model.getStackSetId()));
             callAs = CallAs.DELEGATED_ADMIN.name();
             try {
-                stackSet = describeStackSet(proxyClient, model.getStackSetId(), callAs);
+                stackSet = describeStackSet(proxyClient, model.getStackSetId(), callAs, logger);
             } catch (AwsServiceException serviceException) {
 
                 // Map StackSetNotFoundException to CfnNotFoundException for contract test
