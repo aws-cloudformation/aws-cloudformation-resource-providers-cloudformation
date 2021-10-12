@@ -1,7 +1,6 @@
 package software.amazon.cloudformation.stackset.util;
 
 import com.google.common.collect.ImmutableMap;
-import software.amazon.awssdk.services.cloudformation.model.Capability;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
@@ -14,7 +13,6 @@ import software.amazon.awssdk.services.cloudformation.model.ListStackSetsRespons
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
 import software.amazon.awssdk.services.cloudformation.model.RegionConcurrencyType;
-import software.amazon.awssdk.services.cloudformation.model.StackInstance;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperation;

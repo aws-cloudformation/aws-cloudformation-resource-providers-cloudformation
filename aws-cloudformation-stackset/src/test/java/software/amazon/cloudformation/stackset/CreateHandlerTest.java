@@ -3,7 +3,6 @@ package software.amazon.cloudformation.stackset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
@@ -16,19 +15,15 @@ import software.amazon.awssdk.services.cloudformation.model.CreateStackSetReques
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import java.time.Duration;
+import software.amazon.cloudformation.test.AbstractMockTestBase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,23 +48,19 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_SU
 import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
 
 @ExtendWith(MockitoExtension.class)
-public class CreateHandlerTest extends AbstractTestBase {
+public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient> {
 
-    @Mock
-    CloudFormationClient sdkClient;
-    private CreateHandler handler;
     private ResourceHandlerRequest<ResourceModel> request;
-    @Mock
-    private AmazonWebServicesClientProxy proxy;
-    @Mock
-    private ProxyClient<CloudFormationClient> proxyClient;
+    private CreateHandler handler;
+    private CloudFormationClient client;
+    protected CreateHandlerTest() {
+        super(CloudFormationClient.class);
+    }
 
     @BeforeEach
     public void setup() {
-        proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
-        sdkClient = mock(CloudFormationClient.class);
-        proxyClient = MOCK_PROXY(proxy, sdkClient);
         handler = new CreateHandler();
+        client = getServiceClient();
     }
 
     @Test
@@ -82,17 +73,17 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
-        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
-        when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -102,14 +93,14 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(argThat(
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(argThat(
                 (CreateStackSetRequest req) -> req.callAs() == CallAs.SELF));
-        verify(proxyClient.client()).createStackInstances(argThat(
+        verify(client).createStackInstances(argThat(
                 (CreateStackInstancesRequest req) -> req.callAs() == CallAs.SELF));
-        verify(proxyClient.client()).describeStackSetOperation(argThat(
+        verify(client).describeStackSetOperation(argThat(
                 (DescribeStackSetOperationRequest req) -> req.callAs() == CallAs.SELF));
     }
 
@@ -123,17 +114,17 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
-        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
-        when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -143,12 +134,12 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(argThat(
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(argThat(
                 (CreateStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
-        verify(proxyClient.client()).createStackInstances(argThat(
+        verify(client).createStackInstances(argThat(
                 (CreateStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
-        verify(proxyClient.client()).describeStackSetOperation(argThat(
+        verify(client).describeStackSetOperation(argThat(
                 (DescribeStackSetOperationRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 
@@ -162,17 +153,17 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
-        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
-        when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -182,12 +173,12 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(argThat(
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(argThat(
                 (CreateStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
-        verify(proxyClient.client()).createStackInstances(argThat(
+        verify(client).createStackInstances(argThat(
                 (CreateStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
-        verify(proxyClient.client()).describeStackSetOperation(argThat(
+        verify(client).describeStackSetOperation(argThat(
                 (DescribeStackSetOperationRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 
@@ -202,17 +193,17 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
-        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
-        when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -222,10 +213,10 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
-        verify(proxyClient.client(), times(2)).createStackInstances(any(CreateStackInstancesRequest.class));
-        verify(proxyClient.client(), times(2)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
+        verify(client, times(2)).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client, times(2)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
     }
 
     @Test
@@ -238,13 +229,13 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
-        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -254,8 +245,8 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
 
     }
 
@@ -268,17 +259,17 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
-        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
-        when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -288,10 +279,10 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
-        verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
-        verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
+        verify(client).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
     }
 
     @Test
@@ -311,21 +302,21 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
-        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
                 .thenThrow(e);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getErrorCode()).isEqualTo(InvalidRequest);
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(argThat(
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(argThat(
                 (CreateStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 
@@ -339,27 +330,27 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
-        when(proxyClient.client().createStackSet(any(CreateStackSetRequest.class)))
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
                 .thenReturn(CREATE_STACK_SET_RESPONSE);
-        when(proxyClient.client().createStackInstances(any(CreateStackInstancesRequest.class)))
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_STOPPED_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getErrorCode()).isEqualTo(InternalFailure);
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
-        verify(proxyClient.client()).createStackSet(any(CreateStackSetRequest.class));
-        verify(proxyClient.client()).createStackInstances(any(CreateStackInstancesRequest.class));
-        verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
+        verify(client).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
     }
 
     @Test
@@ -372,13 +363,14 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK);
 
-        assertThrows(CfnInvalidRequestException.class,
-                () -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger));
+        assertThrows(
+                CfnInvalidRequestException.class,
+                () -> handler.handleRequest(proxy, request, null, loggerProxy));
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
     }
 
     @Test
@@ -391,13 +383,14 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
 
-        assertThrows(CfnInvalidRequestException.class,
-                () -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger));
+        assertThrows(
+                CfnInvalidRequestException.class,
+                () -> handler.handleRequest(proxy, request, null, loggerProxy));
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
     }
 
     @Test
@@ -409,12 +402,13 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
 
-        assertThrows(CfnInvalidRequestException.class,
-                () -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger));
+        assertThrows(
+                CfnInvalidRequestException.class,
+                () -> handler.handleRequest(proxy, request, null, loggerProxy));
 
-        verify(proxyClient.client()).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
     }
 }

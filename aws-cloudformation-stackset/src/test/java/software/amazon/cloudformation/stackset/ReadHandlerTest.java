@@ -3,7 +3,6 @@ package software.amazon.cloudformation.stackset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
@@ -13,20 +12,16 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequ
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.StackSetNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import java.time.Duration;
+import software.amazon.cloudformation.test.AbstractMockTestBase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SERVICE_MANAGED_MODEL_FOR_READ;
@@ -42,23 +37,19 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.READ_MODEL_
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL_FOR_READ;
 
 @ExtendWith(MockitoExtension.class)
-public class ReadHandlerTest extends AbstractTestBase {
+public class ReadHandlerTest extends AbstractMockTestBase<CloudFormationClient> {
 
-    @Mock
-    CloudFormationClient sdkClient;
     private ReadHandler handler;
+    private CloudFormationClient client;
     private ResourceHandlerRequest<ResourceModel> request;
-    @Mock
-    private AmazonWebServicesClientProxy proxy;
-    @Mock
-    private ProxyClient<CloudFormationClient> proxyClient;
+    protected ReadHandlerTest() {
+        super(CloudFormationClient.class);
+    }
 
     @BeforeEach
     public void setup() {
         handler = new ReadHandler();
-        proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
-        sdkClient = mock(CloudFormationClient.class);
-        proxyClient = MOCK_PROXY(proxy, sdkClient);
+        client = getServiceClient();
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(READ_MODEL)
                 .build();
@@ -67,13 +58,13 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_SelfManagedSS_Success() {
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
+        when(client.listStackInstances(any(ListStackInstancesRequest.class)))
                 .thenReturn(LIST_SELF_MANAGED_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -84,20 +75,20 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client).listStackInstances(any(ListStackInstancesRequest.class));
     }
 
     @Test
     public void handleRequest_PermissionModelIsNull() {
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_NULL_PERMISSION_MODEL_STACK_SET_RESPONSE);
-        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
+        when(client.listStackInstances(any(ListStackInstancesRequest.class)))
                 .thenReturn(LIST_SELF_MANAGED_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -108,8 +99,8 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).listStackInstances(any(ListStackInstancesRequest.class));
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client).listStackInstances(any(ListStackInstancesRequest.class));
     }
 
     @Test
@@ -119,7 +110,7 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, emptyModelRequest, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, emptyModelRequest, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
@@ -141,15 +132,15 @@ public class ReadHandlerTest extends AbstractTestBase {
                         .errorCode("ValidationError")
                         .build())
                 .build();
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenThrow(StackSetNotFoundException.class)
                 .thenThrow(validationException);
 
-        assertThrows(CfnNotFoundException.class, () -> handler.handleRequest(proxy, serviceManagedRequest, new CallbackContext(), proxyClient, logger));
+        assertThrows(CfnNotFoundException.class, () -> handler.handleRequest(proxy, serviceManagedRequest, null, loggerProxy));
 
-        verify(proxyClient.client()).describeStackSet(argThat(
+        verify(client).describeStackSet(argThat(
                 (DescribeStackSetRequest req) -> req.callAs() == null));
-        verify(proxyClient.client()).describeStackSet(argThat(
+        verify(client).describeStackSet(argThat(
                 (DescribeStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 
@@ -158,14 +149,14 @@ public class ReadHandlerTest extends AbstractTestBase {
         ResourceHandlerRequest<ResourceModel> serviceManagedRequest = request.toBuilder()
                 .desiredResourceState(READ_MODEL_DELEGATED_ADMIN)
                 .build();
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenThrow(StackSetNotFoundException.class)
                 .thenReturn(DESCRIBE_DELEGATED_ADMIN_SERVICE_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().listStackInstances(any(ListStackInstancesRequest.class)))
+        when(client.listStackInstances(any(ListStackInstancesRequest.class)))
                 .thenReturn(LIST_SERVICE_MANAGED_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, serviceManagedRequest, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, serviceManagedRequest, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -176,11 +167,11 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeStackSet(argThat(
+        verify(client).describeStackSet(argThat(
                 (DescribeStackSetRequest req) -> req.callAs() == null));
-        verify(proxyClient.client()).describeStackSet(argThat(
+        verify(client).describeStackSet(argThat(
                 (DescribeStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
-        verify(proxyClient.client()).listStackInstances(argThat(
+        verify(client).listStackInstances(argThat(
                 (ListStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 
@@ -194,16 +185,16 @@ public class ReadHandlerTest extends AbstractTestBase {
                         .errorCode("ThrottlingException")
                         .build())
                 .build();
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenThrow(StackSetNotFoundException.class)
                 .thenThrow(throttlingException);
 
-        AwsServiceException thrown = assertThrows(AwsServiceException.class, () -> handler.handleRequest(proxy, serviceManagedRequest, new CallbackContext(), proxyClient, logger));
+        AwsServiceException thrown = assertThrows(AwsServiceException.class, () -> handler.handleRequest(proxy, serviceManagedRequest, null, loggerProxy));
         assertThat(thrown.awsErrorDetails().errorCode()).isEqualTo("ThrottlingException");
 
-        verify(proxyClient.client()).describeStackSet(argThat(
+        verify(client).describeStackSet(argThat(
                 (DescribeStackSetRequest req) -> req.callAs() == null));
-        verify(proxyClient.client()).describeStackSet(argThat(
+        verify(client).describeStackSet(argThat(
                 (DescribeStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 
@@ -213,10 +204,10 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .desiredResourceState(SELF_MANAGED_MODEL_FOR_READ)
                 .build();
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_DELETED_STACK_SET_RESPONSE);
 
-        assertThrows(CfnNotFoundException.class, () -> handler.handleRequest(proxy, serviceManagedRequest, new CallbackContext(), proxyClient, logger));
+        assertThrows(CfnNotFoundException.class, () -> handler.handleRequest(proxy, serviceManagedRequest, null, loggerProxy));
     }
 
     @Test
@@ -225,11 +216,12 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .desiredResourceState(SELF_MANAGED_MODEL_FOR_READ)
                 .build();
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenThrow(StackSetNotFoundException.class);
 
-        assertThrows(CfnNotFoundException.class,
-                () -> handler.handleRequest(proxy, serviceManagedRequest, new CallbackContext(), proxyClient, logger));
+        assertThrows(
+                CfnNotFoundException.class,
+                () -> handler.handleRequest(proxy, serviceManagedRequest, null, loggerProxy));
     }
 
     @Test
@@ -239,15 +231,15 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .build();
         AwsServiceException validationException = AwsServiceException.builder()
                 .build();
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenThrow(StackSetNotFoundException.class)
                 .thenThrow(validationException);
 
-        assertThrows(AwsServiceException.class, () -> handler.handleRequest(proxy, serviceManagedRequest, new CallbackContext(), proxyClient, logger));
+        assertThrows(AwsServiceException.class, () -> handler.handleRequest(proxy, serviceManagedRequest, null, loggerProxy));
 
-        verify(proxyClient.client()).describeStackSet(argThat(
+        verify(client).describeStackSet(argThat(
                 (DescribeStackSetRequest req) -> req.callAs() == null));
-        verify(proxyClient.client()).describeStackSet(argThat(
+        verify(client).describeStackSet(argThat(
                 (DescribeStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 }
