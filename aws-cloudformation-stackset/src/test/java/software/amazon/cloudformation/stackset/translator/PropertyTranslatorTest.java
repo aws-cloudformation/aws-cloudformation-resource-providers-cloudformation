@@ -3,6 +3,7 @@ package software.amazon.cloudformation.stackset.translator;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.cloudformation.model.RegionConcurrencyType;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationPreferences;
+import software.amazon.awssdk.services.cloudformation.model.ManagedExecution;
 import software.amazon.cloudformation.stackset.AutoDeployment;
 import software.amazon.cloudformation.stackset.util.StackInstance;
 import software.amazon.cloudformation.stackset.util.TestUtils;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkParameters;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkTags;
+import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkManagedExecution;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkOperationPreferences;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkTags;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
@@ -56,7 +58,7 @@ public class PropertyTranslatorTest {
     }
 
     @Test
-    public void test_translateToStackSetOperationPreferences(){
+    public void test_translateToStackSetOperationPreferences() {
         final StackSetOperationPreferences stackSetOperationPreferences = translateToSdkOperationPreferences(TestUtils.OPERATION_PREFERENCES_FULL);
         assertThat(stackSetOperationPreferences.failureToleranceCount()).isEqualTo(0);
         assertThat(stackSetOperationPreferences.failureTolerancePercentage()).isEqualTo(0);
@@ -64,5 +66,11 @@ public class PropertyTranslatorTest {
         assertThat(stackSetOperationPreferences.maxConcurrentPercentage()).isEqualTo(100);
         assertThat(stackSetOperationPreferences.regionOrder()).isEqualTo(Arrays.asList(TestUtils.US_WEST_1, TestUtils.US_EAST_1));
         assertThat(stackSetOperationPreferences.regionConcurrencyType()).isEqualTo(RegionConcurrencyType.PARALLEL);
+    }
+
+    @Test
+    public void test_translateToManagedExecution() {
+        final ManagedExecution managedExecution = translateToSdkManagedExecution(TestUtils.MANAGED_EXECUTION_RESOURCE_MODEL);
+        assertThat(managedExecution.active()).isEqualTo(true);
     }
 }

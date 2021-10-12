@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkAutoDeployment;
+import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkManagedExecution;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkParameters;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkTags;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
@@ -57,6 +58,7 @@ public class ResourceModelBuilder {
                 .parameters(translateFromSdkParameters(stackSet.parameters()))
                 .templateBody(stackSet.templateBody())
                 .callAs(callAs)
+                .managedExecution(translateFromSdkManagedExecution(stackSet.managedExecution()))
                 .build();
 
         isSelfManaged = Comparator.isSelfManaged(model);
