@@ -3,7 +3,6 @@ package software.amazon.cloudformation.stackset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
@@ -15,18 +14,14 @@ import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstances
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import java.time.Duration;
+import software.amazon.cloudformation.test.AbstractMockTestBase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
@@ -47,23 +42,19 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MAN
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL_AS_SELF;
 
 @ExtendWith(MockitoExtension.class)
-public class DeleteHandlerTest extends AbstractTestBase {
+public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient> {
 
-    @Mock
-    CloudFormationClient sdkClient;
-    private DeleteHandler handler;
     private ResourceHandlerRequest<ResourceModel> request;
-    @Mock
-    private AmazonWebServicesClientProxy proxy;
-    @Mock
-    private ProxyClient<CloudFormationClient> proxyClient;
+    private DeleteHandler handler;
+    private CloudFormationClient client;
+    protected DeleteHandlerTest() {
+        super(CloudFormationClient.class);
+    }
 
     @BeforeEach
     public void setup() {
         handler = new DeleteHandler();
-        proxy = new AmazonWebServicesClientProxy(logger, MOCK_CREDENTIALS, () -> Duration.ofSeconds(600).toMillis());
-        sdkClient = mock(CloudFormationClient.class);
-        proxyClient = MOCK_PROXY(proxy, sdkClient);
+        client = getServiceClient();
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(SERVICE_MANAGED_MODEL)
                 .logicalResourceIdentifier(LOGICAL_ID)
@@ -73,17 +64,17 @@ public class DeleteHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
+        when(client.deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
-        when(proxyClient.client().deleteStackSet(any(DeleteStackSetRequest.class)))
+        when(client.deleteStackSet(any(DeleteStackSetRequest.class)))
                 .thenReturn(DELETE_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
-                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -93,10 +84,10 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).deleteStackInstances(any(DeleteStackInstancesRequest.class));
-        verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
-        verify(proxyClient.client()).deleteStackSet(any(DeleteStackSetRequest.class));
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client).deleteStackInstances(any(DeleteStackInstancesRequest.class));
+        verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client).deleteStackSet(any(DeleteStackSetRequest.class));
     }
 
     @Test
@@ -107,13 +98,13 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().deleteStackSet(any(DeleteStackSetRequest.class)))
+        when(client.deleteStackSet(any(DeleteStackSetRequest.class)))
                 .thenReturn(DELETE_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -122,8 +113,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).deleteStackSet(any(DeleteStackSetRequest.class));
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client).deleteStackSet(any(DeleteStackSetRequest.class));
     }
 
     @Test
@@ -135,17 +126,17 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
+        when(client.deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
-        when(proxyClient.client().deleteStackSet(any(DeleteStackSetRequest.class)))
+        when(client.deleteStackSet(any(DeleteStackSetRequest.class)))
                 .thenReturn(DELETE_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -154,10 +145,10 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).deleteStackInstances(any(DeleteStackInstancesRequest.class));
-        verify(proxyClient.client()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
-        verify(proxyClient.client()).deleteStackSet(any(DeleteStackSetRequest.class));
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client).deleteStackInstances(any(DeleteStackInstancesRequest.class));
+        verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client).deleteStackSet(any(DeleteStackSetRequest.class));
     }
 
     @Test
@@ -169,17 +160,17 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
+        when(client.deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
-        when(proxyClient.client().deleteStackSet(any(DeleteStackSetRequest.class)))
+        when(client.deleteStackSet(any(DeleteStackSetRequest.class)))
                 .thenReturn(DELETE_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -188,12 +179,12 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).deleteStackInstances(argThat(
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client).deleteStackInstances(argThat(
                 (DeleteStackInstancesRequest req) -> req.callAs() == CallAs.SELF));
-        verify(proxyClient.client()).describeStackSetOperation(argThat(
+        verify(client).describeStackSetOperation(argThat(
                 (DescribeStackSetOperationRequest req) -> req.callAs() == CallAs.SELF));
-        verify(proxyClient.client()).deleteStackSet(argThat(
+        verify(client).deleteStackSet(argThat(
                 (DeleteStackSetRequest req) -> req.callAs() == CallAs.SELF));
     }
 
@@ -206,17 +197,17 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
+        when(client.deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
-        when(proxyClient.client().describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_SUCCEED_RESPONSE);
-        when(proxyClient.client().deleteStackSet(any(DeleteStackSetRequest.class)))
+        when(client.deleteStackSet(any(DeleteStackSetRequest.class)))
                 .thenReturn(DELETE_STACK_SET_RESPONSE);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -225,12 +216,12 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).deleteStackInstances(argThat(
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client).deleteStackInstances(argThat(
                 (DeleteStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
-        verify(proxyClient.client()).describeStackSetOperation(argThat(
+        verify(client).describeStackSetOperation(argThat(
                 (DescribeStackSetOperationRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
-        verify(proxyClient.client()).deleteStackSet(argThat(
+        verify(client).deleteStackSet(argThat(
                 (DeleteStackSetRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 
@@ -241,8 +232,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .awsErrorDetails(AwsErrorDetails.builder()
                         .errorCode("ValidationError")
                         .sdkHttpResponse(SdkHttpResponse.builder()
-                            .statusCode(HttpStatusCode.BAD_REQUEST)
-                            .build())
+                                .statusCode(HttpStatusCode.BAD_REQUEST)
+                                .build())
                         .build())
                 .build();
 
@@ -253,21 +244,21 @@ public class DeleteHandlerTest extends AbstractTestBase {
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
 
-        when(proxyClient.client().describeStackSet(any(DescribeStackSetRequest.class)))
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
                 .thenReturn(DESCRIBE_DELEGATED_ADMIN_SERVICE_MANAGED_STACK_SET_RESPONSE);
-        when(proxyClient.client().deleteStackInstances(any(DeleteStackInstancesRequest.class)))
+        when(client.deleteStackInstances(any(DeleteStackInstancesRequest.class)))
                 .thenThrow(e);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+                = handler.handleRequest(proxy, request, null, loggerProxy);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getErrorCode()).isEqualTo(InvalidRequest);
 
-        verify(proxyClient.client()).describeStackSet(any(DescribeStackSetRequest.class));
-        verify(proxyClient.client()).deleteStackInstances(argThat(
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client).deleteStackInstances(argThat(
                 (DeleteStackInstancesRequest req) -> req.callAs() == CallAs.DELEGATED_ADMIN));
     }
 }
