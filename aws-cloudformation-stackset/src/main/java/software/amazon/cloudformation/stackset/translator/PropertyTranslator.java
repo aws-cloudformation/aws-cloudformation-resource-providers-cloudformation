@@ -2,6 +2,7 @@ package software.amazon.cloudformation.stackset.translator;
 
 import software.amazon.awssdk.services.cloudformation.model.AutoDeployment;
 import software.amazon.awssdk.services.cloudformation.model.DeploymentTargets;
+import software.amazon.awssdk.services.cloudformation.model.ManagedExecution;
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationPreferences;
@@ -118,6 +119,33 @@ public class PropertyTranslator {
                 .build();
     }
 
+    /**
+     * Converts resource model ManagedExecution to StackSet SDK ManagedExecution
+     *
+     * @param managedExecution ManagedExecution from resource model
+     * @return SDK ManagedExecution
+     */
+    static ManagedExecution translateToSdkManagedExecution(
+            final software.amazon.cloudformation.stackset.ManagedExecution managedExecution) {
+        if (managedExecution == null) return null;
+        return ManagedExecution.builder()
+                .active(managedExecution.getActive())
+                .build();
+    }
+
+    /**
+     * Converts StackSet SDK ManagedExecution to resource model ManagedExecution
+     *
+     * @param managedExecution ManagedExecution from SDK
+     * @return resource model ManagedExecution
+     */
+    public static software.amazon.cloudformation.stackset.ManagedExecution translateFromSdkManagedExecution(
+            final ManagedExecution managedExecution) {
+        if (managedExecution == null) return null;
+        return software.amazon.cloudformation.stackset.ManagedExecution.builder()
+                .active(managedExecution.active())
+                .build();
+    }
 
     /**
      * Converts tags (from CFN resource model) to StackSet set (from StackSet SDK)

@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstances
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetResponse;
 import software.amazon.cloudformation.stackset.AutoDeployment;
 import software.amazon.cloudformation.stackset.DeploymentTargets;
+import software.amazon.cloudformation.stackset.ManagedExecution;
 import software.amazon.cloudformation.stackset.OperationPreferences;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
@@ -195,6 +196,15 @@ public class TestUtils {
             .maxConcurrentPercentage(100)
             .regionOrder(Arrays.asList(US_WEST_1, US_EAST_1))
             .regionConcurrencyType(RegionConcurrencyType.PARALLEL.toString())
+            .build();
+
+    public final static ManagedExecution MANAGED_EXECUTION_RESOURCE_MODEL = ManagedExecution.builder()
+            .active(true)
+            .build();
+
+    public final static software.amazon.awssdk.services.cloudformation.model.ManagedExecution MANAGED_EXECUTION_SDK =
+            software.amazon.awssdk.services.cloudformation.model.ManagedExecution.builder()
+            .active(true)
             .build();
 
     public final static Set<software.amazon.cloudformation.stackset.Tag> TAGS = new HashSet<>(Arrays.asList(
@@ -388,6 +398,7 @@ public class TestUtils {
             .templateBody(TEMPLATE_BODY)
             .permissionModel(PermissionModels.SELF_MANAGED)
             .tags(TAGGED_RESOURCES)
+            .managedExecution(MANAGED_EXECUTION_SDK)
             .build();
 
     public final static StackSet NULL_PERMISSION_MODEL_STACK_SET = StackSet.builder()
@@ -398,6 +409,7 @@ public class TestUtils {
             .parameters(SDK_PARAMETER_1, SDK_PARAMETER_2)
             .templateBody(TEMPLATE_BODY)
             .tags(TAGGED_RESOURCES)
+            .managedExecution(MANAGED_EXECUTION_SDK)
             .build();
 
     public final static ResourceModel SERVICE_MANAGED_MODEL = ResourceModel.builder()
@@ -560,6 +572,7 @@ public class TestUtils {
                     new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
             .tags(TAGS)
+            .managedExecution(MANAGED_EXECUTION_RESOURCE_MODEL)
             .build();
 
     public final static ResourceModel SERVICE_MANAGED_MODEL_FOR_READ = ResourceModel.builder()
