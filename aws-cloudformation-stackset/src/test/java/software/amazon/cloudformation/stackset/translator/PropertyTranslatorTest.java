@@ -70,7 +70,7 @@ public class PropertyTranslatorTest {
 
     @Test
     public void test_translateToManagedExecution() {
-        final ManagedExecution managedExecution = translateToSdkManagedExecution(TestUtils.MANAGED_EXECUTION_RESOURCE_MODEL);
+        final ManagedExecution managedExecution = translateToSdkManagedExecution(TestUtils.MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL);
         assertThat(managedExecution.active()).isEqualTo(true);
     }
 }

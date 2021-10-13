@@ -122,6 +122,15 @@ public class RequestTranslator {
                 .build();
     }
 
+    public static UpdateStackSetRequest updateManagedExecutionRequest(
+            final ResourceModel model) {
+        return UpdateStackSetRequest.builder()
+                .stackSetName(model.getStackSetId())
+                .managedExecution(translateToSdkManagedExecution(model.getManagedExecution()))
+                .usePreviousTemplate(true)
+                .build();
+    }
+
     public static ListStackSetsRequest listStackSetsRequest(
             final String nextToken) {
         return ListStackSetsRequest.builder()

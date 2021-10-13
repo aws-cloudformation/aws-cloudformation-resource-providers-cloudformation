@@ -198,8 +198,12 @@ public class TestUtils {
             .regionConcurrencyType(RegionConcurrencyType.PARALLEL.toString())
             .build();
 
-    public final static ManagedExecution MANAGED_EXECUTION_RESOURCE_MODEL = ManagedExecution.builder()
+    public final static ManagedExecution MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL = ManagedExecution.builder()
             .active(true)
+            .build();
+
+    public final static ManagedExecution MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL = ManagedExecution.builder()
+            .active(false)
             .build();
 
     public final static software.amazon.awssdk.services.cloudformation.model.ManagedExecution MANAGED_EXECUTION_SDK =
@@ -491,6 +495,33 @@ public class TestUtils {
             .tags(TAGS)
             .build();
 
+    public final static ResourceModel SELF_MANAGED_WITH_ME_MODEL = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .description(DESCRIPTION)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
+            .operationPreferences(OPERATION_PREFERENCES)
+            .tags(TAGS)
+            .managedExecution(MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL)
+            .build();
+
+    public final static ResourceModel UPDATED_SELF_MANAGED_WITH_ME_MODEL = ResourceModel.builder()
+            .stackSetId(STACK_SET_ID)
+            .permissionModel(SELF_MANAGED)
+            .capabilities(CAPABILITIES)
+            .templateBody(TEMPLATE_BODY)
+            .stackInstancesGroup(
+                    new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_3, SELF_MANAGED_STACK_INSTANCES_4)))
+            .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_3)))
+            .operationPreferences(OPERATION_PREFERENCES)
+            .tags(TAGS)
+            .managedExecution(MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL)
+            .build();
+
     public final static ResourceModel SELF_MANAGED_NO_INSTANCES_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
             .permissionModel(SELF_MANAGED)
@@ -572,7 +603,7 @@ public class TestUtils {
                     new HashSet<>(Arrays.asList(SELF_MANAGED_STACK_INSTANCES_1, SELF_MANAGED_STACK_INSTANCES_2)))
             .parameters(new HashSet<>(Arrays.asList(PARAMETER_1, PARAMETER_2)))
             .tags(TAGS)
-            .managedExecution(MANAGED_EXECUTION_RESOURCE_MODEL)
+            .managedExecution(MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL)
             .build();
 
     public final static ResourceModel SERVICE_MANAGED_MODEL_FOR_READ = ResourceModel.builder()

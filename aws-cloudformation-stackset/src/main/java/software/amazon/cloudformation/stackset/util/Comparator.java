@@ -2,6 +2,7 @@ package software.amazon.cloudformation.stackset.util;
 
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
+import software.amazon.cloudformation.stackset.ManagedExecution;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
 import java.util.Collection;
@@ -51,6 +52,22 @@ public class Comparator {
 
         // If TemplateURL is specified, always call Update API, Service client will decide if it is updatable
         return desiredModel.getTemplateURL() == null;
+    }
+
+    /**
+     * Compares if desired model uses the same ManagedExecution
+     * when it comes to updating the resource
+     *
+     * @param previousManagedExecution previous {@link ManagedExecution}
+     * @param desiredManagedExecution desired {@link ManagedExecution}
+     * @return
+     */
+    public static boolean isStackSetConfigEquals(final ManagedExecution previousManagedExecution,
+                                                 final ManagedExecution desiredManagedExecution) {
+        if (!equals(previousManagedExecution, desiredManagedExecution))
+            return false;
+
+        return true;
     }
 
     /**
