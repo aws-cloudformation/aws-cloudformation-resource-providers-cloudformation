@@ -21,6 +21,7 @@ import java.util.Map;
 import static software.amazon.awssdk.services.cloudformation.model.StackSetStatus.ACTIVE;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkDeploymentTargets;
+import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkManagedExecution;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkOperationPreferences;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkParameters;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkTags;
@@ -45,6 +46,7 @@ public class RequestTranslator {
                 .templateBody(model.getTemplateBody())
                 .templateURL(model.getTemplateURL())
                 .callAs(model.getCallAs())
+                .managedExecution(translateToSdkManagedExecution(model.getManagedExecution()))
                 .build();
     }
 
@@ -117,6 +119,15 @@ public class RequestTranslator {
                 .templateBody(model.getTemplateBody())
                 .tags(translateToSdkTags(tags))
                 .callAs(model.getCallAs())
+                .build();
+    }
+
+    public static UpdateStackSetRequest updateManagedExecutionRequest(
+            final ResourceModel model) {
+        return UpdateStackSetRequest.builder()
+                .stackSetName(model.getStackSetId())
+                .managedExecution(translateToSdkManagedExecution(model.getManagedExecution()))
+                .usePreviousTemplate(true)
                 .build();
     }
 

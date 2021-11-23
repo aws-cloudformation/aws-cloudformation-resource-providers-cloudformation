@@ -18,6 +18,19 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
+    <!-- Keep sdk bom for dependencies conflict resolutions -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.17.57</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!-- Test dependency for Java Providers -->
         <dependency>
@@ -31,14 +44,11 @@
             <artifactId>aws-cloudformation-rpdk-java-plugin</artifactId>
             <version>2.0.5</version>
         </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>utils</artifactId>
-            <version>2.17.57</version>
-        </dependency>
+        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/cloudformation -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>cloudformation</artifactId>
+            <!-- Specify the version id so we can install local sdk -->
             <version>2.17.57</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->

@@ -15,6 +15,8 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.AUTO_DEPLOY
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIPTION;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.EXECUTION_ROLE_NAME;
+import static software.amazon.cloudformation.stackset.util.TestUtils.MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1_COPY;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1_UPDATED;
@@ -116,6 +118,14 @@ public class ComparatorTest {
         testDesiredModel.setTemplateBody(TEMPLATE_BODY);
         assertThat(isStackSetConfigEquals(testPreviousModel, testDesiredModel, DESIRED_RESOURCE_TAGS, DESIRED_RESOURCE_TAGS)).isTrue();
 
+    }
+
+    @Test
+    public void testIsStackSetConfigManagedExecutionEquals() {
+        // Testing ManagedExecution objects not equal
+        assertThat(isStackSetConfigEquals(MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL, MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL)).isFalse();
+        // Testing ManagedExecution objects equal
+        assertThat(isStackSetConfigEquals(MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL, MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL)).isTrue();
     }
 
     @Test
