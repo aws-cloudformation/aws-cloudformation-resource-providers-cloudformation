@@ -72,5 +72,9 @@ public class PropertyTranslatorTest {
     public void test_translateToManagedExecution() {
         final ManagedExecution managedExecution = translateToSdkManagedExecution(TestUtils.MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL);
         assertThat(managedExecution.active()).isEqualTo(true);
+
+        assertThat(translateToSdkManagedExecution(null).active()).isEqualTo(false);
+        assertThat(translateToSdkManagedExecution(software.amazon.cloudformation.stackset.ManagedExecution.builder()
+                .build()).active()).isEqualTo(false);
     }
 }
