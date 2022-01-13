@@ -7,6 +7,7 @@ import software.amazon.cloudformation.stackset.ResourceModel;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Utility class to help comparing previous model and desire model
@@ -64,10 +65,12 @@ public class Comparator {
      */
     public static boolean isStackSetConfigEquals(final ManagedExecution previousManagedExecution,
                                                  final ManagedExecution desiredManagedExecution) {
-        if (!equals(previousManagedExecution, desiredManagedExecution))
-            return false;
-
-        return true;
+        final ManagedExecution defaultConfig = ManagedExecution.builder().active(false).build();
+        final ManagedExecution previousConfig = (Objects.isNull(previousManagedExecution) || Objects.isNull(previousManagedExecution.getActive()))
+                ? defaultConfig : previousManagedExecution;
+        final ManagedExecution currentConfig = (Objects.isNull(desiredManagedExecution) || Objects.isNull(desiredManagedExecution.getActive()))
+                ? defaultConfig : desiredManagedExecution;
+        return equals(currentConfig, previousConfig);
     }
 
     /**

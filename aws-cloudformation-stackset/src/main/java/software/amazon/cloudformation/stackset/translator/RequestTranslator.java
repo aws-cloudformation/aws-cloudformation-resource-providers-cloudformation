@@ -127,6 +127,7 @@ public class RequestTranslator {
         return UpdateStackSetRequest.builder()
                 .stackSetName(model.getStackSetId())
                 .managedExecution(translateToSdkManagedExecution(model.getManagedExecution()))
+                .capabilitiesWithStrings(model.getCapabilities()) // Ideally, we do not need this, in case UpdateManagedExecution request accidentally triggers deployments
                 .usePreviousTemplate(true)
                 .build();
     }

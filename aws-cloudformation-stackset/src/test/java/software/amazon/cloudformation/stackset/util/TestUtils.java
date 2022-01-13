@@ -202,8 +202,15 @@ public class TestUtils {
             .active(true)
             .build();
 
+    public final static ManagedExecution MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL_COPY = ManagedExecution.builder()
+            .active(true)
+            .build();
+
     public final static ManagedExecution MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL = ManagedExecution.builder()
             .active(false)
+            .build();
+
+    public final static ManagedExecution MANAGED_EXECUTION_EMPTY_RESOURCE_MODEL = ManagedExecution.builder()
             .build();
 
     public final static software.amazon.awssdk.services.cloudformation.model.ManagedExecution MANAGED_EXECUTION_SDK =

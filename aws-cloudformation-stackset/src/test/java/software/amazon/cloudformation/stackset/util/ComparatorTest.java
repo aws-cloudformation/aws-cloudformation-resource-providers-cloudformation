@@ -16,7 +16,9 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIPTION
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.EXECUTION_ROLE_NAME;
 import static software.amazon.cloudformation.stackset.util.TestUtils.MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.MANAGED_EXECUTION_EMPTY_RESOURCE_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL_COPY;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1_COPY;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1_UPDATED;
@@ -126,6 +128,11 @@ public class ComparatorTest {
         assertThat(isStackSetConfigEquals(MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL, MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL)).isFalse();
         // Testing ManagedExecution objects equal
         assertThat(isStackSetConfigEquals(MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL, MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL)).isTrue();
+        assertThat(isStackSetConfigEquals(MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL, MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL_COPY)).isTrue();
+        assertThat(isStackSetConfigEquals(MANAGED_EXECUTION_EMPTY_RESOURCE_MODEL, MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL)).isTrue();
+        assertThat(isStackSetConfigEquals(MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL, MANAGED_EXECUTION_EMPTY_RESOURCE_MODEL)).isTrue();
+        assertThat(isStackSetConfigEquals(MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL, null)).isTrue();
+        assertThat(isStackSetConfigEquals(null, MANAGED_EXECUTION_DISABLED_RESOURCE_MODEL)).isTrue();
     }
 
     @Test

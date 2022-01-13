@@ -127,9 +127,9 @@ public class PropertyTranslator {
      */
     static ManagedExecution translateToSdkManagedExecution(
             final software.amazon.cloudformation.stackset.ManagedExecution managedExecution) {
-        if (managedExecution == null) return null;
         return ManagedExecution.builder()
-                .active(managedExecution.getActive())
+                .active((managedExecution == null || managedExecution.getActive() == null)
+                        ? false : managedExecution.getActive())
                 .build();
     }
 
