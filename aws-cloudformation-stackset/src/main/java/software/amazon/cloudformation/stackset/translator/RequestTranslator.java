@@ -127,6 +127,8 @@ public class RequestTranslator {
         return UpdateStackSetRequest.builder()
                 .stackSetName(model.getStackSetId())
                 .managedExecution(translateToSdkManagedExecution(model.getManagedExecution()))
+                .administrationRoleARN(model.getAdministrationRoleARN()) // In case Customized Role was used during CREATE
+                .executionRoleName(model.getExecutionRoleName()) // In case Customized Role was used during CREATE
                 .capabilitiesWithStrings(model.getCapabilities()) // Ideally, we do not need this, in case UpdateManagedExecution request accidentally triggers deployments
                 .usePreviousTemplate(true)
                 .build();
