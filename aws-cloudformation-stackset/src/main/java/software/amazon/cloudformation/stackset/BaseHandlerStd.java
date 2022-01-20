@@ -5,7 +5,9 @@ import software.amazon.awssdk.awscore.AwsRequest;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationResponse;
+import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.OperationInProgressException;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceNotFoundException;
@@ -58,10 +60,13 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             final ProxyClient<CloudFormationClient> proxyClient,
             final String stackSetId,
             final String operationId,
-            final String callAs) {
+            final String callAs,
+            final Logger logger) {
 
-        final DescribeStackSetOperationResponse response = proxyClient.injectCredentialsAndInvokeV2(
-                describeStackSetOperationRequest(stackSetId, operationId, callAs),
+        final DescribeStackSetOperationRequest request = describeStackSetOperationRequest(stackSetId, operationId, callAs);
+        logger.log(String.format("%s [%s] DescribeStackSetOperation request: [%s]",
+                ResourceModel.TYPE_NAME, stackSetId, request));
+        final DescribeStackSetOperationResponse response = proxyClient.injectCredentialsAndInvokeV2(request,
                 proxyClient.client()::describeStackSetOperation);
         return response.stackSetOperation().status();
     }
@@ -140,6 +145,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                     .translateToServiceRequest(modelRequest -> createStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances, modelRequest.getCallAs()))
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
+                        logger.log(String.format("%s [%s] CreateStackInstances request: [%s]", ResourceModel.TYPE_NAME, model.getStackSetId(), modelRequest));
                         final CreateStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::createStackInstances);
                         logger.log(String.format("%s [%s] CreateStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, model.getStackSetId(), stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
                         return response;
@@ -182,6 +188,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                     .translateToServiceRequest(modelRequest -> deleteStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances, modelRequest.getCallAs()))
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
+                        logger.log(String.format("%s [%s] DeleteStackInstances request: [%s]", ResourceModel.TYPE_NAME, model.getStackSetId(), modelRequest));
                         final DeleteStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::deleteStackInstances);
                         logger.log(String.format("%s [%s] DeleteStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, model.getStackSetId(), stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
                         return response;
@@ -235,6 +242,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                     .translateToServiceRequest(modelRequest -> updateStackInstancesRequest(modelRequest.getStackSetId(), modelRequest.getOperationPreferences(), stackInstances, modelRequest.getCallAs()))
                     .backoffDelay(MULTIPLE_OF)
                     .makeServiceCall((modelRequest, proxyInvocation) -> {
+                        logger.log(String.format("%s [%s] UpdateStackInstances request: [%s]", ResourceModel.TYPE_NAME, model.getStackSetId(), modelRequest));
                         final UpdateStackInstancesResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackInstances);
                         logger.log(String.format("%s [%s] UpdateStackInstances in [%s] of [%s] initiated", ResourceModel.TYPE_NAME, model.getStackSetId(), stackInstances.getRegions(), stackInstances.getDeploymentTargets()));
                         return response;
@@ -272,8 +280,10 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             final String callAs,
             final Logger logger) {
 
+        final DescribeStackSetRequest request = describeStackSetRequest(stackSetId, callAs);
+        logger.log(String.format("%s [%s] DescribeStackSet request: [%s]", ResourceModel.TYPE_NAME, stackSetId, request));
         final DescribeStackSetResponse stackSetResponse = proxyClient.injectCredentialsAndInvokeV2(
-                describeStackSetRequest(stackSetId, callAs), proxyClient.client()::describeStackSet);
+                request, proxyClient.client()::describeStackSet);
         logger.log(String.format("Describe StackSet [%s] successfully", stackSetId));
         final StackSet stackSet = stackSetResponse.stackSet();
         // Apparently, deleted StackSets would be still retrievable using identifier StackSetId
@@ -301,7 +311,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
         final String stackSetId = model.getStackSetId();
         final String callAs = model.getCallAs();
-        final StackSetOperationStatus status = getStackSetOperationStatus(proxyClient, stackSetId, operationId, callAs);
+        final StackSetOperationStatus status = getStackSetOperationStatus(proxyClient, stackSetId, operationId, callAs, logger);
         return isStackSetOperationDone(status, operationId, logger);
     }
 

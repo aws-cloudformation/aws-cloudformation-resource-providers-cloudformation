@@ -71,6 +71,8 @@ public class UpdateHandler extends BaseHandlerStd {
                 .translateToServiceRequest(modelRequest -> updateStackSetRequest(modelRequest, handlerRequest.getDesiredResourceTags()))
                 .backoffDelay(MULTIPLE_OF)
                 .makeServiceCall((modelRequest, proxyInvocation) -> {
+                    logger.log(String.format("%s [%s] UpdateStackSet request: [%s]",
+                            ResourceModel.TYPE_NAME, previousModel.getStackSetId(), modelRequest));
                     final UpdateStackSetResponse response = proxyInvocation.injectCredentialsAndInvokeV2(modelRequest, proxyInvocation.client()::updateStackSet);
                     logger.log(String.format("%s [%s] UpdateStackSet initiated", ResourceModel.TYPE_NAME, previousModel.getStackSetId()));
                     return response;
