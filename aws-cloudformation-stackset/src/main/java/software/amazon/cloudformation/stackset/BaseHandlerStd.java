@@ -249,7 +249,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                     })
                     .stabilize((request, response, proxyInvocation, resourceModel, context) -> isOperationStabilized(proxyInvocation, resourceModel, response.operationId(), logger))
                     .retryErrorFilter(this::filterException)
-                    .progress();
+                    .success();
 
             if (!progressEvent.isSuccess()) {
                 return progressEvent;
