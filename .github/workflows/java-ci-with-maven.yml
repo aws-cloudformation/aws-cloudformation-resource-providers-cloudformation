@@ -30,7 +30,7 @@ jobs:
     - name: Install jinja2 with 2.11.3 to resolve incompatible issue
       run: pip install jinja2==2.11.3
     - name: Set up cloudformation-cli-java-plugin
-      run: pip install cloudformation-cli-java-plugin==2.0.3
+      run: pip install cloudformation-cli-java-plugin
     - name: install and run pre-commit
       uses: pre-commit/action@v2.0.0
       with:
