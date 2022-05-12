@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: AWS SAM template for the AWS::CloudFormation::HookDefaultVersion resource type
+
+Globals:
+  Function:
+    Timeout: 180  # docker start-up times can be long for SAM CLI
+
+Resources:
+  TypeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: software.amazon.cloudformation.hookdefaultversion.HandlerWrapper::handleRequest
+      Runtime: java8
+      MemorySize: 256
+      CodeUri: ./target/aws-cloudformation-hookdefaultversion-handler-1.0-SNAPSHOT.jar
+
+  TestEntrypoint:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: software.amazon.cloudformation.hookdefaultversion.HandlerWrapper::testEntrypoint
+      Runtime: java8
+      MemorySize: 256
+      CodeUri: ./target/aws-cloudformation-hookdefaultversion-handler-1.0-SNAPSHOT.jar

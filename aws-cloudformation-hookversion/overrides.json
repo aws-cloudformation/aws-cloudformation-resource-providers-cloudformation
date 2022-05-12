@@ -1,0 +1,11 @@
+{
+  "CREATE": {
+    "/SchemaHandlerPackage": "{{HookPackage}}",
+    "/TypeName": "{{HookName}}",
+    "/ExecutionRoleArn": "{{ExecutionRoleArn}}",
+    "/LoggingConfig": {
+      "LogGroupName": "{{LogGroupName}}",
+      "LogRoleArn": "{{LogRoleArn}}"
+    }
+  }
+}

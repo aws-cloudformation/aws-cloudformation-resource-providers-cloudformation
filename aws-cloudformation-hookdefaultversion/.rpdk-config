@@ -1,0 +1,19 @@
+{
+    "artifact_type": "RESOURCE",
+    "typeName": "AWS::CloudFormation::HookDefaultVersion",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.cloudformation.hookdefaultversion.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.cloudformation.hookdefaultversion.HandlerWrapper::handleRequest",
+    "settings": {
+        "namespace": [
+            "software",
+            "amazon",
+            "cloudformation",
+            "hookdefaultversion"
+        ],
+        "codegen_template_path": "guided_aws",
+        "protocolVersion": "2.0.0"
+    },
+    "executableEntrypoint": "software.amazon.cloudformation.hookdefaultversion.HandlerWrapperExecutable"
+}
