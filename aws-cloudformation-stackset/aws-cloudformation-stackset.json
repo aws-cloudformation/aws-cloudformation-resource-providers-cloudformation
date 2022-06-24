@@ -155,6 +155,16 @@
           "items": {
             "$ref": "#/definitions/OrganizationalUnitId"
           }
+        },
+        "AccountFilterType": {
+          "description": "The filter type you want to apply on organizational units and accounts.",
+          "type": "string",
+          "enum": [
+            "NONE",
+            "UNION",
+            "INTERSECTION",
+            "DIFFERENCE"
+          ]
         }
       },
       "additionalProperties": false
