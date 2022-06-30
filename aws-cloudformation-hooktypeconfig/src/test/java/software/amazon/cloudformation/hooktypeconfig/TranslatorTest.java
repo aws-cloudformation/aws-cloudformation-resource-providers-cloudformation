@@ -40,7 +40,7 @@ public class TranslatorTest {
     public void translateToUpdateRequest_nullResourceModel() {
         assertThatThrownBy(() -> Translator.translateToUpdateRequest(null))
                 .hasNoCause()
-                .hasMessageEndingWith("is marked @NonNull but is null")
+                .hasMessageEndingWith("but is null")
                 .isExactlyInstanceOf(NullPointerException.class);
     }
 
@@ -75,7 +75,7 @@ public class TranslatorTest {
     public void translateToReadRequest_nullResourceModel() {
         assertThatThrownBy(() -> Translator.translateToReadRequest(null))
                 .hasNoCause()
-                .hasMessageEndingWith("is marked @NonNull but is null")
+                .hasMessageEndingWith("but is null")
                 .isExactlyInstanceOf(NullPointerException.class);
     }
 
@@ -121,7 +121,7 @@ public class TranslatorTest {
     public void translateFromRead_nullResourceModel() {
         assertThatThrownBy(() -> Translator.translateFromReadResponse(null, null))
                 .hasNoCause()
-                .hasMessageEndingWith("is marked @NonNull but is null")
+                .hasMessageEndingWith("but is null")
                 .isExactlyInstanceOf(NullPointerException.class);
     }
 
@@ -196,7 +196,7 @@ public class TranslatorTest {
     public void translateToListRequest_nullResourceModel() {
         assertThatThrownBy(() -> Translator.translateToListRequest(null))
                 .hasNoCause()
-                .hasMessageEndingWith("is marked @NonNull but is null")
+                .hasMessageEndingWith("but is null")
                 .isExactlyInstanceOf(NullPointerException.class);
     }
 
@@ -230,7 +230,7 @@ public class TranslatorTest {
     public void translateToDeleteRequest_nullResourceModel() {
         assertThatThrownBy(() -> Translator.translateToDeleteRequest(null))
                 .hasNoCause()
-                .hasMessageEndingWith("is marked @NonNull but is null")
+                .hasMessageEndingWith("but is null")
                 .isExactlyInstanceOf(NullPointerException.class);
     }
 
