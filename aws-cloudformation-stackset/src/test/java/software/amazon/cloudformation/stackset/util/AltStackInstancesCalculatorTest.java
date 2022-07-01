@@ -7,7 +7,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.stackset.StackInstances;
-import static junit.framework.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
@@ -55,9 +54,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -84,9 +83,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -131,9 +130,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -160,9 +159,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -188,9 +187,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -216,9 +215,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -247,9 +246,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -278,9 +277,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -312,9 +311,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -346,9 +345,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -386,9 +385,9 @@ public class AltStackInstancesCalculatorTest {
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
                 .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
 
-        assertEquals(stackInstancesSetToDelete, desiredDeleteInstances);
-        assertEquals(stackInstancesSetToCreate, desiredCreateInstances);
-        assertEquals(stackInstancesSetToUpdate, desiredUpdateInstances);
+        assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
 }

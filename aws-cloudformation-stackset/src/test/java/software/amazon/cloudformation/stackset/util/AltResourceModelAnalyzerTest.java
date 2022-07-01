@@ -10,7 +10,6 @@ import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.stackset.DeploymentTargets;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
-import static junit.framework.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
@@ -123,9 +122,9 @@ public class AltResourceModelAnalyzerTest {
         StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         AltResourceModelAnalyzer.builder().currentModel(currentModel).build().analyze(placeHolder);
 
-        assertEquals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances);
-        assertEquals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances);
-        assertEquals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances);
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -148,9 +147,9 @@ public class AltResourceModelAnalyzerTest {
         StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         AltResourceModelAnalyzer.builder().previousModel(previousModel).build().analyze(placeHolder);
 
-        assertEquals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances);
-        assertEquals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances);
-        assertEquals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances);
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -180,9 +179,9 @@ public class AltResourceModelAnalyzerTest {
         StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         AltResourceModelAnalyzer.builder().currentModel(currentModel).previousModel(previousModel).build().analyze(placeHolder);
 
-        assertEquals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances);
-        assertEquals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances);
-        assertEquals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances);
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -212,9 +211,9 @@ public class AltResourceModelAnalyzerTest {
         StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         AltResourceModelAnalyzer.builder().currentModel(currentModel).previousModel(previousModel).build().analyze(placeHolder);
 
-        assertEquals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances);
-        assertEquals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances);
-        assertEquals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances);
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -244,9 +243,9 @@ public class AltResourceModelAnalyzerTest {
         StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         AltResourceModelAnalyzer.builder().currentModel(currentModel).previousModel(previousModel).build().analyze(placeHolder);
 
-        assertEquals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances);
-        assertEquals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances);
-        assertEquals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances);
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances)).isTrue();
     }
 
     @Test
@@ -276,9 +275,9 @@ public class AltResourceModelAnalyzerTest {
         StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         AltResourceModelAnalyzer.builder().currentModel(currentModel).previousModel(previousModel).build().analyze(placeHolder);
 
-        assertEquals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances);
-        assertEquals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances);
-        assertEquals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances);
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getDeleteStackInstances()), desiredDeleteInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getCreateStackInstances()), desiredCreateInstances)).isTrue();
+        assertThat(Comparator.equals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances)).isTrue();
     }
 
 }

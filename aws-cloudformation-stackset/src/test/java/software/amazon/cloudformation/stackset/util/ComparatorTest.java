@@ -8,8 +8,6 @@ import software.amazon.cloudformation.stackset.ResourceModel;
 import java.util.Arrays;
 import software.amazon.cloudformation.stackset.StackInstances;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
@@ -51,36 +49,36 @@ public class ComparatorTest {
 
     @Test
     public void testIsAccountLevelTargetingEnabled() {
-        assertFalse(isAccountLevelTargetingEnabled(null));
-        assertFalse(isAccountLevelTargetingEnabled(ResourceModel.builder().permissionModel(SELF_MANAGED).build()));
-        assertFalse(isAccountLevelTargetingEnabled(ResourceModel.builder().permissionModel(SERVICE_MANAGED).build()));
+        assertThat(isAccountLevelTargetingEnabled(null)).isFalse();
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder().permissionModel(SELF_MANAGED).build())).isFalse();
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder().permissionModel(SERVICE_MANAGED).build())).isFalse();
 
-        assertFalse(isAccountLevelTargetingEnabled(ResourceModel.builder()
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder()
                 .permissionModel(SERVICE_MANAGED)
                 .stackInstancesGroup(new HashSet<>())
-                .build()));
+                .build())).isFalse();
 
-        assertFalse(isAccountLevelTargetingEnabled(ResourceModel.builder()
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder()
                 .permissionModel(SERVICE_MANAGED)
                 .stackInstancesGroup(new HashSet<>(Arrays.asList(
                         StackInstances.builder().build()
                 )))
-                .build()));
+                .build())).isFalse();
 
-        assertFalse(isAccountLevelTargetingEnabled(ResourceModel.builder()
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder()
                 .permissionModel(SERVICE_MANAGED)
                 .stackInstancesGroup(new HashSet<>(Arrays.asList(
                         generateInstancesWithRegions(OU_1, region_1)
                 )))
-                .build()));
+                .build())).isFalse();
 
-        assertTrue(isAccountLevelTargetingEnabled(ResourceModel.builder()
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder()
                 .permissionModel(SERVICE_MANAGED)
                 .stackInstancesGroup(new HashSet<>(Arrays.asList(
                         generateInstancesWithRegions(OU_1, region_1),
                         generateInstancesWithRegions(OU_1, account_1, DIFF, region_1)
                 )))
-                .build()));
+                .build())).isTrue();
     }
 
     @Test
