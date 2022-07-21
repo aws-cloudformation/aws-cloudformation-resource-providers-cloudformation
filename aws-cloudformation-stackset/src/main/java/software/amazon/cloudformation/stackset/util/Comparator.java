@@ -8,6 +8,7 @@ import software.amazon.cloudformation.stackset.ResourceModel;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import software.amazon.cloudformation.stackset.StackInstances;
 
 /**
  * Utility class to help comparing previous model and desire model
@@ -111,4 +112,24 @@ public class Comparator {
     public static boolean isSelfManaged(final ResourceModel model) {
         return PermissionModels.SELF_MANAGED.equals(PermissionModels.fromValue(model.getPermissionModel()));
     }
+
+    /*
+    * 1. SELF_MANAGED is considered as ALT disabled
+    * 2. If any deploymentTarget has a non-null AccountFilterType, this model is considered ALT enabled
+    * 3. ALT related validation is integrated in Validator
+    * */
+    public static boolean isAccountLevelTargetingEnabled(final ResourceModel model) {
+
+        if (model == null || isSelfManaged(model) || model.getStackInstancesGroup() == null) return false;
+
+        for (final StackInstances instances : model.getStackInstancesGroup()) {
+            if (instances.getDeploymentTargets() == null) continue;
+            if (instances.getDeploymentTargets().getAccountFilterType() != null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }

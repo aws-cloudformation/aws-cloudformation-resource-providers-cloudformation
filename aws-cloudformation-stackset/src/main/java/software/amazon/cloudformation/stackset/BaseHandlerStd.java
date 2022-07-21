@@ -1,6 +1,7 @@
 package software.amazon.cloudformation.stackset;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import software.amazon.awssdk.awscore.AwsRequest;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
@@ -24,6 +25,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.delay.MultipleOf;
+import software.amazon.cloudformation.stackset.util.AltResourceModelAnalyzer;
 import software.amazon.cloudformation.stackset.util.ClientBuilder;
 import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
 import software.amazon.cloudformation.stackset.util.StackInstancesPlaceHolder;
@@ -37,6 +39,7 @@ import static software.amazon.cloudformation.stackset.translator.RequestTranslat
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackSetOperationRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackSetRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.updateStackInstancesRequest;
+import static software.amazon.cloudformation.stackset.util.Comparator.isAccountLevelTargetingEnabled;
 
 /**
  * Placeholder for the functionality that could be shared across Create/Read/Update/Delete/List Handlers
@@ -332,6 +335,37 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         final ResourceModel desiredModel = request.getDesiredResourceState();
         final ResourceModel previousModel = request.getPreviousResourceState();
 
+        /*
+        * If previous or desired model enables ALT, will apply AltResourceModelAnalyzer
+        * */
+        if (isAccountLevelTargetingEnabled(previousModel) || isAccountLevelTargetingEnabled(desiredModel)){
+            switch (action) {
+                /*
+                * For create -- it's equivalent to compare the desired model to an empty model.
+                * In other words, only set AltResourceModelAnalyzer currentModel() parameter.
+                * */
+                case CREATE:
+                    new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
+                    AltResourceModelAnalyzer.builder().currentModel(desiredModel).build().analyze(placeHolder);
+                    break;
+                /*
+                * For update -- compare current and previous model.
+                * */
+                case UPDATE:
+                    new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
+                    AltResourceModelAnalyzer.builder().currentModel(desiredModel).previousModel(previousModel).build().analyze(placeHolder);
+                    break;
+                /*
+                * For delete -- it's equivalent to compare an empty model to the desiredModel.
+                * In other words, only set AltResourceModelAnalyzer previousModel() parameter.
+                * */
+                case DELETE:
+                    AltResourceModelAnalyzer.builder().previousModel(desiredModel).build().analyze(placeHolder);
+                    break;
+            }
+            return;
+        }
+
         switch (action) {
             case CREATE:
                 new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
@@ -343,6 +377,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                 break;
             case DELETE:
                 InstancesAnalyzer.builder().desiredModel(desiredModel).build().analyzeForDelete(placeHolder);
-        }
+            }
     }
+
 }

@@ -1,5 +1,7 @@
 package software.amazon.cloudformation.stackset;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +31,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InternalFailure;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_2;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateInstancesWithRegions;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateModel;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_2;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_3;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SELF_MANAGED_MODEL;
@@ -217,6 +228,46 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         verify(client).createStackSet(any(CreateStackSetRequest.class));
         verify(client, times(2)).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(client, times(2)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+    }
+
+    @Test
+    public void handleRequest_AltModel_SimpleSuccess() {
+        ResourceModel modelToCreate = generateModel(new HashSet<>(Arrays.asList(
+                generateInstancesWithRegions(OU_1, Arrays.asList(account_1, account_2), DIFF,
+                        new HashSet<>(Arrays.asList(region_1, region_2, region_3)))
+        )));
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(modelToCreate)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
+                .thenReturn(CREATE_STACK_SET_RESPONSE);
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
+                .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+                .thenReturn(OPERATION_SUCCEED_RESPONSE);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, loggerProxy);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(modelToCreate);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
+        verify(client, times(3)).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client, times(3)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
     }
 
     @Test
