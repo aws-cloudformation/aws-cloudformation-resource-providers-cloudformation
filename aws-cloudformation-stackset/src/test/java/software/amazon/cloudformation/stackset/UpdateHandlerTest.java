@@ -1,5 +1,7 @@
 package software.amazon.cloudformation.stackset;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,18 +19,33 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequ
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetRequest;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.stackset.util.AltStackInstancesCalculator;
 import software.amazon.cloudformation.test.AbstractMockTestBase;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.INTER;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_2;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_3;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateInstancesWithRegions;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateModel;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_2;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_3;
 import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SERVICE_MANAGED_MODEL;
@@ -38,6 +55,8 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RES
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PREVIOUS_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_NO_INSTANCES_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_WITH_ME_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SIMPLE_MODEL;
@@ -60,6 +79,58 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     public void setup() {
         client = getServiceClient();
         handler = new UpdateHandler();
+    }
+
+    @Test
+    public void handleRequest_AltModel_SimpleSuccess() {
+        ResourceModel previousModel = generateModel(new HashSet<>(Arrays.asList(
+                generateInstancesWithRegions(OU_1, Arrays.asList(account_1, account_2), DIFF,
+                        new HashSet<>(Arrays.asList(region_1, region_2)))
+        )));
+        ResourceModel currentModel = generateModel(new HashSet<>(Arrays.asList(
+                generateInstancesWithRegions(OU_1, Arrays.asList(account_2, account_3), INTER,
+                        new HashSet<>(Arrays.asList(region_2, region_3)))
+        )));
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .previousResourceState(previousModel)
+                .desiredResourceState(currentModel)
+                .previousResourceTags(PREVIOUS_RESOURCE_TAGS)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .build();
+
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(client.updateStackSet(any(UpdateStackSetRequest.class)))
+                .thenReturn(UPDATE_STACK_SET_RESPONSE);
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
+                .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(client.deleteStackInstances(any(DeleteStackInstancesRequest.class)))
+                .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
+        when(client.updateStackInstances(any(UpdateStackInstancesRequest.class)))
+                .thenReturn(UPDATE_STACK_INSTANCES_RESPONSE);
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+                .thenReturn(OPERATION_SUCCEED_RESPONSE);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, loggerProxy);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(currentModel);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).updateStackSet(any(UpdateStackSetRequest.class));
+        verify(client, times(2)).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client).updateStackInstances(any(UpdateStackInstancesRequest.class));
+        verify(client, times(2)).deleteStackInstances(any(DeleteStackInstancesRequest.class));
+        verify(client, times(6)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
     }
 
     @Test

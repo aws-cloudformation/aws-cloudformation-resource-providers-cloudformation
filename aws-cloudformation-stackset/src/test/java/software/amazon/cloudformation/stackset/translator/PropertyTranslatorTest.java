@@ -1,6 +1,8 @@
 package software.amazon.cloudformation.stackset.translator;
 
+import java.util.HashSet;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.cloudformation.model.DeploymentTargets;
 import software.amazon.awssdk.services.cloudformation.model.RegionConcurrencyType;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationPreferences;
 import software.amazon.awssdk.services.cloudformation.model.ManagedExecution;
@@ -14,10 +16,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkAutoDeployment;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkParameters;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateFromSdkTags;
+import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkDeploymentTargets;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkManagedExecution;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkOperationPreferences;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkTags;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.INTER;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_1;
 import static software.amazon.cloudformation.stackset.util.TestUtils.EU_EAST_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.ORGANIZATION_UNIT_ID_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1;
@@ -76,5 +82,24 @@ public class PropertyTranslatorTest {
         assertThat(translateToSdkManagedExecution(null).active()).isEqualTo(false);
         assertThat(translateToSdkManagedExecution(software.amazon.cloudformation.stackset.ManagedExecution.builder()
                 .build()).active()).isEqualTo(false);
+    }
+
+    @Test
+    public void test_translateToSdkDeploymentTargets() {
+        software.amazon.cloudformation.stackset.DeploymentTargets deploymentTargets =
+                software.amazon.cloudformation.stackset.DeploymentTargets.builder()
+                        .organizationalUnitIds(new HashSet<>(Arrays.asList(OU_1)))
+                        .accounts(new HashSet<>(Arrays.asList(account_1)))
+                        .accountFilterType(INTER)
+                        .build();
+
+        DeploymentTargets sdkDeploymentTargets = translateToSdkDeploymentTargets(deploymentTargets);
+
+        assertThat(new HashSet<>(sdkDeploymentTargets.organizationalUnitIds()))
+                .isEqualTo(new HashSet<>(Arrays.asList(OU_1)));
+        assertThat(new HashSet<>(sdkDeploymentTargets.accounts()))
+                .isEqualTo(new HashSet<>(Arrays.asList(account_1)));
+        assertThat(sdkDeploymentTargets.accountFilterTypeAsString()).isEqualTo(INTER);
+
     }
 }
