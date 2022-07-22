@@ -1,12 +1,21 @@
 package software.amazon.cloudformation.stackset.util;
 
+import java.util.HashSet;
 import org.assertj.core.util.Sets;
 import org.junit.jupiter.api.Test;
 import software.amazon.cloudformation.stackset.ResourceModel;
 
 import java.util.Arrays;
+import software.amazon.cloudformation.stackset.StackInstances;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_2;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateInstancesWithRegions;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_1;
+import static software.amazon.cloudformation.stackset.util.Comparator.isAccountLevelTargetingEnabled;
 import static software.amazon.cloudformation.stackset.util.Comparator.isStackSetConfigEquals;
 import static software.amazon.cloudformation.stackset.util.TestUtils.ADMINISTRATION_ROLE_ARN;
 import static software.amazon.cloudformation.stackset.util.TestUtils.AUTO_DEPLOYMENT_DISABLED;
@@ -24,6 +33,8 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_1_UPDATED;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PARAMETER_2;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PREVIOUS_RESOURCE_TAGS;
+import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED;
+import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TAGS_TO_UPDATE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_BODY;
@@ -35,6 +46,40 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_TEM
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_TEMPLATE_URL;
 
 public class ComparatorTest {
+
+    @Test
+    public void testIsAccountLevelTargetingEnabled() {
+        assertThat(isAccountLevelTargetingEnabled(null)).isFalse();
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder().permissionModel(SELF_MANAGED).build())).isFalse();
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder().permissionModel(SERVICE_MANAGED).build())).isFalse();
+
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder()
+                .permissionModel(SERVICE_MANAGED)
+                .stackInstancesGroup(new HashSet<>())
+                .build())).isFalse();
+
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder()
+                .permissionModel(SERVICE_MANAGED)
+                .stackInstancesGroup(new HashSet<>(Arrays.asList(
+                        StackInstances.builder().build()
+                )))
+                .build())).isFalse();
+
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder()
+                .permissionModel(SERVICE_MANAGED)
+                .stackInstancesGroup(new HashSet<>(Arrays.asList(
+                        generateInstancesWithRegions(OU_1, region_1)
+                )))
+                .build())).isFalse();
+
+        assertThat(isAccountLevelTargetingEnabled(ResourceModel.builder()
+                .permissionModel(SERVICE_MANAGED)
+                .stackInstancesGroup(new HashSet<>(Arrays.asList(
+                        generateInstancesWithRegions(OU_1, region_1),
+                        generateInstancesWithRegions(OU_1, account_1, DIFF, region_1)
+                )))
+                .build())).isTrue();
+    }
 
     @Test
     public void testIsStackSetConfigEquals() {

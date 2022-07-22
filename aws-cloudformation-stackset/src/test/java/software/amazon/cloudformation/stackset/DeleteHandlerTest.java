@@ -1,5 +1,7 @@
 package software.amazon.cloudformation.stackset;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,9 +24,19 @@ import software.amazon.cloudformation.test.AbstractMockTestBase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_2;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateInstancesWithRegions;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateModel;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_2;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_3;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_RESPONSE;
@@ -148,6 +160,45 @@ public class DeleteHandlerTest extends AbstractMockTestBase<CloudFormationClient
         verify(client).describeStackSet(any(DescribeStackSetRequest.class));
         verify(client).deleteStackInstances(any(DeleteStackInstancesRequest.class));
         verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client).deleteStackSet(any(DeleteStackSetRequest.class));
+    }
+
+    @Test
+    public void handleRequest_AltModel_SimpleSuccess() {
+        ResourceModel modelToDelete = generateModel(new HashSet<>(Arrays.asList(
+                generateInstancesWithRegions(OU_1, Arrays.asList(account_1, account_2), DIFF,
+                        new HashSet<>(Arrays.asList(region_1, region_2, region_3)))
+        )));
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(modelToDelete)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+        when(client.deleteStackInstances(any(DeleteStackInstancesRequest.class)))
+                .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+                .thenReturn(OPERATION_SUCCEED_RESPONSE);
+        when(client.deleteStackSet(any(DeleteStackSetRequest.class)))
+                .thenReturn(DELETE_STACK_SET_RESPONSE);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, loggerProxy);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(client).describeStackSet(any(DescribeStackSetRequest.class));
+        verify(client, times(3)).deleteStackInstances(any(DeleteStackInstancesRequest.class));
+        verify(client, times(3)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
         verify(client).deleteStackSet(any(DeleteStackSetRequest.class));
     }
 

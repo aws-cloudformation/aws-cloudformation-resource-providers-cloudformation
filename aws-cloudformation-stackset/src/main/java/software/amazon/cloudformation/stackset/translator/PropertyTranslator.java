@@ -62,6 +62,7 @@ public class PropertyTranslator {
         return DeploymentTargets.builder()
                 .accounts(deploymentTargets.getAccounts())
                 .organizationalUnitIds(deploymentTargets.getOrganizationalUnitIds())
+                .accountFilterType(deploymentTargets.getAccountFilterType())
                 .build();
     }
 
