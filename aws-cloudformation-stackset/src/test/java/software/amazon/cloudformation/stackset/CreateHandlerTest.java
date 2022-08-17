@@ -1,7 +1,5 @@
 package software.amazon.cloudformation.stackset;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,10 +15,14 @@ import software.amazon.awssdk.services.cloudformation.model.CreateStackSetReques
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.test.AbstractMockTestBase;
+
+import java.util.Arrays;
+import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,7 +31,6 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.amazon.cloudformation.proxy.HandlerErrorCode.InternalFailure;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
@@ -390,13 +391,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
                 .thenReturn(OPERATION_STOPPED_RESPONSE);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, null, loggerProxy);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getErrorCode()).isEqualTo(InternalFailure);
+        assertThrows(
+                CfnNotStabilizedException.class,
+                () -> handler.handleRequest(proxy, request, null, loggerProxy));
 
         verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
         verify(client).createStackSet(any(CreateStackSetRequest.class));
