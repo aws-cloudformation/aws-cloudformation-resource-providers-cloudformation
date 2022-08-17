@@ -1,7 +1,6 @@
 package software.amazon.cloudformation.stackset;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import software.amazon.awssdk.awscore.AwsRequest;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
@@ -18,7 +17,7 @@ import software.amazon.awssdk.services.cloudformation.model.StackSetStatus;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesResponse;
 import software.amazon.cloudformation.Action;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.TerminalException;
+import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -79,11 +78,12 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
      *
      * @param status      {@link StackSetOperationStatus}
      * @param operationId Operation ID
+     * @param stackSetId StackSet ID
      * @return boolean
      */
     @VisibleForTesting
     protected static boolean isStackSetOperationDone(
-            final StackSetOperationStatus status, final String operationId, final Logger logger) {
+            final StackSetOperationStatus status, final String operationId, final String stackSetId, final Logger logger) {
 
         switch (status) {
             case SUCCEEDED:
@@ -93,9 +93,9 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             case QUEUED:
                 return false;
             default:
-                logger.log(String.format("StackInstanceOperation [%s] unexpected status [%s]", operationId, status));
-                throw new TerminalException(
-                        String.format("Stack set operation [%s] was unexpectedly stopped or failed", operationId));
+                logger.log(String.format("StackSet Operation [%s] unexpected status [%s]", operationId, status));
+                throw new CfnNotStabilizedException(
+                        String.format("Stack set operation [%s] was unexpectedly stopped or failed", operationId), stackSetId);
         }
     }
 
@@ -315,7 +315,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         final String stackSetId = model.getStackSetId();
         final String callAs = model.getCallAs();
         final StackSetOperationStatus status = getStackSetOperationStatus(proxyClient, stackSetId, operationId, callAs, logger);
-        return isStackSetOperationDone(status, operationId, logger);
+        return isStackSetOperationDone(status, operationId, stackSetId, logger);
     }
 
     /**
