@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetResp
 import software.amazon.awssdk.services.cloudformation.model.OperationInProgressException;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceNotFoundException;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
+import software.amazon.awssdk.services.cloudformation.model.StackSetOperation;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationStatus;
 import software.amazon.awssdk.services.cloudformation.model.StackSetStatus;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesResponse;
@@ -52,13 +53,13 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             .build();
 
     /**
-     * Retrieves the {@link StackSetOperationStatus} from {@link DescribeStackSetOperationResponse}
+     * Retrieves the {@link StackSetOperation} from {@link DescribeStackSetOperationResponse}
      *
      * @param stackSetId  {@link ResourceModel#getStackSetId()}
      * @param operationId Operation ID
-     * @return {@link StackSetOperationStatus}
+     * @return {@link StackSetOperation}
      */
-    private static StackSetOperationStatus getStackSetOperationStatus(
+    private static StackSetOperation getStackSetOperation(
             final ProxyClient<CloudFormationClient> proxyClient,
             final String stackSetId,
             final String operationId,
@@ -70,21 +71,22 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                 ResourceModel.TYPE_NAME, stackSetId, request));
         final DescribeStackSetOperationResponse response = proxyClient.injectCredentialsAndInvokeV2(request,
                 proxyClient.client()::describeStackSetOperation);
-        return response.stackSetOperation().status();
+        return response.stackSetOperation();
     }
 
     /**
      * Compares {@link StackSetOperationStatus} with specific statuses
      *
-     * @param status      {@link StackSetOperationStatus}
-     * @param operationId Operation ID
-     * @param stackSetId StackSet ID
+     * @param stackSetOperation {@link StackSetOperation}
+     * @param operationId       Operation ID
+     * @param stackSetId        StackSet ID
      * @return boolean
      */
     @VisibleForTesting
     protected static boolean isStackSetOperationDone(
-            final StackSetOperationStatus status, final String operationId, final String stackSetId, final Logger logger) {
-
+            final StackSetOperation stackSetOperation, final String operationId, final String stackSetId, final Logger logger) {
+        StackSetOperationStatus status = stackSetOperation.status();
+        String statusReason = stackSetOperation.statusReason();
         switch (status) {
             case SUCCEEDED:
                 logger.log(String.format("StackSet Operation [%s] has been successfully stabilized.", operationId));
@@ -93,9 +95,9 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             case QUEUED:
                 return false;
             default:
-                logger.log(String.format("StackSet Operation [%s] unexpected status [%s]", operationId, status));
+                logger.log(String.format("StackSet Operation [%s] unexpected status [%s] status reason [%s]", operationId, status, statusReason));
                 throw new CfnNotStabilizedException(
-                        String.format("Stack set operation [%s] was unexpectedly stopped or failed", operationId), stackSetId);
+                        String.format("Stack set operation [%s] was unexpectedly stopped or failed. status reason: [%s]", operationId, statusReason), stackSetId);
         }
     }
 
@@ -314,8 +316,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
         final String stackSetId = model.getStackSetId();
         final String callAs = model.getCallAs();
-        final StackSetOperationStatus status = getStackSetOperationStatus(proxyClient, stackSetId, operationId, callAs, logger);
-        return isStackSetOperationDone(status, operationId, stackSetId, logger);
+        final StackSetOperation stackSetOperation = getStackSetOperation(proxyClient, stackSetId, operationId, callAs, logger);
+        return isStackSetOperationDone(stackSetOperation, operationId, stackSetId, logger);
     }
 
     /**
