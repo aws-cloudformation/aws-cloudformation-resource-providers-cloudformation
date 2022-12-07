@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOper
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesResponse;
+import software.amazon.awssdk.services.cloudformation.model.ListStackSetOperationResultsResponse;
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetsResponse;
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.PermissionModels;
@@ -16,6 +17,8 @@ import software.amazon.awssdk.services.cloudformation.model.RegionConcurrencyTyp
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperation;
+import software.amazon.awssdk.services.cloudformation.model.StackSetOperationResultStatus;
+import software.amazon.awssdk.services.cloudformation.model.StackSetOperationResultSummary;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationStatus;
 import software.amazon.awssdk.services.cloudformation.model.StackSetStatus;
 import software.amazon.awssdk.services.cloudformation.model.StackSetSummary;
@@ -743,4 +746,32 @@ public class TestUtils {
             ListStackSetsResponse.builder()
                     .summaries(STACK_SET_SUMMARY_SELF_MANAGED)
                     .build();
+
+    public static DescribeStackSetOperationResponse getFailedDescribeStackSetOperationResponse(String statusReason) {
+        return DescribeStackSetOperationResponse.builder()
+            .stackSetOperation(StackSetOperation.builder()
+                .status(StackSetOperationStatus.FAILED)
+                .statusReason(statusReason)
+                .build())
+            .build();
+    }
+
+    public static ListStackSetOperationResultsResponse getListStackSetOperationResultsResponse(String statusReason) {
+        return ListStackSetOperationResultsResponse.builder()
+            .summaries(
+                StackSetOperationResultSummary.builder()
+                    .status(StackSetOperationResultStatus.SUCCEEDED)
+                    .account(ACCOUNT_ID_1)
+                    .region(US_WEST_1)
+                    .statusReason(statusReason)
+                    .build(),
+                StackSetOperationResultSummary.builder()
+                    .status(StackSetOperationResultStatus.FAILED)
+                    .account(ACCOUNT_ID_1)
+                    .region(US_EAST_1)
+                    .statusReason(statusReason)
+                    .build()
+            )
+            .build();
+    }
 }

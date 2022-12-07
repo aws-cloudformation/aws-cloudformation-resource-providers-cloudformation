@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOper
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackInstancesRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListStackSetOperationResultsRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetsRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetRequest;
@@ -195,5 +196,19 @@ public class RequestTranslator {
                 .templateBody(templateBody)
                 .templateURL(templateUrl)
                 .build();
+    }
+
+    public static ListStackSetOperationResultsRequest listStackSetOperationResultsRequest(
+        final String nextToken,
+        final String stackSetName,
+        final String operationId,
+        final String callAs) {
+        return ListStackSetOperationResultsRequest.builder()
+            .maxResults(LIST_MAX_ITEMS)
+            .nextToken(nextToken)
+            .stackSetName(stackSetName)
+            .operationId(operationId)
+            .callAs(callAs)
+            .build();
     }
 }
