@@ -39,6 +39,7 @@ Resources:
                 - "cloudformation:DescribeStackSetOperation"
                 - "cloudformation:GetTemplateSummary"
                 - "cloudformation:ListStackInstances"
+                - "cloudformation:ListStackSetOperationResults"
                 - "cloudformation:ListStackSets"
                 - "cloudformation:TagResource"
                 - "cloudformation:UntagResource"

@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.cloudformation.model.CreateStackInstances
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListStackSetOperationResultsRequest;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,7 +49,6 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_A
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.LOGICAL_ID;
-import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_STOPPED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.REQUEST_TOKEN;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_DUPLICATE_INSTANCES_MODEL;
@@ -58,6 +59,8 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGE
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL_AS_SELF;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK;
 import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.getFailedDescribeStackSetOperationResponse;
+import static software.amazon.cloudformation.stackset.util.TestUtils.getListStackSetOperationResultsResponse;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient> {
@@ -381,6 +384,7 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
                 .build();
+        String failedStatusReason = "failed status reason";
 
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
@@ -389,9 +393,9 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
                 .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
         when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
-                .thenReturn(OPERATION_STOPPED_RESPONSE);
+                .thenReturn(getFailedDescribeStackSetOperationResponse(failedStatusReason));
 
-        assertThrows(
+        Exception e = assertThrows(
                 CfnNotStabilizedException.class,
                 () -> handler.handleRequest(proxy, request, null, loggerProxy));
 
@@ -399,6 +403,74 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         verify(client).createStackSet(any(CreateStackSetRequest.class));
         verify(client).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client, never()).listStackSetOperationResults(any(ListStackSetOperationResultsRequest.class));
+        assertThat(e.getMessage()).contains(failedStatusReason);
+    }
+
+    @Test
+    public void handlerRequest_OperationStoppedErrorCallsListStackSetOperationResults() {
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(SELF_MANAGED_MODEL)
+            .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+            .logicalResourceIdentifier(LOGICAL_ID)
+            .clientRequestToken(REQUEST_TOKEN)
+            .build();
+        String failedStatusReason = "another failed status reason";
+
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+            .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
+            .thenReturn(CREATE_STACK_SET_RESPONSE);
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
+            .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+            .thenReturn(getFailedDescribeStackSetOperationResponse(null));
+        when(client.listStackSetOperationResults(any(ListStackSetOperationResultsRequest.class)))
+            .thenReturn(getListStackSetOperationResultsResponse(failedStatusReason));
+
+        Exception e = assertThrows(
+            CfnNotStabilizedException.class,
+            () -> handler.handleRequest(proxy, request, null, loggerProxy));
+
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
+        verify(client).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client).listStackSetOperationResults(any(ListStackSetOperationResultsRequest.class));
+        assertThat(e.getMessage()).contains(failedStatusReason);
+    }
+
+    @Test
+    public void handlerRequest_OperationStoppedErrorExceedsCfnCharacterLimit() {
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(SELF_MANAGED_MODEL)
+            .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+            .logicalResourceIdentifier(LOGICAL_ID)
+            .clientRequestToken(REQUEST_TOKEN)
+            .build();
+        String failedStatusReason = new String(new char[30]).replace("\0", "very very long failed message. ");
+
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+            .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
+            .thenReturn(CREATE_STACK_SET_RESPONSE);
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
+            .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+            .thenReturn(getFailedDescribeStackSetOperationResponse(null));
+        when(client.listStackSetOperationResults(any(ListStackSetOperationResultsRequest.class)))
+            .thenReturn(getListStackSetOperationResultsResponse(failedStatusReason));
+
+        Exception e = assertThrows(
+            CfnNotStabilizedException.class,
+            () -> handler.handleRequest(proxy, request, null, loggerProxy));
+
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
+        verify(client).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client).listStackSetOperationResults(any(ListStackSetOperationResultsRequest.class));
+        assertThat(e.getMessage()).contains("... Use list-stack-set-operation-results for more information.");
     }
 
     @Test

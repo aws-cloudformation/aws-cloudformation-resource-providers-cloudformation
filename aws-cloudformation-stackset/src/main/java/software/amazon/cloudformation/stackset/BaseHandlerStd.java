@@ -9,10 +9,13 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOper
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetResponse;
+import software.amazon.awssdk.services.cloudformation.model.ListStackSetOperationResultsRequest;
+import software.amazon.awssdk.services.cloudformation.model.ListStackSetOperationResultsResponse;
 import software.amazon.awssdk.services.cloudformation.model.OperationInProgressException;
 import software.amazon.awssdk.services.cloudformation.model.StackInstanceNotFoundException;
 import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperation;
+import software.amazon.awssdk.services.cloudformation.model.StackSetOperationResultStatus;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationStatus;
 import software.amazon.awssdk.services.cloudformation.model.StackSetStatus;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesResponse;
@@ -32,12 +35,15 @@ import software.amazon.cloudformation.stackset.util.StackInstancesPlaceHolder;
 import software.amazon.cloudformation.stackset.util.Validator;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.createStackInstancesRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.deleteStackInstancesRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackSetOperationRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.describeStackSetRequest;
+import static software.amazon.cloudformation.stackset.translator.RequestTranslator.listStackSetOperationResultsRequest;
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.updateStackInstancesRequest;
 import static software.amazon.cloudformation.stackset.util.Comparator.isAccountLevelTargetingEnabled;
 
@@ -45,6 +51,8 @@ import static software.amazon.cloudformation.stackset.util.Comparator.isAccountL
  * Placeholder for the functionality that could be shared across Create/Read/Update/Delete/List Handlers
  */
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
+
+    private static final int ERROR_MESSAGE_CHARACTER_LIMIT = 850;
 
     protected static final MultipleOf MULTIPLE_OF = MultipleOf.multipleOf()
             .multiple(2)
@@ -75,6 +83,83 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     }
 
     /**
+     * Retrieves the {@link ListStackSetOperationResultsResponse}
+     *
+     * @param nextToken {@link ListStackSetOperationResultsResponse#nextToken()}
+     * @param stackSetId StackSet ID
+     * @param operationId Operation ID
+     * @return {@link ListStackSetOperationResultsResponse}
+     */
+    private static ListStackSetOperationResultsResponse getStackSetOperationResults(
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final String nextToken,
+            final String stackSetId,
+            final String operationId,
+            final String callAs,
+            final Logger logger) {
+        final ListStackSetOperationResultsRequest request = listStackSetOperationResultsRequest(nextToken, stackSetId, operationId, callAs);
+        logger.log(String.format("%s [%s] ListStackSetOperationResults request: [%s]", ResourceModel.TYPE_NAME, stackSetId, request));
+        return proxyClient.injectCredentialsAndInvokeV2(request, proxyClient.client()::listStackSetOperationResults);
+    }
+
+    /**
+     * Retrieves the Set of stack instance level status reasons
+     *
+     * @param stackSetId StackSet ID
+     * @param operationId Operation ID
+     * @return Set of statusReason for failed {@link StackSetOperationResultStatus}
+     */
+    private static Set<String> getFailedStackInstanceLevelStatusReasons(
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final String stackSetId,
+            final String operationId,
+            final String callAs,
+            final Logger logger) {
+        Set<String> statusReasons = new HashSet<>();
+        String nextToken = null;
+        do {
+            ListStackSetOperationResultsResponse response = getStackSetOperationResults(proxyClient, nextToken, stackSetId, operationId, callAs, logger);
+            response.summaries().stream()
+                .filter(summary -> summary.status() == StackSetOperationResultStatus.FAILED)
+                .forEach(summary -> statusReasons.add(summary.statusReason()));
+            nextToken = response.nextToken();
+        } while (nextToken != null);
+        return statusReasons;
+    }
+
+    /**
+     * Builds error message that will be returned to the customer
+     *
+     * @param operationId Operation ID
+     * @param stackSetOperationStatusReason StackSet Operation Status Reason
+     * @param stackSetId StackSet ID
+     * @return Error message
+     */
+    private static String buildErrorMessageForFailedOperation(
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final String callAs,
+            final String operationId,
+            final String stackSetOperationStatusReason,
+            final String stackSetId,
+            final Logger logger) {
+        StringBuilder errorMessage = new StringBuilder(String.format("Stack set operation [%s] was unexpectedly stopped or failed. status reason(s):", operationId));
+        if (stackSetOperationStatusReason != null) {
+            errorMessage.append(String.format(" [%s]", stackSetOperationStatusReason));
+        } else {
+            Set<String> stackInstanceLevelStatusReasons = getFailedStackInstanceLevelStatusReasons(proxyClient, stackSetId, operationId, callAs, logger);
+            stackInstanceLevelStatusReasons.forEach(statusReason -> errorMessage.append(String.format(" [%s]", statusReason)));
+        }
+        logger.log(String.format("Full error message: [%s]", errorMessage));
+
+        if (errorMessage.length() > ERROR_MESSAGE_CHARACTER_LIMIT) {
+            errorMessage.delete(ERROR_MESSAGE_CHARACTER_LIMIT, errorMessage.length());
+            errorMessage.append("... Use list-stack-set-operation-results for more information.");
+        }
+
+        return errorMessage.toString();
+    }
+
+    /**
      * Compares {@link StackSetOperationStatus} with specific statuses
      *
      * @param stackSetOperation {@link StackSetOperation}
@@ -84,7 +169,12 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
      */
     @VisibleForTesting
     protected static boolean isStackSetOperationDone(
-            final StackSetOperation stackSetOperation, final String operationId, final String stackSetId, final Logger logger) {
+            final ProxyClient<CloudFormationClient> proxyClient,
+            final String callAs,
+            final StackSetOperation stackSetOperation,
+            final String operationId,
+            final String stackSetId,
+            final Logger logger) {
         StackSetOperationStatus status = stackSetOperation.status();
         String statusReason = stackSetOperation.statusReason();
         switch (status) {
@@ -95,9 +185,9 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             case QUEUED:
                 return false;
             default:
-                logger.log(String.format("StackSet Operation [%s] unexpected status [%s] status reason [%s]", operationId, status, statusReason));
-                throw new CfnNotStabilizedException(
-                        String.format("Stack set operation [%s] was unexpectedly stopped or failed. status reason: [%s]", operationId, statusReason), stackSetId);
+                String errorMessage = buildErrorMessageForFailedOperation(proxyClient, callAs, operationId, statusReason, stackSetId, logger);
+                logger.log(String.format("StackSet Operation [%s] unexpected status [%s]. Error message: [%s]", operationId, status, errorMessage));
+                throw new CfnNotStabilizedException(errorMessage, stackSetId);
         }
     }
 
@@ -317,7 +407,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         final String stackSetId = model.getStackSetId();
         final String callAs = model.getCallAs();
         final StackSetOperation stackSetOperation = getStackSetOperation(proxyClient, stackSetId, operationId, callAs, logger);
-        return isStackSetOperationDone(stackSetOperation, operationId, stackSetId, logger);
+        return isStackSetOperationDone(proxyClient, callAs, stackSetOperation, operationId, stackSetId, logger);
     }
 
     /**
