@@ -49,6 +49,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_A
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PREVIOUS_RESOURCE_TAGS;
@@ -140,7 +141,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(client.updateStackSet(any(UpdateStackSetRequest.class)))
@@ -184,7 +185,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(client.updateStackSet(any(UpdateStackSetRequest.class)))
@@ -243,7 +244,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(client.updateStackSet(any(UpdateStackSetRequest.class)))
@@ -273,7 +274,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
 
@@ -377,6 +378,6 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         verify(client).createStackInstances(any(CreateStackInstancesRequest.class));
         verify(client).updateStackInstances(any(UpdateStackInstancesRequest.class));
         verify(client).deleteStackInstances(any(DeleteStackInstancesRequest.class));
-        verify(client, times(5)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+        verify(client, times(4)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
     }
 }
