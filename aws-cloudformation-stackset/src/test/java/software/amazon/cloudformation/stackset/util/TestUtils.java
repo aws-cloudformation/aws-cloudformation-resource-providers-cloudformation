@@ -218,8 +218,13 @@ public class TestUtils {
 
     public final static software.amazon.awssdk.services.cloudformation.model.ManagedExecution MANAGED_EXECUTION_SDK =
             software.amazon.awssdk.services.cloudformation.model.ManagedExecution.builder()
-            .active(true)
-            .build();
+                    .active(true)
+                    .build();
+
+    public final static software.amazon.awssdk.services.cloudformation.model.ManagedExecution MANAGED_EXECUTION_DISABLED_SDK =
+            software.amazon.awssdk.services.cloudformation.model.ManagedExecution.builder()
+                    .active(false)
+                    .build();
 
     public final static Set<software.amazon.cloudformation.stackset.Tag> TAGS = new HashSet<>(Arrays.asList(
             new software.amazon.cloudformation.stackset.Tag("key1", "val1"),
@@ -415,6 +420,10 @@ public class TestUtils {
             .managedExecution(MANAGED_EXECUTION_SDK)
             .build();
 
+    public final static StackSet SELF_MANAGED_STACK_SET_ME_DISABLED = SELF_MANAGED_STACK_SET.toBuilder()
+            .managedExecution(MANAGED_EXECUTION_DISABLED_SDK)
+            .build();
+
     public final static StackSet NULL_PERMISSION_MODEL_STACK_SET = StackSet.builder()
             .stackSetId(STACK_SET_ID)
             .stackSetName(STACK_SET_NAME)
@@ -519,7 +528,7 @@ public class TestUtils {
             .managedExecution(MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL)
             .build();
 
-    public final static ResourceModel UPDATED_SELF_MANAGED_WITH_ME_MODEL = ResourceModel.builder()
+    public final static ResourceModel UPDATED_SELF_MANAGED_WITH_ME_DISABLED_MODEL = ResourceModel.builder()
             .stackSetId(STACK_SET_ID)
             .permissionModel(SELF_MANAGED)
             .capabilities(CAPABILITIES)
@@ -712,6 +721,11 @@ public class TestUtils {
                     .stackSet(SELF_MANAGED_STACK_SET)
                     .build();
 
+    public final static DescribeStackSetResponse DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE =
+            DescribeStackSetResponse.builder()
+                    .stackSet(SELF_MANAGED_STACK_SET_ME_DISABLED)
+                    .build();
+
     public final static DescribeStackSetResponse DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE =
             DescribeStackSetResponse.builder()
                     .stackSet(SERVICE_MANAGED_STACK_SET)
@@ -749,29 +763,29 @@ public class TestUtils {
 
     public static DescribeStackSetOperationResponse getFailedDescribeStackSetOperationResponse(String statusReason) {
         return DescribeStackSetOperationResponse.builder()
-            .stackSetOperation(StackSetOperation.builder()
-                .status(StackSetOperationStatus.FAILED)
-                .statusReason(statusReason)
-                .build())
-            .build();
+                .stackSetOperation(StackSetOperation.builder()
+                        .status(StackSetOperationStatus.FAILED)
+                        .statusReason(statusReason)
+                        .build())
+                .build();
     }
 
     public static ListStackSetOperationResultsResponse getListStackSetOperationResultsResponse(String statusReason) {
         return ListStackSetOperationResultsResponse.builder()
-            .summaries(
-                StackSetOperationResultSummary.builder()
-                    .status(StackSetOperationResultStatus.SUCCEEDED)
-                    .account(ACCOUNT_ID_1)
-                    .region(US_WEST_1)
-                    .statusReason(statusReason)
-                    .build(),
-                StackSetOperationResultSummary.builder()
-                    .status(StackSetOperationResultStatus.FAILED)
-                    .account(ACCOUNT_ID_1)
-                    .region(US_EAST_1)
-                    .statusReason(statusReason)
-                    .build()
-            )
-            .build();
+                .summaries(
+                        StackSetOperationResultSummary.builder()
+                                .status(StackSetOperationResultStatus.SUCCEEDED)
+                                .account(ACCOUNT_ID_1)
+                                .region(US_WEST_1)
+                                .statusReason(statusReason)
+                                .build(),
+                        StackSetOperationResultSummary.builder()
+                                .status(StackSetOperationResultStatus.FAILED)
+                                .account(ACCOUNT_ID_1)
+                                .region(US_EAST_1)
+                                .statusReason(statusReason)
+                                .build()
+                )
+                .build();
     }
 }
