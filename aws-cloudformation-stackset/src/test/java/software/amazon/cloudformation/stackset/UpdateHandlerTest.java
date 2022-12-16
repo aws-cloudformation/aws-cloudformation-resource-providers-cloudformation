@@ -97,7 +97,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(client.updateStackSet(any(UpdateStackSetRequest.class)))
