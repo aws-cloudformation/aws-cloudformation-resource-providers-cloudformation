@@ -27,8 +27,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: Install jinja2 with 2.11.3 to resolve incompatible issue
-      run: pip install jinja2==2.11.3
     - name: Set up cloudformation-cli-java-plugin
       run: pip install cloudformation-cli-java-plugin
     - name: install and run pre-commit
