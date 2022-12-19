@@ -1,6 +1,7 @@
 package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.StackSet;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetResponse;
 import software.amazon.cloudformation.Action;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -8,6 +9,7 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+import software.amazon.cloudformation.stackset.translator.PropertyTranslator;
 import software.amazon.cloudformation.stackset.util.StackInstancesPlaceHolder;
 
 import static software.amazon.cloudformation.stackset.translator.RequestTranslator.updateManagedExecutionRequest;
@@ -32,11 +34,11 @@ public class UpdateHandler extends BaseHandlerStd {
         final StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
         analyzeTemplate(proxyClient, request, placeHolder, Action.UPDATE);
         // describe StackSet in case it is DELETED
-        describeStackSet(proxyClient, model.getStackSetId(), model.getCallAs(), logger);
+        StackSet stackSet = describeStackSet(proxyClient, model.getStackSetId(), model.getCallAs(), logger);
 
         return ProgressEvent.progress(model, callbackContext)
                 // ManagedExecution update should be separated due to its limitations
-                .then(progress -> updateManagedExecution(proxy, proxyClient, progress, previousModel))
+                .then(progress -> updateManagedExecution(proxy, proxyClient, progress, previousModel, stackSet))
                 .then(progress -> deleteStackInstances(proxy, proxyClient, progress, placeHolder.getDeleteStackInstances(), logger))
                 .then(progress -> updateStackSet(proxy, proxyClient, request, progress, previousModel))
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, placeHolder.getCreateStackInstances(), logger))
@@ -96,11 +98,12 @@ public class UpdateHandler extends BaseHandlerStd {
             final AmazonWebServicesClientProxy proxy,
             final ProxyClient<CloudFormationClient> client,
             final ProgressEvent<ResourceModel, CallbackContext> progress,
-            final ResourceModel previousModel) {
+            final ResourceModel previousModel,
+            final StackSet stackSet) {
 
         final ResourceModel desiredModel = progress.getResourceModel();
         final CallbackContext callbackContext = progress.getCallbackContext();
-        if (isStackSetConfigEquals(previousModel.getManagedExecution(), desiredModel.getManagedExecution())) {
+        if (isStackSetConfigEquals(PropertyTranslator.translateFromSdkManagedExecution(stackSet.managedExecution()), desiredModel.getManagedExecution())) {
             return ProgressEvent.progress(desiredModel, callbackContext);
         }
         return proxy.initiate("AWS-CloudFormation-StackSet::UpdateManagedExecution", client, desiredModel, callbackContext)

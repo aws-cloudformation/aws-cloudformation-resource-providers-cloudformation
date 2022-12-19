@@ -19,18 +19,15 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetRequ
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackInstancesRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackSetRequest;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.stackset.util.AltStackInstancesCalculator;
 import software.amazon.cloudformation.test.AbstractMockTestBase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,18 +47,18 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.CREATE_STAC
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SELF_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELEGATED_ADMIN_SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DELETE_STACK_INSTANCES_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE;
+import static software.amazon.cloudformation.stackset.util.TestUtils.DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.DESIRED_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.OPERATION_SUCCEED_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.PREVIOUS_RESOURCE_TAGS;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_MODEL;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_NO_INSTANCES_MODEL;
-import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_WITH_ME_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SIMPLE_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_SELF_MANAGED_MODEL;
-import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_SELF_MANAGED_WITH_ME_MODEL;
+import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATED_SELF_MANAGED_WITH_ME_DISABLED_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATE_STACK_INSTANCES_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.UPDATE_STACK_SET_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
@@ -100,7 +97,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(client.updateStackSet(any(UpdateStackSetRequest.class)))
@@ -144,7 +141,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(client.updateStackSet(any(UpdateStackSetRequest.class)))
@@ -188,7 +185,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(client.updateStackSet(any(UpdateStackSetRequest.class)))
@@ -247,7 +244,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
         when(client.updateStackSet(any(UpdateStackSetRequest.class)))
@@ -277,7 +274,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 .build();
 
         when(client.describeStackSet(any(DescribeStackSetRequest.class)))
-                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_RESPONSE);
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
 
@@ -301,7 +298,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceState(SELF_MANAGED_WITH_ME_MODEL)
-                .desiredResourceState(UPDATED_SELF_MANAGED_WITH_ME_MODEL)
+                .desiredResourceState(UPDATED_SELF_MANAGED_WITH_ME_DISABLED_MODEL)
                 .previousResourceTags(PREVIOUS_RESOURCE_TAGS)
                 .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .build();
@@ -328,7 +325,7 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(UPDATED_SELF_MANAGED_WITH_ME_MODEL);
+        assertThat(response.getResourceModel()).isEqualTo(UPDATED_SELF_MANAGED_WITH_ME_DISABLED_MODEL);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
@@ -338,5 +335,49 @@ public class UpdateHandlerTest extends AbstractMockTestBase<CloudFormationClient
         verify(client).updateStackInstances(any(UpdateStackInstancesRequest.class));
         verify(client).deleteStackInstances(any(DeleteStackInstancesRequest.class));
         verify(client, times(5)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+    }
+
+    @Test
+    public void handleRequest_UpdateManagedExecution_StackSetAndTemplateMismatch_UsesStackSetSetting() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .previousResourceState(SELF_MANAGED_WITH_ME_MODEL)
+                .desiredResourceState(UPDATED_SELF_MANAGED_WITH_ME_DISABLED_MODEL)
+                .previousResourceTags(PREVIOUS_RESOURCE_TAGS)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .build();
+
+        when(client.describeStackSet(any(DescribeStackSetRequest.class)))
+                .thenReturn(DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE);
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(client.updateStackSet(any(UpdateStackSetRequest.class)))
+                .thenReturn(UPDATE_STACK_SET_RESPONSE);
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
+                .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(client.deleteStackInstances(any(DeleteStackInstancesRequest.class)))
+                .thenReturn(DELETE_STACK_INSTANCES_RESPONSE);
+        when(client.updateStackInstances(any(UpdateStackInstancesRequest.class)))
+                .thenReturn(UPDATE_STACK_INSTANCES_RESPONSE);
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+                .thenReturn(OPERATION_SUCCEED_RESPONSE);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, loggerProxy);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(UPDATED_SELF_MANAGED_WITH_ME_DISABLED_MODEL);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).updateStackSet(any(UpdateStackSetRequest.class));
+        verify(client).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client).updateStackInstances(any(UpdateStackInstancesRequest.class));
+        verify(client).deleteStackInstances(any(DeleteStackInstancesRequest.class));
+        verify(client, times(4)).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
     }
 }
