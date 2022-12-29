@@ -265,6 +265,11 @@ public class TestUtils {
                     .resourceTypes(Arrays.asList("AWS::CloudFormation::Stack"))
                     .build();
 
+    public final static GetTemplateSummaryResponse TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK_SET =
+            GetTemplateSummaryResponse.builder()
+                    .resourceTypes(Arrays.asList("AWS::CloudFormation::StackSet"))
+                    .build();
+
     public final static StackInstanceSummary STACK_INSTANCE_SUMMARY_OU1_IAD = StackInstanceSummary.builder()
             .organizationalUnitId(ORGANIZATION_UNIT_ID_1)
             .account(ACCOUNT_ID_1)

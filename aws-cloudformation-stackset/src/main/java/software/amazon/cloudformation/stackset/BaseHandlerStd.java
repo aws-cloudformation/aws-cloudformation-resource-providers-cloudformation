@@ -30,6 +30,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.delay.MultipleOf;
 import software.amazon.cloudformation.stackset.util.AltResourceModelAnalyzer;
 import software.amazon.cloudformation.stackset.util.ClientBuilder;
+import software.amazon.cloudformation.stackset.util.Comparator;
 import software.amazon.cloudformation.stackset.util.InstancesAnalyzer;
 import software.amazon.cloudformation.stackset.util.StackInstancesPlaceHolder;
 import software.amazon.cloudformation.stackset.util.Validator;
@@ -426,6 +427,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
         final ResourceModel desiredModel = request.getDesiredResourceState();
         final ResourceModel previousModel = request.getPreviousResourceState();
+        final boolean isSelfManaged = Comparator.isSelfManaged(request.getDesiredResourceState());
 
         /*
         * If previous or desired model enables ALT, will apply AltResourceModelAnalyzer
@@ -437,14 +439,14 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                 * In other words, only set AltResourceModelAnalyzer currentModel() parameter.
                 * */
                 case CREATE:
-                    new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
+                    new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), isSelfManaged);
                     AltResourceModelAnalyzer.builder().currentModel(desiredModel).build().analyze(placeHolder);
                     break;
                 /*
                 * For update -- compare current and previous model.
                 * */
                 case UPDATE:
-                    new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
+                    new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(), isSelfManaged);
                     AltResourceModelAnalyzer.builder().currentModel(desiredModel).previousModel(previousModel).build().analyze(placeHolder);
                     break;
                 /*
@@ -460,11 +462,11 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
         switch (action) {
             case CREATE:
-                new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
+                new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(),isSelfManaged);
                 InstancesAnalyzer.builder().desiredModel(desiredModel).build().analyzeForCreate(placeHolder);
                 break;
             case UPDATE:
-                new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL());
+                new Validator().validateTemplate(proxyClient, desiredModel.getTemplateBody(), desiredModel.getTemplateURL(),isSelfManaged);
                 InstancesAnalyzer.builder().desiredModel(desiredModel).previousModel(previousModel).build().analyzeForUpdate(placeHolder);
                 break;
             case DELETE:

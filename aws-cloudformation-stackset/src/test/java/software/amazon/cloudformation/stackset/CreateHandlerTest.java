@@ -58,6 +58,7 @@ import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGE
 import static software.amazon.cloudformation.stackset.util.TestUtils.SELF_MANAGED_ONE_INSTANCES_MODEL;
 import static software.amazon.cloudformation.stackset.util.TestUtils.SERVICE_MANAGED_MODEL_AS_SELF;
 import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK;
+import static software.amazon.cloudformation.stackset.util.TestUtils.TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK_SET;
 import static software.amazon.cloudformation.stackset.util.TestUtils.VALID_TEMPLATE_SUMMARY_RESPONSE;
 import static software.amazon.cloudformation.stackset.util.TestUtils.getFailedDescribeStackSetOperationResponse;
 import static software.amazon.cloudformation.stackset.util.TestUtils.getListStackSetOperationResultsResponse;
@@ -341,6 +342,41 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     }
 
     @Test
+    public void handleRequest_SelfManagedSS_Nested_Stack_SimpleSuccess() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(SELF_MANAGED_ONE_INSTANCES_MODEL)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK);
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
+                .thenReturn(CREATE_STACK_SET_RESPONSE);
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
+                .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+                .thenReturn(OPERATION_SUCCEED_RESPONSE);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, loggerProxy);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_ONE_INSTANCES_MODEL);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
+        verify(client).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
+    }
+
+    @Test
     public void handleRequest_SelfManagedSS_WithCallAsDelegatedAdmin_Failure() {
         AwsServiceException e = AwsServiceException.builder()
                 .awsErrorDetails(AwsErrorDetails.builder()
@@ -474,10 +510,30 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
     }
 
     @Test
-    public void handlerRequest_CfnInvalidRequestException_NestedStack() {
+    public void handlerRequest_CfnInvalidRequestException_NestedStackSet() {
 
         request = ResourceHandlerRequest.<ResourceModel>builder()
-                .desiredResourceState(SELF_MANAGED_DUPLICATE_INSTANCES_MODEL)
+                .desiredResourceState(SELF_MANAGED_ONE_INSTANCES_MODEL)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK_SET);
+
+        assertThrows(
+                CfnInvalidRequestException.class,
+                () -> handler.handleRequest(proxy, request, null, loggerProxy));
+
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+    }
+
+    @Test
+    public void handlerRequest_CfnInvalidRequestException_ServiceManaged_With_NestedStack() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(DELEGATED_ADMIN_SERVICE_MANAGED_MODEL)
                 .desiredResourceTags(DESIRED_RESOURCE_TAGS)
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .clientRequestToken(REQUEST_TOKEN)
@@ -485,6 +541,12 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
 
         when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
                 .thenReturn(TEMPLATE_SUMMARY_RESPONSE_WITH_NESTED_STACK);
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
+                .thenReturn(CREATE_STACK_SET_RESPONSE);
+        when(client.createStackInstances(any(CreateStackInstancesRequest.class)))
+                .thenReturn(CREATE_STACK_INSTANCES_RESPONSE);
+        when(client.describeStackSetOperation(any(DescribeStackSetOperationRequest.class)))
+                .thenReturn(OPERATION_SUCCEED_RESPONSE);
 
         assertThrows(
                 CfnInvalidRequestException.class,
