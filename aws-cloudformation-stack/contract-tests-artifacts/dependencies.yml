@@ -1,0 +1,62 @@
+Resources:
+  MyQueue:
+    Type: AWS::SQS::Queue
+    Properties: {}
+  MyTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Protocol: sqs
+          Endpoint:
+            Fn::GetAtt: [ MyQueue, Arn ]
+  MyTopic2:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Protocol: sqs
+          Endpoint:
+            Fn::GetAtt: [ MyQueue, Arn ]
+  ContractTestRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: ContractTestPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:ListStacks
+                  - sns:Publish
+                  - iam:PassRole
+                Resource: "*"
+Outputs:
+  TopicArn1:
+    Value:
+      Ref: MyTopic
+    Export:
+      Name: awscloudformationstackcto1
+  TopicArn2:
+    Value:
+      Ref: MyTopic2
+    Export:
+      Name: awscloudformationstackcto2
+  ContractTestRoleARN:
+    Value:
+      Fn::GetAtt: [ ContractTestRole, Arn ]
+    Export:
+      Name: awscloudformationstackcto3
