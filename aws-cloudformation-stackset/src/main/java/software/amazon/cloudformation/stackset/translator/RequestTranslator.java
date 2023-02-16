@@ -132,6 +132,7 @@ public class RequestTranslator {
                 .executionRoleName(model.getExecutionRoleName()) // In case Customized Role was used during CREATE
                 .capabilitiesWithStrings(model.getCapabilities()) // Ideally, we do not need this, in case UpdateManagedExecution request accidentally triggers deployments
                 .usePreviousTemplate(true)
+                .callAs(model.getCallAs())
                 .build();
     }
 
