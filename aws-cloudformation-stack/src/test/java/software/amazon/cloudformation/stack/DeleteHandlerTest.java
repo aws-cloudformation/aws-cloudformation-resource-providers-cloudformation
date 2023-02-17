@@ -4,8 +4,10 @@ import java.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
 import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
+import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
@@ -202,5 +204,32 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_Deletion_Error() {
+        // Mocks
+        when(proxyClient.client().deleteStack(any(DeleteStackRequest.class)))
+            .thenThrow(CloudFormationException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode("UnauthorizedOperation").build()).build()) ;
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
+                .build())
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of())
+                .build());
+        final DeleteHandler handler = new DeleteHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .stackId(STACK_ID)
+            .stackName(STACK_NAME)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,new CallbackContext(), proxyClient, logger);
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
     }
 }

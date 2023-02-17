@@ -24,7 +24,7 @@ public class ReadHandler extends BaseHandlerStd {
         final Logger logger) {
 
         this.logger = logger;
-
+        logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Read VPN Gateway", request.getStackId(), request.getClientRequestToken()));
         // https://github.com/aws-cloudformation/cloudformation-cli-java-plugin/blob/master/src/main/java/software/amazon/cloudformation/proxy/CallChain.java
 
         // STEP 1 [initialize a proxy context]
@@ -35,27 +35,14 @@ public class ReadHandler extends BaseHandlerStd {
             // Implement client invocation of the read request through the proxyClient, which is already initialised with
             // caller credentials, correct region and retry settings
             .makeServiceCall((awsRequest, client) -> {
-                DescribeStacksResponse awsResponse ;
-                try {
-                    awsResponse = client.injectCredentialsAndInvokeV2(awsRequest,client.client()::describeStacks);
-                } catch (final AwsServiceException e) { // ResourceNotFoundException
-                    /*
-                    * While the handler contract states that the handler must always return a progress event,
-                    * you may throw any instance of BaseHandlerException, as the wrapper map it to a progress event.
-                    * Each BaseHandlerException maps to a specific error code, and you should map service exceptions as closely as possible
-                    * to more specific error codes
-                    */
-                    throw new CfnGeneralServiceException(ResourceModel.TYPE_NAME, e); // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/commit/2077c92299aeb9a68ae8f4418b5e932b12a8b186#diff-5761e3a9f732dc1ef84103dc4bc93399R56-R63
-                }
+                DescribeStacksResponse awsResponse = client.injectCredentialsAndInvokeV2(awsRequest,client.client()::describeStacks);
                 if (awsResponse.stacks().isEmpty() || awsResponse.stacks().get(0).stackStatus() == StackStatus.DELETE_COMPLETE) {
                     throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getStackId());
                 }
                 logger.log(String.format("%s has successfully been read.", ResourceModel.TYPE_NAME));
                 return awsResponse;
             })
-
-            // Implement client invocation of the read request through the proxyClient, which is already initialised with
-            // caller credentials, correct region and retry settings
+            .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
             .done(awsResponse -> ProgressEvent.defaultSuccessHandler(awsResponse.stacks().isEmpty()?
                 request.getDesiredResourceState() : Translator.translateFromReadResponse(awsResponse.stacks().get(0))));
     }

@@ -1,5 +1,6 @@
 package software.amazon.cloudformation.stack;
 
+import com.google.common.collect.Maps;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
@@ -14,7 +15,9 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -32,80 +35,73 @@ public class CreateHandler extends BaseHandlerStd {
         this.logger = logger;
         ResourceModel model = request.getDesiredResourceState();
 
-        return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
+        Map<String, String> mergedTags = Maps.newHashMap();
+        mergedTags.putAll(Optional.ofNullable(request.getDesiredResourceTags()).orElse(Collections.emptyMap()));
+        mergedTags.putAll(Optional.ofNullable(request.getSystemTags()).orElse(Collections.emptyMap()));
+
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.progress(request.getDesiredResourceState(), callbackContext);
+        //only chain this if stackName is null;
+        if (model != null && model.getStackName() == null) {
+            progressEvent
                 .then(progress -> {
-                    if (model.getStackName() == null) {
-                        model.setStackName(IdentifierUtils.generateResourceIdentifier("stack",
+                    model.setStackName(IdentifierUtils.generateResourceIdentifier("stack",
                         Optional.ofNullable(request.getClientRequestToken()).orElse("token"), STACK_NAME_MAX_LENGTH));
-                    }
-                return progress;
-            })
-            .then(progress -> {
-                if (request.getDesiredResourceTags() != null && request.getDesiredResourceTags().size() != 0) {
-                    List<Tag> resourceTags = request.getDesiredResourceTags().entrySet()
-                        .stream()
-                        .map(e -> Tag.builder().key(e.getKey()).value(e.getValue()).build())
-                        .collect(Collectors.toList());
-                  //  model.getTags().addAll(resourceTags);
-                    if(model.getTags()  != null) {
-                        resourceTags.addAll(model.getTags());
-                    }
+                    return progress;
+                });
+        }
+        //chain this if mergedTags is not empty
+        if (mergedTags != null && mergedTags.size() != 0) {
+            progressEvent
+                .then(progress ->{
+                    List<Tag> resourceTags = Translator.mergeRequestTagWithModelTags(mergedTags, model);
                     model.setTags(resourceTags);
-                }
-                return progress;
-            })
-            .then(progress ->
+                    return progress;
+                });
+        }
+        return progressEvent.then(progress ->
                 proxy.initiate("AWS-CloudFormation-Stack::Create", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToCreateRequest)
                     .makeServiceCall((awsRequest, client) -> {
-                        CreateStackResponse awsResponse;
-                        try {
-                            logger.log(String.format("%s %s", this.getClass(), Optional.ofNullable(request.getClientRequestToken()).orElse("")));
-                            awsResponse = client.injectCredentialsAndInvokeV2(awsRequest, client.client()::createStack);
-                        } catch (final AwsServiceException e) {
-                            /*
-                            * While the handler contract states that the handler must always return a progress event,
-                            * you may throw any instance of BaseHandlerException, as the wrapper map it to a progress event.
-                            * Each BaseHandlerException maps to a specific error code, and you should map service exceptions as closely as possible
-                            * to more specific error codes
-                            */
-                            throw new CfnGeneralServiceException(ResourceModel.TYPE_NAME, e);
-                        }
-
+                        logger.log(String.format("%s %s", this.getClass(), Optional.ofNullable(request.getClientRequestToken()).orElse("")));
+                        CreateStackResponse awsResponse = client.injectCredentialsAndInvokeV2(awsRequest, client.client()::createStack);
                         logger.log(String.format("%s successfully created.", ResourceModel.TYPE_NAME));
                         return awsResponse;
                     })
-                    .stabilize((awsRequest, awsResponse, client, _model, context) -> {
-                        model.setStackId(awsResponse.stackId());
-                        DescribeStacksResponse describeStacksResponse;
-                        try {
-                            describeStacksResponse = client.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(_model), client.client()::describeStacks);
-                        } catch (final AwsServiceException e) {
-                            if (e.getMessage().contains("does not exist")) {
-                                return false;
-                            }
-                            throw new CfnGeneralServiceException(e.getMessage(), e);
-                        }
-                        if (describeStacksResponse.stacks().isEmpty()) {
-                            return false;
-                        }
-                        String stackId = _model.getStackId();
-                        switch(describeStacksResponse.stacks().get(0).stackStatus()) {
-                            case CREATE_COMPLETE: {
-                                logger.log(String.format("%s [%s] has been stabilized.", ResourceModel.TYPE_NAME, _model.getPrimaryIdentifier()));
-                                return true;
-                            }
-                            case CREATE_FAILED:
-                            case ROLLBACK_FAILED:
-                            case DELETE_COMPLETE:
-                            case DELETE_FAILED:
-                            case ROLLBACK_COMPLETE:
-                                throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, stackId);
-                            default: return false;
-                        }
-                    })
+                    .stabilize((awsRequest, awsResponse, client, _model, context) -> stabilizeCreate(client, awsResponse,_model, logger))
+                    .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
                     .progress()
                 )
             .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
+
+    private boolean stabilizeCreate(ProxyClient<CloudFormationClient> proxyClient, CreateStackResponse awsResponse, ResourceModel model, Logger logger) {
+        model.setStackId(awsResponse.stackId());
+        DescribeStacksResponse describeStacksResponse;
+        try {
+            describeStacksResponse = proxyClient.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(model), proxyClient.client()::describeStacks);
+        } catch (final AwsServiceException e) {
+            if (e.getMessage().contains("does not exist")) {
+                return false;
+            }
+            throw e;
+        }
+        if (describeStacksResponse.stacks().isEmpty()) {
+            return false;
+        }
+        String stackId = model.getStackId();
+        switch(describeStacksResponse.stacks().get(0).stackStatus()) {
+            case CREATE_COMPLETE: {
+                logger.log(String.format("%s [%s] has been stabilized.", ResourceModel.TYPE_NAME, model.getPrimaryIdentifier()));
+                return true;
+            }
+            case CREATE_FAILED:
+            case ROLLBACK_FAILED:
+            case DELETE_COMPLETE:
+            case DELETE_FAILED:
+            case ROLLBACK_COMPLETE:
+                throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, stackId);
+            default: return false;
+        }
+    }
+
 }

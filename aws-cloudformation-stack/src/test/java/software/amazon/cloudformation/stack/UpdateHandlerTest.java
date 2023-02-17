@@ -1,18 +1,14 @@
 package software.amazon.cloudformation.stack;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackResponse;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -98,11 +94,30 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handlerRequest_Failure_Throw_CfnGeneralServiceException() {
+    public void stabilize_no_stack_exist_throw_CfnNotFoundException() {
+        when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
+            .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
             .thenReturn(DescribeStacksResponse.builder()
-                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
+                .stacks(ImmutableList.of())
                 .build());
+
+        final UpdateHandler handler = new UpdateHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .stackId(STACK_ID)
+            .stackName(STACK_NAME)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .build();
+
+        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
+            .isInstanceOf(CfnNotFoundException.class);
+    }
+    @Test
+    public void handlerRequest_Failure_handle_Error() {
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenThrow(AwsServiceException.builder().message("ServiceError").build());
         final UpdateHandler handler = new UpdateHandler();
@@ -116,16 +131,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
             .desiredResourceState(model)
             .build();
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
-            .isInstanceOf(CfnGeneralServiceException.class);
+
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,new CallbackContext(), proxyClient, logger);
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
     }
 
     @Test
     public void no_update_should_return_success() {
-        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
-            .thenReturn(DescribeStacksResponse.builder()
-                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
-                .build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenThrow(AwsServiceException.builder().message("No updates are to be performed").build());
         final UpdateHandler handler = new UpdateHandler();
@@ -149,7 +161,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void stablization_Failure_Throw_CfnGeneralServiceException() {
+    public void stablization_Failure_handle_error() {
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
             .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
@@ -168,23 +180,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
             .desiredResourceState(model)
             .build();
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
-            .isInstanceOf(CfnGeneralServiceException.class);
-    }
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,new CallbackContext(), proxyClient, logger);
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
 
-    @Test
-    public void stackIdAndNameAreMissing_HandlerThrowsCfnNotFoundException() {
-        final UpdateHandler handler = new UpdateHandler();
-
-        final ResourceModel model = ResourceModel.builder()
-            .build();
-
-        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
-            .build();
-
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
-            .isInstanceOf(CfnNotFoundException.class);
     }
 
     @Test
@@ -256,9 +254,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
-            .thenReturn(DescribeStacksResponse.builder()
-                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
-                .build())
             .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of(STACK_UPDATE_FAILED))
                 .build());

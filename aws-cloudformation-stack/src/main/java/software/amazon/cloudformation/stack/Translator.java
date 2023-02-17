@@ -1,14 +1,19 @@
 package software.amazon.cloudformation.stack;
 
+import software.amazon.awssdk.services.cloudformation.model.CloudFormationRequest;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStacksRequest;
 
+import software.amazon.awssdk.services.cloudformation.model.ListStacksResponse;
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.Stack;
+import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.awssdk.services.cloudformation.model.Tag;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackRequest;
+import software.amazon.awssdk.utils.CollectionUtils;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 
 import java.util.ArrayList;
@@ -34,7 +39,6 @@ public class Translator {
    * @return awsRequest the aws service request to create a resource
    */
   static CreateStackRequest translateToCreateRequest(final ResourceModel model) {
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L39-L43
     return CreateStackRequest.builder()
         .notificationARNs(model.getNotificationARNs())
         .parameters(translateToSdkParameters(model))
@@ -154,6 +158,21 @@ public class Translator {
         .build();
   }
 
+  /**
+   * Request to list resources
+   * @param response List reqsponse
+   * @return List of ResourceModels
+   */
+  static  List<ResourceModel>translateFromListResponse(ListStacksResponse response){
+    return response.stackSummaries().stream()
+        .filter(stack -> stack.stackStatus() != StackStatus.DELETE_COMPLETE)
+        .map(stack -> ResourceModel.builder()
+            .stackId(stack.stackId())
+            .parentId(stack.parentId())
+            .rootId(stack.rootId()).build())
+        .collect(Collectors.toList());
+  }
+
   static List<Tag> translateToSdkTags(final ResourceModel model) {
     if (model.getTags() == null) {
       return null;
@@ -170,5 +189,16 @@ public class Translator {
     return model.getParameters().entrySet().stream()
         .map(e -> Parameter.builder().parameterKey(e.getKey()).parameterValue(e.getValue()).build())
         .collect(Collectors.toList());
+  }
+
+  static List<software.amazon.cloudformation.stack.Tag> mergeRequestTagWithModelTags(Map<String, String> requestTags, ResourceModel model) {
+    List<software.amazon.cloudformation.stack.Tag> resourceTags = requestTags.entrySet()
+        .stream()
+        .map(e -> software.amazon.cloudformation.stack.Tag.builder().key(e.getKey()).value(e.getValue()).build())
+        .collect(Collectors.toList());
+    if(model.getTags()  != null) {
+      resourceTags.addAll(model.getTags());
+    }
+    return resourceTags;
   }
 }

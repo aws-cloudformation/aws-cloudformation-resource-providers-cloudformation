@@ -149,7 +149,8 @@ public class ReadHandlerTest extends AbstractTestBase {
             .desiredResourceState(model)
             .build();
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
-            .isInstanceOf(CfnGeneralServiceException.class);
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+
     }
 }

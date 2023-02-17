@@ -4,6 +4,7 @@ import java.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
@@ -94,9 +95,50 @@ public class CreateHandlerTest extends AbstractTestBase {
             "templateURL", "tags", "outputs","driftInformation", "parentId", "rootId", "stackStatus", "stackStatusReason", "creationTime", "parameters");
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        assertThat(model.getTags().size() == 2);
-        assertThat(model.getTags().get(0).getKey().equals("Key"));
-        assertThat(model.getTags().get(1).getKey().equals("ResourceKey"));
+        assertThat(model.getTags().size()).isEqualTo(3);
+        assertThat(model.getTags().get(0).getKey()).isEqualTo("key");
+        assertThat(model.getTags().get(1).getKey()).isEqualTo("aws:key");
+        assertThat(model.getTags().get(2).getKey()).isEqualTo("ResourceKey");
+
+    }
+
+    @Test
+    public void handleRequest_SimpleSuccess1() {
+        // Mocks
+        when(proxyClient.client().createStack(any(CreateStackRequest.class)))
+            .thenReturn(CreateStackResponse.builder().stackId(STACK_ID).build());
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenThrow(CloudFormationException.builder().message(NOT_FOUND_ERROR_MESSAGE).build())
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_CREATE_IN_PROGRESS))
+                .build())
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
+                .build());
+
+        final CreateHandler handler = new CreateHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .templateURL(TEMPLATE_URL)
+            .stackName(STACK_NAME)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .systemTags(ImmutableMap.of("aws:key", "value"))
+            .desiredResourceTags(ImmutableMap.of("key", "value"))
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getResourceModel()).isEqualToIgnoringGivenFields(request.getDesiredResourceState(),
+            "templateURL", "tags", "outputs","driftInformation", "parentId", "rootId", "stackStatus", "stackStatusReason", "creationTime", "parameters");
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(model.getTags().size()).isEqualTo(2);
+        assertThat(model.getTags().get(0).getKey()).isEqualTo("key");
+        assertThat(model.getTags().get(1).getKey()).isEqualTo("aws:key");
     }
 
     @Test
@@ -132,7 +174,7 @@ public class CreateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void serviceExceptionThrown_DescribeStackThrowsCfnGeneralServiceException() {
+    public void handlerRequest_Stabilization_Error() {
         // Mocks
         when(proxyClient.client().createStack(any(CreateStackRequest.class)))
             .thenReturn(CreateStackResponse.builder().stackId(STACK_ID).build());
@@ -149,15 +191,32 @@ public class CreateHandlerTest extends AbstractTestBase {
             .desiredResourceState(model)
             .build();
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
-            .isInstanceOf(CfnGeneralServiceException.class);
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,new CallbackContext(), proxyClient, logger);
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
     }
 
     @Test
-    public void serviceExceptionThrown_CreateStackThrowsCfnGeneralServiceException() {
-        // Mocks
+    public void handleRequest_Creation_Error() {
+        handleRequest_Error("service error for create");
+    }
+    @Test
+    public void handleRequest_INVALID_PARAMETER_VALUE_Error() {
+        handleRequest_Error("InvalidParameterValue");
+    }
+
+    @Test
+    public void handleRequest_Throttling_Error() {
+        handleRequest_Error("RequestLimitExceeded");
+    }
+
+    @Test
+    public void handleRequest_Auth_Error() {
+        handleRequest_Error("AuthFailure");
+    }
+
+    private void handleRequest_Error(String errorCode) {
         when(proxyClient.client().createStack(any(CreateStackRequest.class)))
-            .thenThrow(CloudFormationException.builder().message("service error for create").build());
+            .thenThrow(CloudFormationException.builder().awsErrorDetails(AwsErrorDetails.builder().errorCode(errorCode).build()).build()) ;
 
         final CreateHandler handler = new CreateHandler();
 
@@ -169,10 +228,9 @@ public class CreateHandlerTest extends AbstractTestBase {
             .desiredResourceState(model)
             .build();
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
-            .isInstanceOf(CfnGeneralServiceException.class);
+        ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,new CallbackContext(), proxyClient, logger);
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
     }
-
     @Test
     public void describestack_return_empty_stack_then_return_complete_shoud_be_success() {
         // Mocks
@@ -225,13 +283,14 @@ public class CreateHandlerTest extends AbstractTestBase {
 
         final ResourceModel model = ResourceModel.builder()
             .templateURL(TEMPLATE_URL)
+            .stackName(STACK_NAME)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
             .build();
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
+       assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
             .isInstanceOf(CfnNotStabilizedException.class);
     }
 

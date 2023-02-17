@@ -2,17 +2,22 @@ package software.amazon.cloudformation.stack;
 
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.CloudFormationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
 import software.amazon.awssdk.services.cloudformation.model.StackStatus;
+import software.amazon.cloudformation.exceptions.BaseHandlerException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInvalidCredentialsException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-import software.amazon.cloudformation.proxy.delay.Exponential;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -21,7 +26,13 @@ import java.util.Optional;
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     public final int STACK_NAME_MAX_LENGTH = 128;
-    protected static final Exponential BACKOFF_STRATEGY = Exponential.of().timeout(Duration.ofHours(36L)).build();
+    public static String UNAUTHORIZED_OPERATION= "UnauthorizedOperation";
+    public static String AUTH_FAILURE = "AuthFailure";
+    public static String INVALID_PARAMETER_VALUE = "InvalidParameterValue";
+    public static String THROTTLING = "RequestLimitExceeded";
+    public static String INVALID_REQUEST = "InvalidRequest";
+
+    public static String NO_UPDATE_TO_PERFORM = "No updates are to be performed";
 
   @Override
   public final ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -78,4 +89,39 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                 })
                 .progress());
   }
+
+    protected ProgressEvent<ResourceModel, CallbackContext> handleError(
+        final CloudFormationRequest request,
+        final Exception e,
+        final ProxyClient<CloudFormationClient> proxyClient,
+        final ResourceModel resourceModel,
+        final CallbackContext callbackContext) {
+
+        BaseHandlerException ex;
+
+        if (UNAUTHORIZED_OPERATION.equals(getErrorCode(e))) {
+            ex = new CfnAccessDeniedException(e);
+        } else if(INVALID_REQUEST.equals(getErrorCode(e))){
+            ex = new CfnInvalidRequestException(e);
+        } else if (INVALID_PARAMETER_VALUE.equals(getErrorCode(e))) {
+            ex = new CfnInvalidRequestException(e);
+        } else if (AUTH_FAILURE.equals(getErrorCode(e))) {
+            ex = new CfnInvalidCredentialsException(e);
+        } else if (THROTTLING.equals(getErrorCode(e))){
+            ex = new CfnThrottlingException(e);
+        } else if(NO_UPDATE_TO_PERFORM.equals(getErrorCode(e))) {
+            return ProgressEvent.defaultSuccessHandler(resourceModel);
+        } else {
+            ex = new CfnGeneralServiceException(e);
+        }
+        return ProgressEvent.failed(resourceModel, callbackContext, ex.getErrorCode(), ex.getMessage());
+    }
+    protected static String getErrorCode(Exception e) {
+        if (e instanceof AwsServiceException) {
+            AwsServiceException ex = (AwsServiceException) e;
+            if(ex.awsErrorDetails() != null)
+                return ex.awsErrorDetails().errorCode();
+        }
+        return e.getMessage();
+    }
 }
