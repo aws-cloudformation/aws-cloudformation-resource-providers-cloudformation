@@ -35,9 +35,6 @@ Resources:
                 - "cloudformation:DescribeStacks"
                 - "cloudformation:ListStacks"
                 - "cloudformation:UpdateStack"
-                - "iam:CreateServiceLinkedRole"
-                - "iam:DeleteServiceLinkedRole"
-                - "iam:GetServiceLinkedRoleDeletionStatus"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

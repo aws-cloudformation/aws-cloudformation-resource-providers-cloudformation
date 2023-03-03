@@ -52,7 +52,7 @@ public class UpdateHandler extends BaseHandlerStd {
                     .stabilize((awsRequest, awsResponse, client, _model, context) -> stabilizeUpdate(client, awsResponse,_model, logger))
                     .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
                     .progress())
-            .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+            .then(progress -> ProgressEvent.defaultSuccessHandler(progress.getResourceModel()));
     }
 
     private boolean stabilizeUpdate(ProxyClient<CloudFormationClient> proxyClient, Object awsResponse, ResourceModel model, Logger logger) {

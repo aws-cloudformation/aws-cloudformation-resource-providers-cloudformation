@@ -220,38 +220,30 @@
     "create": {
       "permissions": [
         "cloudformation:DescribeStacks",
-        "cloudformation:CreateStack",
-        "iam:CreateServiceLinkedRole"
+        "cloudformation:CreateStack"
       ]
     },
     "update": {
       "permissions": [
         "cloudformation:DescribeStacks",
-        "cloudformation:UpdateStack",
-        "iam:CreateServiceLinkedRole",
-        "iam:DeleteServiceLinkedRole",
-        "iam:GetServiceLinkedRoleDeletionStatus"
+        "cloudformation:UpdateStack"
       ]
     },
     "delete": {
       "permissions": [
         "cloudformation:DescribeStacks",
-        "cloudformation:DeleteStack",
-        "iam:DeleteServiceLinkedRole",
-        "iam:GetServiceLinkedRoleDeletionStatus"
+        "cloudformation:DeleteStack"
       ]
     },
     "read": {
       "permissions": [
         "cloudformation:DescribeStacks",
-        "cloudformation:ListStacks",
-        "iam:GetServiceLinkedRoleDeletionStatus"
+        "cloudformation:ListStacks"
       ]
     },
     "list": {
       "permissions": [
-        "cloudformation:ListStacks",
-        "iam:GetServiceLinkedRoleDeletionStatus"
+        "cloudformation:ListStacks"
       ]
     }
   }

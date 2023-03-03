@@ -1,12 +1,10 @@
 package software.amazon.cloudformation.stack;
 
 import com.google.common.collect.Maps;
-import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -19,8 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
 
 public class CreateHandler extends BaseHandlerStd {
     private Logger logger;
@@ -39,26 +35,17 @@ public class CreateHandler extends BaseHandlerStd {
         mergedTags.putAll(Optional.ofNullable(request.getDesiredResourceTags()).orElse(Collections.emptyMap()));
         mergedTags.putAll(Optional.ofNullable(request.getSystemTags()).orElse(Collections.emptyMap()));
 
-        ProgressEvent<ResourceModel, CallbackContext> progressEvent = ProgressEvent.progress(request.getDesiredResourceState(), callbackContext);
         //only chain this if stackName is null;
         if (model != null && model.getStackName() == null) {
-            progressEvent
-                .then(progress -> {
-                    model.setStackName(IdentifierUtils.generateResourceIdentifier("stack",
-                        Optional.ofNullable(request.getClientRequestToken()).orElse("token"), STACK_NAME_MAX_LENGTH));
-                    return progress;
-                });
+            model.setStackName(IdentifierUtils.generateResourceIdentifier("stack",
+                Optional.ofNullable(request.getClientRequestToken()).orElse("token"), STACK_NAME_MAX_LENGTH));
         }
         //chain this if mergedTags is not empty
         if (mergedTags != null && mergedTags.size() != 0) {
-            progressEvent
-                .then(progress ->{
-                    List<Tag> resourceTags = Translator.mergeRequestTagWithModelTags(mergedTags, model);
-                    model.setTags(resourceTags);
-                    return progress;
-                });
+            List<Tag> resourceTags = Translator.mergeRequestTagWithModelTags(mergedTags, model);
+            model.setTags(resourceTags);
         }
-        return progressEvent.then(progress ->
+        return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext).then(progress ->
                 proxy.initiate("AWS-CloudFormation-Stack::Create", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToCreateRequest)
                     .makeServiceCall((awsRequest, client) -> {
@@ -71,7 +58,7 @@ public class CreateHandler extends BaseHandlerStd {
                     .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
                     .progress()
                 )
-            .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+            .then(progress -> ProgressEvent.defaultSuccessHandler(progress.getResourceModel()));
     }
 
     private boolean stabilizeCreate(ProxyClient<CloudFormationClient> proxyClient, CreateStackResponse awsResponse, ResourceModel model, Logger logger) {

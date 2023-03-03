@@ -163,9 +163,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Test
     public void stablization_Failure_handle_error() {
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
-            .thenReturn(DescribeStacksResponse.builder()
-                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
-                .build())
             .thenThrow(AwsServiceException.builder().message("Service Error").build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
@@ -221,14 +218,11 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void describeStacksResponseIsEmpty_HandlerReturnsSuccess() {
+    public void describeStacksResponseIsEmpty_HandlerShouldThrowException() {
         // Mocks
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
-            .thenReturn(DescribeStacksResponse.builder()
-                .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
-                .build())
             .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of())
                 .build());

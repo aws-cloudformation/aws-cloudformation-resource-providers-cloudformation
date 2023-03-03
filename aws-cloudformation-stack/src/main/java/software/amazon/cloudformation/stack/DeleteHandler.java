@@ -2,8 +2,6 @@ package software.amazon.cloudformation.stack;
 
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.CloudFormationRequest;
-import software.amazon.awssdk.services.cloudformation.model.CreateStackResponse;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;

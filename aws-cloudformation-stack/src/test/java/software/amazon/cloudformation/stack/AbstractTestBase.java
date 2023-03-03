@@ -64,6 +64,8 @@ public class AbstractTestBase {
   protected static final Stack STACK_UPDATE_COMPLETE = Stack.builder()
       .stackId(STACK_ID)
       .stackName(STACK_NAME)
+      .rootId("arn:aws:cloudformation:us-east-1:0111111111111:stack/test/7350d520-b85d-11ed-b590-0ec7beaead8f")
+      .parentId("arn:aws:cloudformation:us-east-1:0111111111111:stack/test/7350d520-b85d-11ed-b590-0ec7beaead8f")
       .stackStatus(StackStatus.UPDATE_COMPLETE)
       .creationTime(CREATION_TIME)
       .lastUpdatedTime(LAST_UPDATED_TIME)

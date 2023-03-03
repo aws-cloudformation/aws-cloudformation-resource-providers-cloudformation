@@ -3,6 +3,7 @@ package software.amazon.cloudformation.stack;
 import java.time.Duration;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
 import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
@@ -73,6 +74,40 @@ public class ReadHandlerTest extends AbstractTestBase {
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .systemTags(ImmutableMap.of("aws:key", "value"))
+            .desiredResourceTags(ImmutableMap.of("key", "value"))
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualToIgnoringNullFields(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_SimpleSuccess1() {
+        // Mocks
+        when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
+            .thenReturn(DescribeStacksResponse.builder()
+                .stacks(ImmutableList.of(STACK_UPDATE_COMPLETE))
+                .build());
+
+        final ReadHandler handler = new ReadHandler();
+
+        final ResourceModel model = ResourceModel.builder()
+            .stackId(STACK_ID)
+            .stackName(STACK_NAME)
+            .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .desiredResourceState(model)
+            .systemTags(ImmutableMap.of("aws:key", "value"))
+            .desiredResourceTags(ImmutableMap.of("key", "value"))
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
