@@ -1,9 +1,12 @@
 package software.amazon.cloudformation.stack;
 
+import org.apache.commons.collections4.Get;
+import org.json.JSONObject;
 import software.amazon.awssdk.services.cloudformation.model.CloudFormationRequest;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
+import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStacksRequest;
 
 import software.amazon.awssdk.services.cloudformation.model.ListStacksResponse;
@@ -12,6 +15,7 @@ import software.amazon.awssdk.services.cloudformation.model.Stack;
 import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.awssdk.services.cloudformation.model.Tag;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackRequest;
+import software.amazon.awssdk.services.cloudformation.model.UpdateTerminationProtectionRequest;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
@@ -39,7 +43,7 @@ public class Translator {
    * @return awsRequest the aws service request to create a resource
    */
   static CreateStackRequest translateToCreateRequest(final ResourceModel model) {
-    return CreateStackRequest.builder()
+    CreateStackRequest.Builder builder = CreateStackRequest.builder()
         .notificationARNs(model.getNotificationARNs())
         .parameters(translateToSdkParameters(model))
         .tags(translateToSdkTags(model))
@@ -49,10 +53,13 @@ public class Translator {
         .roleARN(model.getRoleARN())
         .capabilitiesWithStrings(model.getCapabilities())
         .templateBody(model.getTemplateBody())
-        .stackPolicyBody(model.getStackPolicyBody())
-        .stackPolicyURL(model.getStackPolicyURL())
         .disableRollback(model.getDisableRollback())
-        .build();
+        .enableTerminationProtection(model.getEnableTerminationProtection());
+    if(model.getStackPolicyBody() != null && !model.getStackPolicyBody().toString().isEmpty()){
+      builder.stackPolicyBody(new JSONObject(model.getStackPolicyBody()).toString());
+    }
+    else builder.stackPolicyURL(model.getStackPolicyURL());
+    return builder.build();
   }
 
   /**
@@ -93,11 +100,11 @@ public class Translator {
         .creationTime(stack.creationTime().toString())
         .lastUpdateTime(stack.lastUpdatedTime() == null? null:stack.lastUpdatedTime().toString())
         .enableTerminationProtection(stack.enableTerminationProtection())
-        .rootId(stack.rootId() == null? "None": stack.rootId())
-        .parentId(stack.parentId() == null? "None" : stack.parentId())
+        .rootId(stack.rootId() == null? null: stack.rootId())
+        .parentId(stack.parentId() == null? null : stack.parentId())
         .stackId(stack.stackId())
         .stackStatus(stack.stackStatusAsString())
-        .stackStatusReason(stack.stackStatusReason()==null? " ":stack.stackStatusReason())
+        .stackStatusReason(stack.stackStatusReason()==null? null:stack.stackStatusReason())
         .notificationARNs(stack.notificationARNs().isEmpty() ? null : new ArrayList<>(stack.notificationARNs()))
         .parameters(parameters.isEmpty()? null : parameters)
         .stackName(stack.stackName())
@@ -107,10 +114,6 @@ public class Translator {
         .capabilities(stack.capabilitiesAsStrings().isEmpty() ? null : stack.capabilitiesAsStrings())
         .outputs(outputs)
         .disableRollback(stack.disableRollback())
-        .driftInformation(software.amazon.cloudformation.stack.StackDriftInformation.builder()
-                .stackDriftStatus(stack.driftInformation().stackDriftStatusAsString())
-                .lastCheckTimestamp(stack.driftInformation().lastCheckTimestamp() == null? "None": stack.driftInformation().lastCheckTimestamp().toString())
-            .build())
         .build();
   }
 
@@ -128,7 +131,7 @@ public class Translator {
   /**
    * Request to update a resource
    * @param model resource model
-   * @return awsRequest the aws service request to delete a resource
+   * @return awsRequest the aws service request to update a resource
    */
   static UpdateStackRequest translateToUpdateRequest(final ResourceModel model) {
     return UpdateStackRequest.builder()
@@ -140,12 +143,22 @@ public class Translator {
         .roleARN(model.getRoleARN())
         .capabilitiesWithStrings(model.getCapabilities())
         .templateBody(model.getTemplateBody())
-        .stackPolicyBody(model.getStackPolicyBody())
+        .stackPolicyBody(new JSONObject(model.getStackPolicyBody()).toString())
         .stackPolicyURL(model.getStackPolicyURL())
         .disableRollback(model.getDisableRollback())
         .build();
   }
 
+  /**
+   * Request to update TerminationProtection
+   * @param model resource model
+   * @return awsRequest the aws service request to delete the terminationProtection for a stack
+   */
+  static UpdateTerminationProtectionRequest translateToUpdateTerminationProtectionRequest(final ResourceModel model) {
+    return UpdateTerminationProtectionRequest.builder()
+        .stackName(model.getStackId())
+        .enableTerminationProtection(model.getEnableTerminationProtection()).build();
+  }
   /**
    * Request to list resources
    * @param nextToken token passed to the aws service list resources request
@@ -155,6 +168,17 @@ public class Translator {
     // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L26-L31
     return ListStacksRequest.builder()
         .nextToken(nextToken)
+        .build();
+  }
+
+  /**
+   * Request to list resources
+   * @param model token passed to the aws service getStackPolicy
+   * @return awsRequest the aws service request to list resources within aws account
+   */
+  static GetStackPolicyRequest translateToGetStackPolicyRequest(final ResourceModel model) {
+    return GetStackPolicyRequest.builder()
+        .stackName(model.getStackId())
         .build();
   }
 
@@ -201,4 +225,5 @@ public class Translator {
     }
     return resourceTags;
   }
+
 }

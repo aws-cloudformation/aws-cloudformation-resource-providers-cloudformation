@@ -1,8 +1,11 @@
 package software.amazon.cloudformation.stack;
 
+import org.json.JSONObject;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
+import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyRequest;
+import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyResponse;
 import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
@@ -24,26 +27,47 @@ public class ReadHandler extends BaseHandlerStd {
         final Logger logger) {
 
         this.logger = logger;
-        logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Read VPN Gateway", request.getStackId(), request.getClientRequestToken()));
-        // https://github.com/aws-cloudformation/cloudformation-cli-java-plugin/blob/master/src/main/java/software/amazon/cloudformation/proxy/CallChain.java
-
-        // STEP 1 [initialize a proxy context]
-        return proxy.initiate("AWS-CloudFormation-Stack::Read", proxyClient, request.getDesiredResourceState(), callbackContext)
-
-            .translateToServiceRequest(Translator::translateToReadRequest)
-
-            // Implement client invocation of the read request through the proxyClient, which is already initialised with
-            // caller credentials, correct region and retry settings
-            .makeServiceCall((awsRequest, client) -> {
-                DescribeStacksResponse awsResponse = client.injectCredentialsAndInvokeV2(awsRequest,client.client()::describeStacks);
-                if (awsResponse.stacks().isEmpty() || awsResponse.stacks().get(0).stackStatus() == StackStatus.DELETE_COMPLETE) {
-                    throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getStackId());
-                }
-                logger.log(String.format("%s has successfully been read.", ResourceModel.TYPE_NAME));
-                return awsResponse;
-            })
-            .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
-            .done(awsResponse -> ProgressEvent.defaultSuccessHandler(awsResponse.stacks().isEmpty()?
-                request.getDesiredResourceState() : Translator.translateFromReadResponse(awsResponse.stacks().get(0))));
+        logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Read Stack", request.getStackId(),
+            request.getClientRequestToken()));
+        return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
+            .then(progress -> proxy.initiate("AWS-CloudFormation-Stack::GetStackPolicy", proxyClient, request.getDesiredResourceState(),
+                    callbackContext)
+                .translateToServiceRequest(Translator::translateToGetStackPolicyRequest)
+                .makeServiceCall((awsRequest, client) -> {
+                    GetStackPolicyResponse awsResponse = client.injectCredentialsAndInvokeV2(awsRequest, client.client()::getStackPolicy);
+                    return awsResponse;
+                })
+                .handleError(
+                    (awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
+                .done((req, res, cli, m, cc) -> {
+                    cc.setGetStackPolicyResponse(res);
+                    return ProgressEvent.progress(m, cc);
+                }))
+            .then(progress -> proxy.initiate("AWS-CloudFormation-Stack::Read", proxyClient, request.getDesiredResourceState(),
+                    callbackContext)
+                .translateToServiceRequest(Translator::translateToReadRequest)
+                .makeServiceCall((awsRequest, client) -> {
+                    DescribeStacksResponse awsResponse = client.injectCredentialsAndInvokeV2(awsRequest, client.client()::describeStacks);
+                    if (awsResponse.stacks().isEmpty() || awsResponse.stacks().get(0).stackStatus() == StackStatus.DELETE_COMPLETE) {
+                        throw new CfnNotFoundException(ResourceModel.TYPE_NAME, request.getDesiredResourceState().getStackName());
+                    }
+                    logger.log(String.format("%s has successfully been read.", ResourceModel.TYPE_NAME));
+                    return awsResponse;
+                })
+                .handleError(
+                    (awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
+                .done((req, res, cli, m, cc) -> {
+                    cc.setDescribeStacksResponse(res);
+                    return ProgressEvent.progress(m, cc);
+                }))
+            .then(progress -> {
+                DescribeStacksResponse dr = callbackContext.getDescribeStacksResponse();
+                GetStackPolicyResponse gr = callbackContext.getGetStackPolicyResponse();
+                ResourceModel finalModel =
+                    dr.stacks().isEmpty() ? request.getDesiredResourceState() : Translator.translateFromReadResponse(dr.stacks().get(0));
+                if (gr.stackPolicyBody() != null) finalModel.setStackPolicyBody(new JSONObject(gr.stackPolicyBody()).toMap());
+                return ProgressEvent.defaultSuccessHandler(finalModel);
+            });
     }
+
 }

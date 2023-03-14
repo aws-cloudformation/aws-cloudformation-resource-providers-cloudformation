@@ -2,6 +2,7 @@ package software.amazon.cloudformation.stack;
 
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
 import software.amazon.awssdk.services.cloudformation.model.CloudFormationRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
@@ -98,7 +99,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         final CallbackContext callbackContext) {
 
         BaseHandlerException ex;
-
+        if(e instanceof CloudFormationException && e.getMessage() != null && e.getMessage().contains(NO_UPDATE_TO_PERFORM))
+            return ProgressEvent.defaultSuccessHandler(resourceModel);
         if (UNAUTHORIZED_OPERATION.equals(getErrorCode(e))) {
             ex = new CfnAccessDeniedException(e);
         } else if(INVALID_REQUEST.equals(getErrorCode(e))){
@@ -109,8 +111,6 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             ex = new CfnInvalidCredentialsException(e);
         } else if (THROTTLING.equals(getErrorCode(e))){
             ex = new CfnThrottlingException(e);
-        } else if(NO_UPDATE_TO_PERFORM.equals(getErrorCode(e))) {
-            return ProgressEvent.defaultSuccessHandler(resourceModel);
         } else {
             ex = new CfnGeneralServiceException(e);
         }

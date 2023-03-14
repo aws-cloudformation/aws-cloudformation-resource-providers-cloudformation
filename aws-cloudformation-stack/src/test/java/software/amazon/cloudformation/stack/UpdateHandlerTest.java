@@ -5,10 +5,13 @@ import java.time.Duration;
 import com.google.common.collect.ImmutableList;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
+import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackResponse;
+import software.amazon.awssdk.services.cloudformation.model.UpdateTerminationProtectionRequest;
+import software.amazon.awssdk.services.cloudformation.model.UpdateTerminationProtectionResponse;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -59,6 +62,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess() {
+        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
+            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
@@ -95,6 +100,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void stabilize_no_stack_exist_throw_CfnNotFoundException() {
+        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
+            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
@@ -118,6 +125,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
     @Test
     public void handlerRequest_Failure_handle_Error() {
+        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
+            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenThrow(AwsServiceException.builder().message("ServiceError").build());
         final UpdateHandler handler = new UpdateHandler();
@@ -138,8 +147,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void no_update_should_return_success() {
+        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
+            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
-            .thenThrow(AwsServiceException.builder().message("No updates are to be performed").build());
+            .thenThrow(CloudFormationException.builder().message("No updates are to be performed").build());
         final UpdateHandler handler = new UpdateHandler();
 
         final ResourceModel model = ResourceModel.builder()
@@ -162,6 +173,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void stablization_Failure_handle_error() {
+        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
+            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
             .thenThrow(AwsServiceException.builder().message("Service Error").build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
@@ -185,6 +198,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Test
     public void stackReachesUpdateCompleteCleanup_HandlerReturnsSuccess() {
         // Mocks
+        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
+            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
@@ -220,6 +235,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Test
     public void describeStacksResponseIsEmpty_HandlerShouldThrowException() {
         // Mocks
+        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
+            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
@@ -245,6 +262,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Test
     public void stackReachesUpdateFailed_HandlerThrowsNotStabilizedException() {
         // Mocks
+        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
+            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))

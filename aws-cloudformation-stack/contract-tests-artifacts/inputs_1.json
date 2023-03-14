@@ -12,7 +12,16 @@
       "Param": "ParamVal"
     },
     "TimeoutInMinutes": 15,
-    "StackPolicyBody": "{\n  \"Statement\" : [\n    {\n      \"Effect\" : \"Allow\",\n      \"Action\" : \"Update:*\",\n      \"Principal\": \"*\",\n      \"Resource\" : \"*\"\n    }\n  ]\n}",
+    "StackPolicyBody": {
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "Update:*",
+          "Principal": "*",
+          "Resource": "*"
+        }
+      ]
+    },
     "Capabilities": [
       "CAPABILITY_NAMED_IAM"
     ],

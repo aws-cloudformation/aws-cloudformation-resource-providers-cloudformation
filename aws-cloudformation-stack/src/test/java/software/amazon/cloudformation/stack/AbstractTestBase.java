@@ -40,6 +40,8 @@ public class AbstractTestBase {
   protected static final software.amazon.awssdk.services.cloudformation.model.Output OUTPUT = software.amazon.awssdk.services.cloudformation.model.Output.builder().outputKey("output").outputValue("outputValue").build();
   protected static final software.amazon.awssdk.services.cloudformation.model.Tag TAG = software.amazon.awssdk.services.cloudformation.model.Tag.builder().key("tag1").value("tagValue1").build();
 
+  protected static final String STACK_POLICY_BODY =  "{\n  \"Statement\" : [\n    {\n      \"Effect\" : \"Allow\",\n      \"Action\" : \"Update:*\",\n      \"Principal\": \"*\",\n      \"Resource\" : \"*\"\n    }\n  ]\n}";
+
   protected static final Stack STACK_CREATE_COMPLETE = Stack.builder()
       .stackId(STACK_ID)
       .stackName(STACK_NAME)

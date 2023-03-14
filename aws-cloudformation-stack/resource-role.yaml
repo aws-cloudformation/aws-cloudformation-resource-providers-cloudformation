@@ -33,8 +33,10 @@ Resources:
                 - "cloudformation:CreateStack"
                 - "cloudformation:DeleteStack"
                 - "cloudformation:DescribeStacks"
+                - "cloudformation:GetStackPolicy"
                 - "cloudformation:ListStacks"
                 - "cloudformation:UpdateStack"
+                - "cloudformation:UpdateTerminationProtection"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

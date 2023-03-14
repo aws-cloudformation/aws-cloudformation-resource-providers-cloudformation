@@ -27,8 +27,9 @@ public class CreateHandler extends BaseHandlerStd {
         final CallbackContext callbackContext,
         final ProxyClient<CloudFormationClient> proxyClient,
         final Logger logger) {
-
         this.logger = logger;
+        logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Create Stack", request.getStackId(),
+            request.getClientRequestToken()));
         ResourceModel model = request.getDesiredResourceState();
 
         Map<String, String> mergedTags = Maps.newHashMap();
@@ -37,6 +38,8 @@ public class CreateHandler extends BaseHandlerStd {
 
         //only chain this if stackName is null;
         if (model != null && model.getStackName() == null) {
+            logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Create Stack and assign Stack Name", request.getStackId(),
+                request.getClientRequestToken()));
             model.setStackName(IdentifierUtils.generateResourceIdentifier("stack",
                 Optional.ofNullable(request.getClientRequestToken()).orElse("token"), STACK_NAME_MAX_LENGTH));
         }
@@ -57,7 +60,7 @@ public class CreateHandler extends BaseHandlerStd {
                     .stabilize((awsRequest, awsResponse, client, _model, context) -> stabilizeCreate(client, awsResponse,_model, logger))
                     .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
                     .progress()
-                )
+            )
             .then(progress -> ProgressEvent.defaultSuccessHandler(progress.getResourceModel()));
     }
 

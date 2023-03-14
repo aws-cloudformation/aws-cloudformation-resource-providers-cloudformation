@@ -9,6 +9,8 @@ import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
 import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
+import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyRequest;
+import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyResponse;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -60,6 +62,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_SimpleSuccess() {
         // Mocks
+        when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
+            .thenReturn(GetStackPolicyResponse.builder()
+                .stackPolicyBody(STACK_POLICY_BODY)
+                .build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
             .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of(STACK_CREATE_COMPLETE))
@@ -92,6 +98,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_SimpleSuccess1() {
         // Mocks
+        when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
+            .thenReturn(GetStackPolicyResponse.builder()
+                .stackPolicyBody(STACK_POLICY_BODY)
+                .build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
             .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of(STACK_UPDATE_COMPLETE))
@@ -124,6 +134,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void stackindeleteComplete_HandlerThrowsCfnNotFoundException() {
         // Mocks
+        when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
+            .thenReturn(GetStackPolicyResponse.builder()
+                .stackPolicyBody(STACK_POLICY_BODY)
+                .build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
             .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of(STACK_DELETE_COMPLETE))
@@ -147,6 +161,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void noStackinresponse_HandlerThrowsCfnNotFoundException() {
         // Mocks
+        when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
+            .thenReturn(GetStackPolicyResponse.builder()
+                .stackPolicyBody(STACK_POLICY_BODY)
+                .build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
             .thenReturn(DescribeStacksResponse.builder()
                 .stacks(ImmutableList.of())
@@ -170,6 +188,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void serviceExceptionThrown_HandlerThrowsCfnGeneralServiceException() {
         // Mocks
+        when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
+            .thenReturn(GetStackPolicyResponse.builder()
+                .stackPolicyBody(STACK_POLICY_BODY)
+                .build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
             .thenThrow(AwsServiceException.builder().message("service error").build());
 

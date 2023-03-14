@@ -53,15 +53,6 @@
         }
       }
     },
-    "ParentId": {
-      "type": "string"
-    },
-    "RootId": {
-      "type": "string"
-    },
-    "ChangeSetId": {
-      "type": "string"
-    },
     "StackName": {
       "type": "string"
     },
@@ -102,9 +93,6 @@
         "IMPORT_ROLLBACK_COMPLETE"
       ]
     },
-    "StackStatusReason": {
-      "type": "string"
-    },
     "Tags": {
       "type": "array",
       "uniqueItems": false,
@@ -125,9 +113,6 @@
     "TimeoutInMinutes": {
       "type": "integer",
       "minimum": 1
-    },
-    "LastUpdateTime": {
-      "type": "string"
     },
     "CreationTime": {
       "type": "string"
@@ -176,11 +161,7 @@
     "/properties/StackId",
     "/properties/StackStatus",
     "/properties/CreationTime",
-    "/properties/RootId",
-    "/properties/ParentId",
-    "/properties/ChangeSetId",
-    "/properties/Outputs",
-    "/properties/LastUpdateTime"
+    "/properties/Outputs"
   ],
   "writeOnlyProperties": [
     "/properties/TemplateURL",

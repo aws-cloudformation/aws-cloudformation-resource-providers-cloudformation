@@ -14,25 +14,19 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "Properties" : {
         "<a href="#capabilities" title="Capabilities">Capabilities</a>" : <i>[ String, ... ]</i>,
         "<a href="#rolearn" title="RoleARN">RoleARN</a>" : <i>String</i>,
-        "<a href="#outputs" title="Outputs">Outputs</a>" : <i>[ <a href="output.md">Output</a>, ... ]</i>,
         "<a href="#description" title="Description">Description</a>" : <i>String</i>,
         "<a href="#disablerollback" title="DisableRollback">DisableRollback</a>" : <i>Boolean</i>,
-        "<a href="#driftinformation" title="DriftInformation">DriftInformation</a>" : <i><a href="stackdriftinformation.md">StackDriftInformation</a></i>,
         "<a href="#enableterminationprotection" title="EnableTerminationProtection">EnableTerminationProtection</a>" : <i>Boolean</i>,
         "<a href="#notificationarns" title="NotificationARNs">NotificationARNs</a>" : <i>[ String, ... ]</i>,
         "<a href="#parameters" title="Parameters">Parameters</a>" : <i><a href="parameters.md">Parameters</a></i>,
-        "<a href="#parentid" title="ParentId">ParentId</a>" : <i>String</i>,
-        "<a href="#rootid" title="RootId">RootId</a>" : <i>String</i>,
         "<a href="#stackname" title="StackName">StackName</a>" : <i>String</i>,
-        "<a href="#stackpolicybody" title="StackPolicyBody">StackPolicyBody</a>" : <i>String</i>,
+        "<a href="#stackpolicybody" title="StackPolicyBody">StackPolicyBody</a>" : <i>Map</i>,
         "<a href="#stackpolicyurl" title="StackPolicyURL">StackPolicyURL</a>" : <i>String</i>,
         "<a href="#stackstatusreason" title="StackStatusReason">StackStatusReason</a>" : <i>String</i>,
         "<a href="#tags" title="Tags">Tags</a>" : <i>[ <a href="tag.md">Tag</a>, ... ]</i>,
         "<a href="#templatebody" title="TemplateBody">TemplateBody</a>" : <i>String</i>,
         "<a href="#templateurl" title="TemplateURL">TemplateURL</a>" : <i>String</i>,
         "<a href="#timeoutinminutes" title="TimeoutInMinutes">TimeoutInMinutes</a>" : <i>Integer</i>,
-        "<a href="#lastupdatetime" title="LastUpdateTime">LastUpdateTime</a>" : <i>String</i>,
-        "<a href="#creationtime" title="CreationTime">CreationTime</a>" : <i>String</i>
     }
 }
 </pre>
@@ -45,19 +39,14 @@ Properties:
     <a href="#capabilities" title="Capabilities">Capabilities</a>: <i>
       - String</i>
     <a href="#rolearn" title="RoleARN">RoleARN</a>: <i>String</i>
-    <a href="#outputs" title="Outputs">Outputs</a>: <i>
-      - <a href="output.md">Output</a></i>
     <a href="#description" title="Description">Description</a>: <i>String</i>
     <a href="#disablerollback" title="DisableRollback">DisableRollback</a>: <i>Boolean</i>
-    <a href="#driftinformation" title="DriftInformation">DriftInformation</a>: <i><a href="stackdriftinformation.md">StackDriftInformation</a></i>
     <a href="#enableterminationprotection" title="EnableTerminationProtection">EnableTerminationProtection</a>: <i>Boolean</i>
     <a href="#notificationarns" title="NotificationARNs">NotificationARNs</a>: <i>
       - String</i>
     <a href="#parameters" title="Parameters">Parameters</a>: <i><a href="parameters.md">Parameters</a></i>
-    <a href="#parentid" title="ParentId">ParentId</a>: <i>String</i>
-    <a href="#rootid" title="RootId">RootId</a>: <i>String</i>
     <a href="#stackname" title="StackName">StackName</a>: <i>String</i>
-    <a href="#stackpolicybody" title="StackPolicyBody">StackPolicyBody</a>: <i>String</i>
+    <a href="#stackpolicybody" title="StackPolicyBody">StackPolicyBody</a>: <i>Map</i>
     <a href="#stackpolicyurl" title="StackPolicyURL">StackPolicyURL</a>: <i>String</i>
     <a href="#stackstatusreason" title="StackStatusReason">StackStatusReason</a>: <i>String</i>
     <a href="#tags" title="Tags">Tags</a>: <i>
@@ -65,8 +54,6 @@ Properties:
     <a href="#templatebody" title="TemplateBody">TemplateBody</a>: <i>String</i>
     <a href="#templateurl" title="TemplateURL">TemplateURL</a>: <i>String</i>
     <a href="#timeoutinminutes" title="TimeoutInMinutes">TimeoutInMinutes</a>: <i>Integer</i>
-    <a href="#lastupdatetime" title="LastUpdateTime">LastUpdateTime</a>: <i>String</i>
-    <a href="#creationtime" title="CreationTime">CreationTime</a>: <i>String</i>
 </pre>
 
 ## Properties
@@ -87,14 +74,6 @@ _Type_: String
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
-#### Outputs
-
-_Required_: No
-
-_Type_: List of <a href="output.md">Output</a>
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
 #### Description
 
 _Required_: No
@@ -112,14 +91,6 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 _Required_: No
 
 _Type_: Boolean
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### DriftInformation
-
-_Required_: No
-
-_Type_: <a href="stackdriftinformation.md">StackDriftInformation</a>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
@@ -147,22 +118,6 @@ _Type_: <a href="parameters.md">Parameters</a>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
-#### ParentId
-
-_Required_: No
-
-_Type_: String
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### RootId
-
-_Required_: No
-
-_Type_: String
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
 #### StackName
 
 _Required_: Yes
@@ -175,7 +130,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 _Required_: No
 
-_Type_: String
+_Type_: Map
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
@@ -231,22 +186,6 @@ _Type_: Integer
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
-#### LastUpdateTime
-
-_Required_: No
-
-_Type_: String
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### CreationTime
-
-_Required_: No
-
-_Type_: String
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
 ## Return Values
 
 ### Ref
@@ -266,3 +205,27 @@ Returns the <code>StackId</code> value.
 #### StackStatus
 
 Returns the <code>StackStatus</code> value.
+
+#### CreationTime
+
+Returns the <code>CreationTime</code> value.
+
+#### RootId
+
+Returns the <code>RootId</code> value.
+
+#### ParentId
+
+Returns the <code>ParentId</code> value.
+
+#### ChangeSetId
+
+Returns the <code>ChangeSetId</code> value.
+
+#### Outputs
+
+Returns the <code>Outputs</code> value.
+
+#### LastUpdateTime
+
+Returns the <code>LastUpdateTime</code> value.

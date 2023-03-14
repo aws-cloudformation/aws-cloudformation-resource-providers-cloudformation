@@ -8,6 +8,8 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStacksReques
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
 import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackResponse;
+import software.amazon.awssdk.services.cloudformation.model.UpdateTerminationProtectionRequest;
+import software.amazon.awssdk.services.cloudformation.model.UpdateTerminationProtectionResponse;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
@@ -38,9 +40,19 @@ public class UpdateHandler extends BaseHandlerStd {
         this.logger = logger;
         ResourceModel model = request.getDesiredResourceState();
 
-        logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Update VPN Gateway", request.getStackId(), request.getClientRequestToken()));
+        logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Update Stack", request.getStackId(), request.getClientRequestToken()));
 
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
+            .then(progress ->
+                proxy.initiate("AWS-CloudFormation-Stack::UpdateTerminationProtection", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+                    .translateToServiceRequest(Translator::translateToUpdateTerminationProtectionRequest)
+                    .makeServiceCall((awsRequest, client) -> {
+                        UpdateTerminationProtectionResponse awsResponse = client.injectCredentialsAndInvokeV2(awsRequest, client.client()::updateTerminationProtection);
+                        logger.log(String.format("TerminationProtection has successfully been updated for stack %s.", progress.getResourceModel().getStackId()));
+                        return awsResponse;
+                    })
+                    .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
+                    .progress())
             .then(progress ->
                 proxy.initiate("AWS-CloudFormation-Stack::Update", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToUpdateRequest)
@@ -52,6 +64,7 @@ public class UpdateHandler extends BaseHandlerStd {
                     .stabilize((awsRequest, awsResponse, client, _model, context) -> stabilizeUpdate(client, awsResponse,_model, logger))
                     .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
                     .progress())
+
             .then(progress -> ProgressEvent.defaultSuccessHandler(progress.getResourceModel()));
     }
 
@@ -63,6 +76,7 @@ public class UpdateHandler extends BaseHandlerStd {
         switch(describeStacksResponse.stacks().get(0).stackStatus()) {
             case CREATE_COMPLETE:
             case UPDATE_COMPLETE:
+                //We will assume UPDATE_COMPLETE_CLEANUP_IN_PROGRESS is stabliazed status for now, this will unblock customer if the stack's update is actually done. But there is still some risk that resources have not been removed.
             case UPDATE_COMPLETE_CLEANUP_IN_PROGRESS: return true;
             case UPDATE_ROLLBACK_COMPLETE:
             case UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS:
