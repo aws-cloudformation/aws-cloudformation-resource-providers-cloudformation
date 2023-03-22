@@ -2,12 +2,10 @@ package software.amazon.cloudformation.stack;
 
 import org.json.JSONObject;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
-import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyResponse;
+import software.amazon.awssdk.services.cloudformation.model.GetTemplateResponse;
 import software.amazon.awssdk.services.cloudformation.model.StackStatus;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -30,6 +28,19 @@ public class ReadHandler extends BaseHandlerStd {
         logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Read Stack", request.getStackId(),
             request.getClientRequestToken()));
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
+            .then(progress -> proxy.initiate("AWS-CloudFormation-Stack::GetTemplate", proxyClient, request.getDesiredResourceState(),
+                callbackContext)
+            .translateToServiceRequest(Translator::translateToGetTemplateRequest)
+            .makeServiceCall((awsRequest, client) -> {
+                GetTemplateResponse awsResponse = client.injectCredentialsAndInvokeV2(awsRequest, client.client()::getTemplate);
+                return awsResponse;
+            })
+            .handleError(
+                (awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
+            .done((req, res, cli, m, cc) -> {
+                cc.setGetTemplateResponse(res);
+                return ProgressEvent.progress(m, cc);
+            }))
             .then(progress -> proxy.initiate("AWS-CloudFormation-Stack::GetStackPolicy", proxyClient, request.getDesiredResourceState(),
                     callbackContext)
                 .translateToServiceRequest(Translator::translateToGetStackPolicyRequest)
@@ -63,9 +74,11 @@ public class ReadHandler extends BaseHandlerStd {
             .then(progress -> {
                 DescribeStacksResponse dr = callbackContext.getDescribeStacksResponse();
                 GetStackPolicyResponse gr = callbackContext.getGetStackPolicyResponse();
+                GetTemplateResponse tr = callbackContext.getGetTemplateResponse();
                 ResourceModel finalModel =
                     dr.stacks().isEmpty() ? request.getDesiredResourceState() : Translator.translateFromReadResponse(dr.stacks().get(0));
                 if (gr.stackPolicyBody() != null) finalModel.setStackPolicyBody(new JSONObject(gr.stackPolicyBody()).toMap());
+                if (tr.templateBody() != null) finalModel.setTemplateBody(new JSONObject(tr.templateBody()).toMap());
                 return ProgressEvent.defaultSuccessHandler(finalModel);
             });
     }

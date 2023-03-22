@@ -24,7 +24,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
         "<a href="#stackpolicyurl" title="StackPolicyURL">StackPolicyURL</a>" : <i>String</i>,
         "<a href="#stackstatusreason" title="StackStatusReason">StackStatusReason</a>" : <i>String</i>,
         "<a href="#tags" title="Tags">Tags</a>" : <i>[ <a href="tag.md">Tag</a>, ... ]</i>,
-        "<a href="#templatebody" title="TemplateBody">TemplateBody</a>" : <i>String</i>,
+        "<a href="#templatebody" title="TemplateBody">TemplateBody</a>" : <i>Map</i>,
         "<a href="#templateurl" title="TemplateURL">TemplateURL</a>" : <i>String</i>,
         "<a href="#timeoutinminutes" title="TimeoutInMinutes">TimeoutInMinutes</a>" : <i>Integer</i>,
     }
@@ -51,7 +51,7 @@ Properties:
     <a href="#stackstatusreason" title="StackStatusReason">StackStatusReason</a>: <i>String</i>
     <a href="#tags" title="Tags">Tags</a>: <i>
       - <a href="tag.md">Tag</a></i>
-    <a href="#templatebody" title="TemplateBody">TemplateBody</a>: <i>String</i>
+    <a href="#templatebody" title="TemplateBody">TemplateBody</a>: <i>Map</i>
     <a href="#templateurl" title="TemplateURL">TemplateURL</a>: <i>String</i>
     <a href="#timeoutinminutes" title="TimeoutInMinutes">TimeoutInMinutes</a>: <i>Integer</i>
 </pre>
@@ -162,7 +162,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 _Required_: No
 
-_Type_: String
+_Type_: Map
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 

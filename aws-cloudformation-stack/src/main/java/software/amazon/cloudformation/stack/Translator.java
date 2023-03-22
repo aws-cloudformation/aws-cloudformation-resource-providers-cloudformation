@@ -1,12 +1,11 @@
 package software.amazon.cloudformation.stack;
 
-import org.apache.commons.collections4.Get;
 import org.json.JSONObject;
-import software.amazon.awssdk.services.cloudformation.model.CloudFormationRequest;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyRequest;
+import software.amazon.awssdk.services.cloudformation.model.GetTemplateRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStacksRequest;
 
 import software.amazon.awssdk.services.cloudformation.model.ListStacksResponse;
@@ -16,17 +15,13 @@ import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.awssdk.services.cloudformation.model.Tag;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateTerminationProtectionRequest;
-import software.amazon.awssdk.utils.CollectionUtils;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * This class is a centralized placeholder for
@@ -47,14 +42,17 @@ public class Translator {
         .notificationARNs(model.getNotificationARNs())
         .parameters(translateToSdkParameters(model))
         .tags(translateToSdkTags(model))
-        .templateURL(model.getTemplateURL())
         .timeoutInMinutes(model.getTimeoutInMinutes())
         .stackName(model.getStackName())
         .roleARN(model.getRoleARN())
         .capabilitiesWithStrings(model.getCapabilities())
-        .templateBody(model.getTemplateBody())
         .disableRollback(model.getDisableRollback())
         .enableTerminationProtection(model.getEnableTerminationProtection());
+    if(model.getTemplateBody() != null && !model.getTemplateBody().toString().isEmpty()) {
+      builder.templateBody(new JSONObject((model.getTemplateBody())).toString());
+    }else {
+      builder.templateURL(model.getTemplateURL());
+    }
     if(model.getStackPolicyBody() != null && !model.getStackPolicyBody().toString().isEmpty()){
       builder.stackPolicyBody(new JSONObject(model.getStackPolicyBody()).toString());
     }
@@ -134,7 +132,7 @@ public class Translator {
    * @return awsRequest the aws service request to update a resource
    */
   static UpdateStackRequest translateToUpdateRequest(final ResourceModel model) {
-    return UpdateStackRequest.builder()
+    UpdateStackRequest.Builder builder =  UpdateStackRequest.builder()
         .notificationARNs(model.getNotificationARNs())
         .parameters(translateToSdkParameters(model))
         .tags(translateToSdkTags(model))
@@ -142,11 +140,19 @@ public class Translator {
         .stackName(model.getStackId())
         .roleARN(model.getRoleARN())
         .capabilitiesWithStrings(model.getCapabilities())
-        .templateBody(model.getTemplateBody())
-        .stackPolicyBody(new JSONObject(model.getStackPolicyBody()).toString())
-        .stackPolicyURL(model.getStackPolicyURL())
-        .disableRollback(model.getDisableRollback())
-        .build();
+        .disableRollback(model.getDisableRollback());
+    if(model.getTemplateBody() != null && !model.getTemplateBody().toString().isEmpty()) {
+      builder.templateBody(new JSONObject((model.getTemplateBody())).toString());
+    }else {
+      builder.templateURL(model.getTemplateURL());
+    }
+    if(model.getStackPolicyBody() != null && !model.getStackPolicyBody().toString().isEmpty()){
+      builder.stackPolicyBody(new JSONObject(model.getStackPolicyBody()).toString());
+    }
+    else {
+      builder.stackPolicyURL(model.getStackPolicyURL());
+    }
+    return builder.build();
   }
 
   /**
@@ -172,12 +178,23 @@ public class Translator {
   }
 
   /**
-   * Request to list resources
+   * Request to get Stack Policy
    * @param model token passed to the aws service getStackPolicy
    * @return awsRequest the aws service request to list resources within aws account
    */
   static GetStackPolicyRequest translateToGetStackPolicyRequest(final ResourceModel model) {
     return GetStackPolicyRequest.builder()
+        .stackName(model.getStackId())
+        .build();
+  }
+
+  /**
+   * Request to get Tempalte Body
+   * @param model token passed to the aws service getStackPolicy
+   * @return awsRequest the aws service request to list resources within aws account
+   */
+  static GetTemplateRequest translateToGetTemplateRequest(final ResourceModel model) {
+    return GetTemplateRequest.builder()
         .stackName(model.getStackId())
         .build();
   }

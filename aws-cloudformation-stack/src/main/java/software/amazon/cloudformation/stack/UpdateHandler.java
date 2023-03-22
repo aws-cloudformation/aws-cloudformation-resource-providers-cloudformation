@@ -1,31 +1,17 @@
 package software.amazon.cloudformation.stack;
 
-import com.google.common.collect.Maps;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
-import software.amazon.awssdk.services.cloudformation.model.DeleteStackResponse;
-import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
-import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.awssdk.services.cloudformation.model.UpdateStackResponse;
-import software.amazon.awssdk.services.cloudformation.model.UpdateTerminationProtectionRequest;
 import software.amazon.awssdk.services.cloudformation.model.UpdateTerminationProtectionResponse;
-import software.amazon.awssdk.utils.StringUtils;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class UpdateHandler extends BaseHandlerStd {
     private Logger logger;
@@ -39,10 +25,11 @@ public class UpdateHandler extends BaseHandlerStd {
 
         this.logger = logger;
         ResourceModel model = request.getDesiredResourceState();
+        ResourceModel previousModel = request.getPreviousResourceState();
 
         logger.log(String.format("[StackId: %s, ClientRequestToken: %s] Calling Update Stack", request.getStackId(), request.getClientRequestToken()));
-
-        return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
+        if(model.getEnableTerminationProtection() != null && !model.getEnableTerminationProtection().equals(previousModel.getEnableTerminationProtection()))
+            ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress ->
                 proxy.initiate("AWS-CloudFormation-Stack::UpdateTerminationProtection", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToUpdateTerminationProtectionRequest)
@@ -52,7 +39,8 @@ public class UpdateHandler extends BaseHandlerStd {
                         return awsResponse;
                     })
                     .handleError((awsRequest, exception, client, _model, context) -> handleError(awsRequest, exception, client, _model, context))
-                    .progress())
+                    .progress());
+        return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress ->
                 proxy.initiate("AWS-CloudFormation-Stack::Update", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToUpdateRequest)

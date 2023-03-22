@@ -115,7 +115,7 @@
       "maxItems": 50
     },
     "TemplateBody": {
-      "type": "string"
+      "type": "object"
     },
     "TemplateURL": {
       "type": "string",
@@ -184,7 +184,6 @@
   ],
   "writeOnlyProperties": [
     "/properties/TemplateURL",
-    "/properties/TemplateBody",
     "/properties/StackPolicyURL"
   ],
   "createOnlyProperties": [
@@ -228,8 +227,8 @@
     "read": {
       "permissions": [
         "cloudformation:DescribeStacks",
-        "cloudformation:ListStacks",
-        "cloudformation:GetStackPolicy"
+        "cloudformation:GetStackPolicy",
+        "cloudformation:GetTemplate"
       ]
     },
     "list": {

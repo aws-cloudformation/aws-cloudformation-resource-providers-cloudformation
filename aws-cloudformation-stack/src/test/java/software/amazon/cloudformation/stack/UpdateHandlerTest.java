@@ -3,6 +3,7 @@ package software.amazon.cloudformation.stack;
 import java.time.Duration;
 
 import com.google.common.collect.ImmutableList;
+import org.json.JSONObject;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
 import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
@@ -82,10 +83,19 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
             .stackId(STACK_ID)
             .stackName(STACK_NAME)
+            .templateBody (new JSONObject(TEMPLATE_BODY).toMap())
+            .stackPolicyBody(new JSONObject(STACK_POLICY_BODY).toMap())
+            .enableTerminationProtection(false)
+            .build();
+        final ResourceModel prevmodel = ResourceModel.builder()
+            .stackId(STACK_ID)
+            .stackName(STACK_NAME)
+            .enableTerminationProtection(true)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .previousResourceState(prevmodel)
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -100,8 +110,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @Test
     public void stabilize_no_stack_exist_throw_CfnNotFoundException() {
-        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
-            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
@@ -114,10 +122,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
             .stackId(STACK_ID)
             .stackName(STACK_NAME)
+            .enableTerminationProtection(false)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .previousResourceState(model)
             .build();
 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
@@ -125,8 +135,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
     @Test
     public void handlerRequest_Failure_handle_Error() {
-        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
-            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenThrow(AwsServiceException.builder().message("ServiceError").build());
         final UpdateHandler handler = new UpdateHandler();
@@ -134,10 +142,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
             .stackId(STACK_ID)
             .stackName(STACK_NAME)
+            .enableTerminationProtection(false)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .previousResourceState(model)
             .build();
 
 
@@ -156,10 +166,17 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
             .stackId(STACK_ID)
             .stackName(STACK_NAME)
+            .enableTerminationProtection(false)
+            .build();
+        final ResourceModel prevmodel = ResourceModel.builder()
+            .stackId(STACK_ID)
+            .stackName(STACK_NAME)
+            .enableTerminationProtection(true)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .previousResourceState(prevmodel)
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -184,10 +201,17 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
             .stackId(STACK_ID)
             .stackName(STACK_NAME)
+            .enableTerminationProtection(false)
+            .build();
+        final ResourceModel prevmodel = ResourceModel.builder()
+            .stackId(STACK_ID)
+            .stackName(STACK_NAME)
+            .enableTerminationProtection(true)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .previousResourceState(prevmodel)
             .build();
 
         ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,new CallbackContext(), proxyClient, logger);
@@ -215,10 +239,17 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
             .stackId(STACK_ID)
             .stackName(STACK_NAME)
+            .enableTerminationProtection(false)
+            .build();
+        final ResourceModel prevmodel = ResourceModel.builder()
+            .stackId(STACK_ID)
+            .stackName(STACK_NAME)
+            .enableTerminationProtection(true)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .previousResourceState(prevmodel)
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -235,8 +266,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Test
     public void describeStacksResponseIsEmpty_HandlerShouldThrowException() {
         // Mocks
-        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
-            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
@@ -249,10 +278,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
             .stackId(STACK_ID)
             .stackName(STACK_NAME)
+            .enableTerminationProtection(false)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .previousResourceState(model)
             .build();
 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))
@@ -262,8 +293,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
     @Test
     public void stackReachesUpdateFailed_HandlerThrowsNotStabilizedException() {
         // Mocks
-        when(proxyClient.client().updateTerminationProtection(any(UpdateTerminationProtectionRequest.class)))
-            .thenReturn(UpdateTerminationProtectionResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().updateStack(any(UpdateStackRequest.class)))
             .thenReturn(UpdateStackResponse.builder().stackId(STACK_ID).build());
         when(proxyClient.client().describeStacks(any(DescribeStacksRequest.class)))
@@ -276,10 +305,12 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
             .stackId(STACK_ID)
             .stackName(STACK_NAME)
+            .enableTerminationProtection(false)
             .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
             .desiredResourceState(model)
+            .previousResourceState(model)
             .build();
 
         assertThatThrownBy(() -> handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger))

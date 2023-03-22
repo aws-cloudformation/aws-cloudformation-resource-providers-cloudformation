@@ -17,7 +17,6 @@ import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.Parameter;
 import software.amazon.awssdk.services.cloudformation.model.Stack;
 import software.amazon.awssdk.services.cloudformation.model.StackDriftInformation;
-import software.amazon.awssdk.services.cloudformation.model.StackDriftStatus;
 import software.amazon.awssdk.services.cloudformation.model.StackStatus;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Credentials;
@@ -42,6 +41,7 @@ public class AbstractTestBase {
 
   protected static final String STACK_POLICY_BODY =  "{\n  \"Statement\" : [\n    {\n      \"Effect\" : \"Allow\",\n      \"Action\" : \"Update:*\",\n      \"Principal\": \"*\",\n      \"Resource\" : \"*\"\n    }\n  ]\n}";
 
+  protected static final String TEMPLATE_BODY = "{\"Resources\":{\"WCH\":{\"Type\":\"AWS::CloudFormation::WaitConditionHandle\"}}}";
   protected static final Stack STACK_CREATE_COMPLETE = Stack.builder()
       .stackId(STACK_ID)
       .stackName(STACK_NAME)

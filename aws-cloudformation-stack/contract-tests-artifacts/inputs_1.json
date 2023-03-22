@@ -1,7 +1,32 @@
 {
   "CreateInputs": {
     "StackName": "CTestAuto",
-    "TemplateBody": "{\"Description\":\"This is for testing purposes\",\"Outputs\":{\"Param\":{\"Description\":\"testingpurposes\",\"Value\":{\"Ref\":\"Param\"},\"Export\":{\"Name\":\"testingct\"}}},\"Parameters\":{\"Param\":{\"Default\":\"defaultVal\",\"Type\":\"String\"}},\"Resources\":{\"WaitHandle\":{\"Properties\":{},\"Type\":\"AWS::CloudFormation::WaitConditionHandle\"}}}",
+    "TemplateBody": {
+      "Description": "This is for testing purposes",
+      "Outputs": {
+        "Param": {
+          "Description": "testingpurposes",
+          "Value": {
+            "Ref": "Param"
+          },
+          "Export": {
+            "Name": "testingct"
+          }
+        }
+      },
+      "Parameters": {
+        "Param": {
+          "Default": "defaultVal",
+          "Type": "String"
+        }
+      },
+      "Resources": {
+        "WaitHandle": {
+          "Properties": {},
+          "Type": "AWS::CloudFormation::WaitConditionHandle"
+        }
+      }
+    },
     "Tags": [
       {
         "Key": "tag1",
@@ -54,7 +79,32 @@
     {
       "op": "add",
       "path": "/TemplateBody",
-      "value": "{\"Description\":\"This is for testing purposes\",\"Outputs\":{\"Param\":{\"Description\":\"testingpurposes\",\"Value\":{\"Ref\":\"Param\"},\"Export\":{\"Name\":\"testingct\"}}},\"Parameters\":{\"Param\":{\"Default\":\"defaultVal\",\"Type\":\"String\"}},\"Resources\":{\"WaitHandle\":{\"Properties\":{},\"Type\":\"AWS::CloudFormation::WaitConditionHandle\"}}}"
+      "value": {
+        "Description": "This is for testing purposes1",
+        "Outputs": {
+          "Param": {
+            "Description": "testingpurposes",
+            "Value": {
+              "Ref": "Param"
+            },
+            "Export": {
+              "Name": "testingct1"
+            }
+          }
+        },
+        "Parameters": {
+          "Param": {
+            "Default": "defaultVal",
+            "Type": "String"
+          }
+        },
+        "Resources": {
+          "WaitHandle1": {
+            "Properties": {},
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+          }
+        }
+      }
     }
   ]
 }

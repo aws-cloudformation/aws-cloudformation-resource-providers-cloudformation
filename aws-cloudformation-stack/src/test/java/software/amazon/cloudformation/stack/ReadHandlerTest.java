@@ -11,6 +11,8 @@ import software.amazon.awssdk.services.cloudformation.model.DescribeStacksReques
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksResponse;
 import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetStackPolicyResponse;
+import software.amazon.awssdk.services.cloudformation.model.GetTemplateRequest;
+import software.amazon.awssdk.services.cloudformation.model.GetTemplateResponse;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -62,6 +64,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_SimpleSuccess() {
         // Mocks
+        when(proxyClient.client().getTemplate(any(GetTemplateRequest.class)))
+            .thenReturn(GetTemplateResponse.builder()
+                .templateBody(TEMPLATE_BODY)
+                .build());
         when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
             .thenReturn(GetStackPolicyResponse.builder()
                 .stackPolicyBody(STACK_POLICY_BODY)
@@ -98,6 +104,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void handleRequest_SimpleSuccess1() {
         // Mocks
+        when(proxyClient.client().getTemplate(any(GetTemplateRequest.class)))
+            .thenReturn(GetTemplateResponse.builder()
+                .templateBody(TEMPLATE_BODY)
+                .build());
         when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
             .thenReturn(GetStackPolicyResponse.builder()
                 .stackPolicyBody(STACK_POLICY_BODY)
@@ -134,6 +144,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void stackindeleteComplete_HandlerThrowsCfnNotFoundException() {
         // Mocks
+        when(proxyClient.client().getTemplate(any(GetTemplateRequest.class)))
+            .thenReturn(GetTemplateResponse.builder()
+                .templateBody(TEMPLATE_BODY)
+                .build());
         when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
             .thenReturn(GetStackPolicyResponse.builder()
                 .stackPolicyBody(STACK_POLICY_BODY)
@@ -161,6 +175,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void noStackinresponse_HandlerThrowsCfnNotFoundException() {
         // Mocks
+        when(proxyClient.client().getTemplate(any(GetTemplateRequest.class)))
+            .thenReturn(GetTemplateResponse.builder()
+                .templateBody(TEMPLATE_BODY)
+                .build());
         when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
             .thenReturn(GetStackPolicyResponse.builder()
                 .stackPolicyBody(STACK_POLICY_BODY)
@@ -188,6 +206,10 @@ public class ReadHandlerTest extends AbstractTestBase {
     @Test
     public void serviceExceptionThrown_HandlerThrowsCfnGeneralServiceException() {
         // Mocks
+        when(proxyClient.client().getTemplate(any(GetTemplateRequest.class)))
+            .thenReturn(GetTemplateResponse.builder()
+                .templateBody(TEMPLATE_BODY)
+                .build());
         when(proxyClient.client().getStackPolicy(any(GetStackPolicyRequest.class)))
             .thenReturn(GetStackPolicyResponse.builder()
                 .stackPolicyBody(STACK_POLICY_BODY)

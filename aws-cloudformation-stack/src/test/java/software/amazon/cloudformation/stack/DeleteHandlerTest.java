@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;;
 import software.amazon.awssdk.services.cloudformation.model.CloudFormationException;
-import software.amazon.awssdk.services.cloudformation.model.CreateStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackResponse;
 import software.amazon.awssdk.services.cloudformation.model.DescribeStacksRequest;

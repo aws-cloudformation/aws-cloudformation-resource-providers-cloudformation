@@ -34,6 +34,7 @@ Resources:
                 - "cloudformation:DeleteStack"
                 - "cloudformation:DescribeStacks"
                 - "cloudformation:GetStackPolicy"
+                - "cloudformation:GetTemplate"
                 - "cloudformation:ListStacks"
                 - "cloudformation:UpdateStack"
                 - "cloudformation:UpdateTerminationProtection"
