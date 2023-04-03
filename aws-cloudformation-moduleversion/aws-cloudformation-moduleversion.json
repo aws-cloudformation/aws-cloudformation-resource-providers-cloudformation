@@ -66,6 +66,7 @@
   "readOnlyProperties": [
     "/properties/Arn",
     "/properties/Description",
+    "/properties/DocumentationUrl",
     "/properties/IsDefaultVersion",
     "/properties/Schema",
     "/properties/TimeCreated",
