@@ -71,10 +71,11 @@ public class Translator {
      * @return resource model
      */
     static ResourceModel translateFromReadResponse(@NonNull final DescribeTypeResponse response) {
+        String documentationUrl = response.documentationUrl() != null ? response.documentationUrl() : "";
         return ResourceModel.builder()
                 .arn(response.arn())
                 .description(response.description())
-                .documentationUrl(response.documentationUrl())
+                .documentationUrl(documentationUrl)
                 .isDefaultVersion(response.isDefaultVersion())
                 .moduleName(response.typeName())
                 .schema(response.schema())
