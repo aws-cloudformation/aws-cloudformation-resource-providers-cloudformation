@@ -1,0 +1,6 @@
+{
+  "CreateInputs": {
+    "ModuleName": "Uluru::Contract::Test::MODULE",
+    "ModulePackage": "{{awscloudformationmoduleversioncto1}}"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "typeName": "Uluru::Contract::Test::MODULE",
+  "description": "A module to be used in Contract Tests",
+  "properties": {
+    "Resources": {
+      "properties": {
+        "QueueInAModule": {
+          "type": "object",
+          "properties": {
+            "Type": {
+              "type": "string",
+              "const": "AWS::SQS::Queue"
+            },
+            "Properties": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

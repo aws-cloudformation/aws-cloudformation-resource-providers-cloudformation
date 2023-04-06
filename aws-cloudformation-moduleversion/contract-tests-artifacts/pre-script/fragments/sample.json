@@ -1,0 +1,11 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "QueueInAModule": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": "QueueInaModule"
+      }
+    }
+  }
+}
