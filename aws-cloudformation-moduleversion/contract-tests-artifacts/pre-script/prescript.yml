@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description:
+  Dependencies for AWS::CloudFormation::ModuleVersion Contract Tests
+
+Resources:
+  ContractTestS3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+
+Outputs:
+  ContractTestS3BucketName:
+    Value:
+      Ref: ContractTestS3Bucket
+    Export:
+      Name: ModuleVersionContractTestBucket
+  ContractTestModuleVersionS3Path:
+    Value:
+      Fn::Sub: "s3://${ContractTestS3Bucket}/contract-test-module.zip"
+    Export:
+      Name: awscloudformationmoduleversioncto1

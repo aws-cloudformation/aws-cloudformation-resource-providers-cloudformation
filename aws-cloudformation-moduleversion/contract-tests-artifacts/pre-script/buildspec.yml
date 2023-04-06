@@ -1,0 +1,20 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - aws cloudformation create-stack --stack-name moduleversion-ctv2-prescript --template-body file://prescript.yml
+      - aws cloudformation wait stack-create-complete --stack-name moduleversion-ctv2-prescript
+      - echo "Created stack moduleversion-ctv2-prescript"
+      - aws cloudformation list-exports | jq -r '.'
+      - export BUCKET_NAME=$(aws cloudformation list-exports |jq -r '.Exports[] | select(.Name | contains("ModuleVersionContractTestBucket")).Value')
+      - echo "${BUCKET_NAME}"
+      - zip -r contract-test-module.zip fragments/ schema.json
+      - aws s3 cp contract-test-module.zip "s3://${BUCKET_NAME}/contract-test-module.zip"
+      - echo Uploaded Module zip to s3://${BUCKET_NAME}/contract-test-module.zip
+  post_build:
+    commands:
+      - echo Build completed on `date`

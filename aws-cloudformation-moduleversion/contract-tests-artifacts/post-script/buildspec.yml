@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo Build started on `date`
+      - aws cloudformation list-exports | jq -r '.'
+      - export BUCKET_NAME=$(aws cloudformation list-exports |jq -r '.Exports[] | select(.Name | contains("ModuleVersionContractTestBucket")).Value')
+      - echo "${BUCKET_NAME}"
+      - aws s3 rm "s3://${BUCKET_NAME}" --recursive
+      - aws cloudformation delete-stack --stack-name moduleversion-ctv2-prescript
+      - aws cloudformation wait stack-delete-complete --stack-name moduleversion-ctv2-prescript
+      - echo "Deleted stack moduleversion-ctv2-prescript"
+  post_build:
+    commands:
+      - echo Build completed on `date`
