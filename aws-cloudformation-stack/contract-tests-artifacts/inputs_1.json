@@ -1,0 +1,110 @@
+{
+  "CreateInputs": {
+    "StackName": "CTestAuto",
+    "TemplateBody": {
+      "Description": "This is for testing purposes",
+      "Outputs": {
+        "Param": {
+          "Description": "testingpurposes",
+          "Value": {
+            "Ref": "Param"
+          },
+          "Export": {
+            "Name": "testingct"
+          }
+        }
+      },
+      "Parameters": {
+        "Param": {
+          "Default": "defaultVal",
+          "Type": "String"
+        }
+      },
+      "Resources": {
+        "WaitHandle": {
+          "Properties": {},
+          "Type": "AWS::CloudFormation::WaitConditionHandle"
+        }
+      }
+    },
+    "Tags": [
+      {
+        "Key": "tag1",
+        "Value": "val"
+      }
+    ],
+    "Parameters": {
+      "Param": "ParamVal"
+    },
+    "TimeoutInMinutes": 15,
+    "StackPolicyBody": {
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": "Update:*",
+          "Principal": "*",
+          "Resource": "*"
+        }
+      ]
+    },
+    "Capabilities": [
+      "CAPABILITY_NAMED_IAM"
+    ],
+    "RoleARN": "{{awscloudformationstackcto3}}",
+    "NotificationARNs": [
+      "{{awscloudformationstackcto1}}"
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "add",
+      "path": "/Capabilities/1",
+      "value": "CAPABILITY_AUTO_EXPAND"
+    },
+    {
+      "op": "replace",
+      "path": "/Tags/0/Key",
+      "value": "tag2"
+    },
+    {
+      "op": "replace",
+      "path": "/Parameters/Param",
+      "value": "ParamValUpdated"
+    },
+    {
+      "op": "replace",
+      "path": "/NotificationARNs/0",
+      "value": "{{awscloudformationstackcto2}}"
+    },
+    {
+      "op": "add",
+      "path": "/TemplateBody",
+      "value": {
+        "Description": "This is for testing purposes1",
+        "Outputs": {
+          "Param": {
+            "Description": "testingpurposes",
+            "Value": {
+              "Ref": "Param"
+            },
+            "Export": {
+              "Name": "testingct1"
+            }
+          }
+        },
+        "Parameters": {
+          "Param": {
+            "Default": "defaultVal",
+            "Type": "String"
+          }
+        },
+        "Resources": {
+          "WaitHandle1": {
+            "Properties": {},
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+          }
+        }
+      }
+    }
+  ]
+}
