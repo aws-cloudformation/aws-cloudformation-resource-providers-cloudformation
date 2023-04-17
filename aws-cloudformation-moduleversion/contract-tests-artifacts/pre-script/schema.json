@@ -4,12 +4,12 @@
   "properties": {
     "Resources": {
       "properties": {
-        "QueueInAModule": {
+        "TopicInAModule": {
           "type": "object",
           "properties": {
             "Type": {
               "type": "string",
-              "const": "AWS::SQS::Queue"
+              "const": "AWS::SNS::Topic"
             },
             "Properties": {
               "type": "object"
