@@ -60,7 +60,7 @@ public class ListHandlerTest extends AbstractMockTestBase<CloudFormationClient> 
                 .nextToken(NEXT_TOKEN)
                 .build();
         final ResourceModel expectedResourceModel = ResourceModel.builder()
-                .arn(MODULE_ARN)
+                .arn(MODULE_ARN + "/" + DEFAULT_VERSION_ID)
                 .moduleName(MODULE_NAME)
                 .versionId(DEFAULT_VERSION_ID)
                 .build();

@@ -85,7 +85,7 @@ public class Translator {
                 .map(summary -> ResourceModel.builder()
                         .moduleName(summary.typeName())
                         .versionId(summary.defaultVersionId())
-                        .arn(summary.typeArn())
+                        .arn(summary.typeArn() + "/" + summary.defaultVersionId())
                         .build())
                 .collect(Collectors.toList());
     }
