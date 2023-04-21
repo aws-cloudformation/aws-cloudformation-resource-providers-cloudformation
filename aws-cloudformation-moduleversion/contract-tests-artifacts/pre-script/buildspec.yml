@@ -12,7 +12,9 @@ phases:
       - aws cloudformation list-exports | jq -r '.'
       - export BUCKET_NAME=$(aws cloudformation list-exports |jq -r '.Exports[] | select(.Name | contains("ModuleVersionContractTestBucket")).Value')
       - echo "${BUCKET_NAME}"
+      - cp schema_json.txt schema.json
       - zip -r contract-test-module.zip fragments/ schema.json
+      - rm schema.json
       - aws s3 cp contract-test-module.zip "s3://${BUCKET_NAME}/contract-test-module.zip"
       - echo Uploaded Module zip to s3://${BUCKET_NAME}/contract-test-module.zip
   post_build:
