@@ -208,14 +208,17 @@
     "create": {
       "permissions": [
         "cloudformation:DescribeStacks",
-        "cloudformation:CreateStack"
+        "cloudformation:CreateStack",
+        "iam:PassRole"
       ]
     },
     "update": {
       "permissions": [
         "cloudformation:DescribeStacks",
         "cloudformation:UpdateStack",
-        "cloudformation:UpdateTerminationProtection"
+        "cloudformation:UpdateTerminationProtection",
+        "cloudformation:SetStackPolicy",
+        "iam:PassRole"
       ]
     },
     "delete": {
