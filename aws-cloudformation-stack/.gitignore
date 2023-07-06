@@ -21,3 +21,7 @@ rpdk.log*
 
 # contains credentials
 sam-tests/
+
+build
+*.zip
+*_schema.json
