@@ -61,6 +61,7 @@ public class PropertyTranslator {
             final software.amazon.cloudformation.stackset.DeploymentTargets deploymentTargets) {
         return DeploymentTargets.builder()
                 .accounts(deploymentTargets.getAccounts())
+                .accountsUrl(deploymentTargets.getAccountsUrl())
                 .organizationalUnitIds(deploymentTargets.getOrganizationalUnitIds())
                 .accountFilterType(deploymentTargets.getAccountFilterType())
                 .build();

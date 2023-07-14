@@ -21,6 +21,7 @@ import static software.amazon.cloudformation.stackset.translator.PropertyTransla
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkOperationPreferences;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToSdkTags;
 import static software.amazon.cloudformation.stackset.translator.PropertyTranslator.translateToStackInstance;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.ACCOUNTS_URL;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.INTER;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.account_1;
@@ -90,6 +91,7 @@ public class PropertyTranslatorTest {
                 software.amazon.cloudformation.stackset.DeploymentTargets.builder()
                         .organizationalUnitIds(new HashSet<>(Arrays.asList(OU_1)))
                         .accounts(new HashSet<>(Arrays.asList(account_1)))
+                        .accountsUrl(ACCOUNTS_URL)
                         .accountFilterType(INTER)
                         .build();
 
@@ -99,6 +101,7 @@ public class PropertyTranslatorTest {
                 .isEqualTo(new HashSet<>(Arrays.asList(OU_1)));
         assertThat(new HashSet<>(sdkDeploymentTargets.accounts()))
                 .isEqualTo(new HashSet<>(Arrays.asList(account_1)));
+        assertThat(sdkDeploymentTargets.accountsUrl()).isEqualTo(ACCOUNTS_URL);
         assertThat(sdkDeploymentTargets.accountFilterTypeAsString()).isEqualTo(INTER);
 
     }
