@@ -31,6 +31,7 @@ public class AltTestUtils {
     public final static String region_2 = "us-west-1";
     public final static String region_3 = "us-east-2";
     public final static String region_4 = "us-east-1";
+    public final static String ACCOUNTS_URL = "http://test";
 
     public final static Set<String> singleton_region_set = new HashSet<>(Collections.singletonList(region_1));
 
