@@ -63,6 +63,12 @@ public class AltResourceModelAnalyzer {
                                 stackInstancesToUpdate)
         );
 
+        currentRegions.forEach(
+                region -> new AltStackInstancesCalculator(region,
+                        currentStackInstancesByRegion.get(region),
+                        currentStackInstancesByRegion.get(region))
+        );
+
         placeHolder.setCreateStackInstances(new ArrayList<>(stackInstancesToCreate));
         placeHolder.setDeleteStackInstances(new ArrayList<>(stackInstancesToDelete));
         placeHolder.setUpdateStackInstances(new ArrayList<>(stackInstancesToUpdate));

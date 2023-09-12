@@ -45,6 +45,7 @@ Resources:
                 - "cloudformation:UntagResource"
                 - "cloudformation:UpdateStackInstances"
                 - "cloudformation:UpdateStackSet"
+                - "iam:PassRole"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
