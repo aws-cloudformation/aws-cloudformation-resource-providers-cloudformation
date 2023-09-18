@@ -11,7 +11,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 <pre>
 {
     "<a href="#accounts" title="Accounts">Accounts</a>" : <i>[ String, ... ]</i>,
-    "<a href="#accountsUrl" title="AccountsUrl">AccountsUrl</a>" : <i>String</i>,
+    "<a href="#accountsurl" title="AccountsUrl">AccountsUrl</a>" : <i>String</i>,
     "<a href="#organizationalunitids" title="OrganizationalUnitIds">OrganizationalUnitIds</a>" : <i>[ String, ... ]</i>,
     "<a href="#accountfiltertype" title="AccountFilterType">AccountFilterType</a>" : <i>String</i>
 }
@@ -48,9 +48,11 @@ _Required_: No
 
 _Type_: String
 
-_Length Constraints_: Minimum length of 1. Maximum length of 5120.
+_Minimum Length_: <code>1</code>
 
-_Pattern_: `(s3://|http(s?)://).+`
+_Maximum Length_: <code>5120</code>
+
+_Pattern_: <code>(s3://|http(s?)://).+</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
