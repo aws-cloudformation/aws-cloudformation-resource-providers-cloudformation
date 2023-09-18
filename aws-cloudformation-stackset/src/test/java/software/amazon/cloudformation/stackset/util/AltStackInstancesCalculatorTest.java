@@ -404,12 +404,7 @@ public class AltStackInstancesCalculatorTest {
                 Set<Parameter> parameters = stackInstances.getParameterOverrides();
 
                 stackInstances.getDeploymentTargets().getOrganizationalUnitIds().forEach(
-                        ou -> {
-                            if (ouDeploymentParameters.containsKey(ou) && ouDeploymentParameters.get(ou) != parameters) {
-                                throw new CfnInvalidRequestException("An OrganizationalUnitIds cannot be associated with more than one Parameters set");
-                            }
-                            ouDeploymentParameters.put(ou, parameters);
-                        }
+                        ou -> ouDeploymentParameters.put(ou, parameters)
                 );
             }
         }
