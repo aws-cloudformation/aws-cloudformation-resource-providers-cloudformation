@@ -9,6 +9,8 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import software.amazon.awssdk.utils.CollectionUtils;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.stackset.Parameter;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
 
@@ -53,6 +55,8 @@ public class AltResourceModelAnalyzer {
                 region -> stackInstancesToCreate.addAll(currentStackInstancesByRegion.get(region))
         );
 
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
+
         setInter(currentRegions, previousRegions).forEach(
                 region -> new AltStackInstancesCalculator(region,
                         previousStackInstancesByRegion.get(region),
@@ -60,18 +64,42 @@ public class AltResourceModelAnalyzer {
                         .calculate(
                                 stackInstancesToDelete,
                                 stackInstancesToCreate,
-                                stackInstancesToUpdate)
-        );
-
-        currentRegions.forEach(
-                region -> new AltStackInstancesCalculator(region,
-                        currentStackInstancesByRegion.get(region),
-                        currentStackInstancesByRegion.get(region))
+                                stackInstancesToUpdate,
+                                ouDeploymentParametersMap)
         );
 
         placeHolder.setCreateStackInstances(new ArrayList<>(stackInstancesToCreate));
         placeHolder.setDeleteStackInstances(new ArrayList<>(stackInstancesToDelete));
         placeHolder.setUpdateStackInstances(new ArrayList<>(stackInstancesToUpdate));
+    }
+
+    /*
+     *  If an OU is associated with different parameter sets, will raise an error.
+     *  1. This is the original process logic when ALT is not enabled.
+     *  2. Although users logically CAN associate an OU with different with ALT filter, but we cannot check if the input is valid
+     *  2.1 For example, (OU - account1) and (OU - account2). It's up to OU's structure if these two targets can be
+     *      associated with two parameters -- if OU is set(account1, account2, account3), then not valid.
+     *  2.2 So we chose to raise and error to align with previous implementation and avoid possible ambiguity
+     * */
+
+    private static HashMap<String, Set<Parameter>> findDeploymentParametersForOUs(final HashMap<String, Set<StackInstances>> currentStackInstancesByRegion) {
+        HashMap<String, Set<Parameter>> ouDeploymentParameters = new HashMap<>();
+
+        for (final String region : currentStackInstancesByRegion.keySet()) {
+            for (final StackInstances stackInstances : currentStackInstancesByRegion.get(region)) {
+                Set<Parameter> parameters = stackInstances.getParameterOverrides();
+
+                stackInstances.getDeploymentTargets().getOrganizationalUnitIds().forEach(
+                        ou -> {
+                            if (ouDeploymentParameters.containsKey(ou) && ouDeploymentParameters.get(ou) != parameters) {
+                                throw new CfnInvalidRequestException("An OrganizationalUnitIds cannot be associated with more than one Parameters set");
+                            }
+                            ouDeploymentParameters.put(ou, parameters);
+                        }
+                );
+            }
+        }
+        return ouDeploymentParameters;
     }
 
     private static HashMap<String, Set<StackInstances>> regroupStackInstancesByRegion (final Collection<StackInstances> stackInstancesGroup) {

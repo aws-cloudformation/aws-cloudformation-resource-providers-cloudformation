@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Data;
 import software.amazon.awssdk.utils.CollectionUtils;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.stackset.DeploymentTargets;
 import software.amazon.cloudformation.stackset.Parameter;
 import software.amazon.cloudformation.stackset.StackInstances;
@@ -30,7 +29,6 @@ public class AltStackInstancesCalculator {
 
     private final HashMap<List<String>, Set<String>> previousStackInstancesByOuFilter;
     private final HashMap<List<String>, Set<String>> currentStackInstancesByOuFilter;
-    private final HashMap<String, Set<Parameter>> ouDeploymentParametersMap;
 
     private final static String NONE = "NONE";
     private final static String INTER = "INTERSECTION";
@@ -52,12 +50,11 @@ public class AltStackInstancesCalculator {
         this.currentStackInstancesGroup = currentStackInstancesGroup;
         this.previousOUs = findAllOus(previousStackInstancesGroup);
         this.currentOUs = findAllOus(currentStackInstancesGroup);
-        this.ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesGroup);
         this.previousStackInstancesByOuFilter = mergeDifferentFilters(mergeSameFilters(previousStackInstancesGroup));
         this.currentStackInstancesByOuFilter = mergeDifferentFilters(mergeSameFilters(currentStackInstancesGroup));
     }
 
-    public void calculate (Set<StackInstances> instancesToDelete, Set<StackInstances> instancesToCreate, Set<StackInstances> instancesToUpdate) {
+    public void calculate (Set<StackInstances> instancesToDelete, Set<StackInstances> instancesToCreate, Set<StackInstances> instancesToUpdate, HashMap<String, Set<Parameter>> ouDeploymentParametersMap) {
         setDiff(previousOUs, currentOUs).forEach(ou -> {
             String filter = getFilterType(ou, previousStackInstancesByOuFilter);
             Set<String> accounts = previousStackInstancesByOuFilter.get(Arrays.asList(ou, filter));
@@ -83,33 +80,6 @@ public class AltStackInstancesCalculator {
             createTargetSet.forEach(targets -> addToInstancesSet(targets, instancesToCreate, parameters));
             updateTargetSet.forEach(targets -> addToInstancesSet(targets, instancesToUpdate, parameters));
         });
-    }
-
-    /*
-    *  If an OU is associated with different parameter sets, will raise an error.
-    *  1. This is the original process logic when ALT is not enabled.
-    *  2. Although users logically CAN associate an OU with different with ALT filter, but we cannot check if the input is valid
-    *  2.1 For example, (OU - account1) and (OU - account2). It's up to OU's structure if these two targets can be
-    *      associated with two parameters -- if OU is set(account1, account2, account3), then not valid.
-    *  2.2 So we chose to raise and error to align with previous implementation and avoid possible ambiguity
-    * */
-
-    private static HashMap<String, Set<Parameter>> findDeploymentParametersForOUs(final Set<StackInstances> stackInstancesGroup) {
-        HashMap<String, Set<Parameter>> ouDeploymentParameters = new HashMap<>();
-
-        for (final StackInstances stackInstances : stackInstancesGroup) {
-            Set<Parameter> parameters = stackInstances.getParameterOverrides();
-
-            stackInstances.getDeploymentTargets().getOrganizationalUnitIds().forEach(
-                    ou -> {
-                        if (ouDeploymentParameters.containsKey(ou) && ouDeploymentParameters.get(ou) != parameters) {
-                            throw new CfnInvalidRequestException("An OrganizationalUnitIds cannot be associated with more than one Parameters set");
-                        }
-                        ouDeploymentParameters.put(ou, parameters);
-                    }
-            );
-        }
-        return ouDeploymentParameters;
     }
 
     private static Set<String> findAllOus(final Set<StackInstances> stackInstancesGroup) {

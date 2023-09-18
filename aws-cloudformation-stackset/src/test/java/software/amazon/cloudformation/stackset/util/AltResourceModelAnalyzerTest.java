@@ -26,6 +26,8 @@ import static software.amazon.cloudformation.stackset.util.AltTestUtils.generate
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateInstances;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateInstancesWithRegions;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.generateModel;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.parameters_1;
+import static software.amazon.cloudformation.stackset.util.AltTestUtils.parameters_2;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_1;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_2;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.region_3;
@@ -280,4 +282,18 @@ public class AltResourceModelAnalyzerTest {
         assertThat(Comparator.equals(new HashSet<>(placeHolder.getUpdateStackInstances()), desiredUpdateInstances)).isTrue();
     }
 
+    @Test
+    public void test_No_Alt_Filter_Multiple_Parameters_In_One_Group() {
+        ResourceModel currentModel = generateModel(new HashSet<>(Arrays.asList(
+                generateInstances(OU_1, parameters_1),
+                generateInstances(Arrays.asList(OU_1, OU_2), parameters_2)))
+        );
+        StackInstancesPlaceHolder placeHolder = new StackInstancesPlaceHolder();
+
+        Exception ex = assertThrows(
+                CfnInvalidRequestException.class,
+                () -> AltResourceModelAnalyzer.builder().currentModel(currentModel).build().analyze(placeHolder)
+        );
+        assertThat(ex.getMessage()).contains("An OrganizationalUnitIds cannot be associated with more than one Parameters set");
+    }
 }

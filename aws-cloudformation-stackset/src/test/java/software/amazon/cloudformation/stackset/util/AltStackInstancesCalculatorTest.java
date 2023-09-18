@@ -2,13 +2,15 @@ package software.amazon.cloudformation.stackset.util;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.stackset.Parameter;
 import software.amazon.cloudformation.stackset.StackInstances;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.INTER;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.NONE;
@@ -51,8 +53,10 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -80,30 +84,14 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
-    }
-
-    @Test
-    public void test_No_Alt_Filter_Multiple_Parameters_In_One_Group() {
-        Set<StackInstances> previousGroup = new HashSet<>(Collections.singletonList(generateInstances(OU_1)));
-        Set<StackInstances> currentGroup = new HashSet<>(Arrays.asList(
-                generateInstances(OU_1, parameters_1),
-                generateInstances(Arrays.asList(OU_1, OU_2), parameters_2)));
-
-        HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
-        HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
-        HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
-        Exception ex = assertThrows(
-                CfnInvalidRequestException.class,
-                () -> new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                        .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate)
-        );
-        assertThat(ex.getMessage()).contains("An OrganizationalUnitIds cannot be associated with more than one Parameters set");
     }
 
     @Test
@@ -127,8 +115,10 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -155,9 +145,11 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
 
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -184,8 +176,10 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -212,8 +206,10 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -243,8 +239,10 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -274,8 +272,10 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -308,8 +308,10 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -342,8 +344,10 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
@@ -382,12 +386,33 @@ public class AltStackInstancesCalculatorTest {
         HashSet<StackInstances> stackInstancesSetToDelete = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToCreate = new HashSet<>();
         HashSet<StackInstances> stackInstancesSetToUpdate = new HashSet<>();
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = new HashMap<String, Set<StackInstances>>(){{put(region_1, currentGroup);}};
+        HashMap<String, Set<Parameter>> ouDeploymentParametersMap = findDeploymentParametersForOUs(currentStackInstancesByRegion);
         new AltStackInstancesCalculator(region_1, previousGroup, currentGroup)
-                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate);
+                .calculate(stackInstancesSetToDelete, stackInstancesSetToCreate, stackInstancesSetToUpdate, ouDeploymentParametersMap);
 
         assertThat(Comparator.equals(stackInstancesSetToDelete, desiredDeleteInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToCreate, desiredCreateInstances)).isTrue();
         assertThat(Comparator.equals(stackInstancesSetToUpdate, desiredUpdateInstances)).isTrue();
     }
 
+    private static HashMap<String, Set<Parameter>> findDeploymentParametersForOUs(final HashMap<String, Set<StackInstances>> currentStackInstancesByRegion) {
+        HashMap<String, Set<Parameter>> ouDeploymentParameters = new HashMap<>();
+
+        for (final String region : currentStackInstancesByRegion.keySet()) {
+            for (final StackInstances stackInstances : currentStackInstancesByRegion.get(region)) {
+                Set<Parameter> parameters = stackInstances.getParameterOverrides();
+
+                stackInstances.getDeploymentTargets().getOrganizationalUnitIds().forEach(
+                        ou -> {
+                            if (ouDeploymentParameters.containsKey(ou) && ouDeploymentParameters.get(ou) != parameters) {
+                                throw new CfnInvalidRequestException("An OrganizationalUnitIds cannot be associated with more than one Parameters set");
+                            }
+                            ouDeploymentParameters.put(ou, parameters);
+                        }
+                );
+            }
+        }
+        return ouDeploymentParameters;
+    }
 }
