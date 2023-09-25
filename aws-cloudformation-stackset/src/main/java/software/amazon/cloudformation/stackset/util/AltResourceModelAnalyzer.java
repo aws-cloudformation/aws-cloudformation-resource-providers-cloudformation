@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
@@ -21,9 +23,9 @@ public class AltResourceModelAnalyzer {
     private ResourceModel previousModel;
     private ResourceModel currentModel;
 
-    private final Set<StackInstances> stackInstancesToDelete = new HashSet<>();
-    private final Set<StackInstances> stackInstancesToCreate = new HashSet<>();
-    private final Set<StackInstances> stackInstancesToUpdate = new HashSet<>();
+    private final Set<StackInstances> stackInstancesToDelete = new LinkedHashSet<>();
+    private final Set<StackInstances> stackInstancesToCreate = new LinkedHashSet<>();
+    private final Set<StackInstances> stackInstancesToUpdate = new LinkedHashSet<>();
 
     /*
     * This class takes previous and current models to analyze the StackInstances to create, delete, and update
@@ -41,8 +43,16 @@ public class AltResourceModelAnalyzer {
         Validator.validateServiceMangedInstancesGroup(previousStackInstancesGroup);
         Validator.validateServiceMangedInstancesGroup(currentStackInstancesGroup);
 
-        HashMap<String, Set<StackInstances>> previousStackInstancesByRegion = regroupStackInstancesByRegion(previousStackInstancesGroup);
-        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = regroupStackInstancesByRegion(currentStackInstancesGroup);
+        Set<String> previousModelRegionOrder = new LinkedHashSet<>();
+        Set<String> currentModelRegionOrder = new LinkedHashSet<>();
+
+        if (currentModel != null && currentModel.getOperationPreferences() != null && currentModel.getOperationPreferences().getRegionOrder() != null)
+            currentModelRegionOrder.addAll(currentModel.getOperationPreferences().getRegionOrder());
+        if (previousModel != null && previousModel.getOperationPreferences() != null && previousModel.getOperationPreferences().getRegionOrder() != null)
+            previousModelRegionOrder.addAll(previousModel.getOperationPreferences().getRegionOrder());
+
+        HashMap<String, Set<StackInstances>> previousStackInstancesByRegion = regroupStackInstancesByRegion(previousStackInstancesGroup, previousModelRegionOrder);
+        HashMap<String, Set<StackInstances>> currentStackInstancesByRegion = regroupStackInstancesByRegion(currentStackInstancesGroup, currentModelRegionOrder);
 
         Set<String> previousRegions = previousStackInstancesByRegion.keySet();
         Set<String> currentRegions = currentStackInstancesByRegion.keySet();
@@ -102,8 +112,8 @@ public class AltResourceModelAnalyzer {
         return ouDeploymentParameters;
     }
 
-    private static HashMap<String, Set<StackInstances>> regroupStackInstancesByRegion (final Collection<StackInstances> stackInstancesGroup) {
-        HashMap<String, Set<StackInstances>> stackInstancesGroupsByRegion = new HashMap<>();
+    private static HashMap<String, Set<StackInstances>> regroupStackInstancesByRegion (final Collection<StackInstances> stackInstancesGroup, final Set<String> regionOrder) {
+        HashMap<String, Set<StackInstances>> stackInstancesGroupsByRegion = new LinkedHashMap<>();
         if (CollectionUtils.isNullOrEmpty(stackInstancesGroup)) return stackInstancesGroupsByRegion;
 
         for (final StackInstances stackInstances : stackInstancesGroup) {
@@ -118,23 +128,41 @@ public class AltResourceModelAnalyzer {
                         .build());
             }
         }
-        return stackInstancesGroupsByRegion;
+        return regroupStackInstancesByRegionOrder(stackInstancesGroupsByRegion, regionOrder);
+    }
+
+    private static HashMap<String, Set<StackInstances>> regroupStackInstancesByRegionOrder(
+            final HashMap<String, Set<StackInstances>> stackInstancesGroupsByRegion,
+            final Set<String> regionOrder) {
+
+        if(regionOrder.size() == 0) return stackInstancesGroupsByRegion;
+        HashMap<String, Set<StackInstances>> stackInstancesGroupsByRegionOrder = new LinkedHashMap<>();
+        for(String region: regionOrder) {
+            if(stackInstancesGroupsByRegion.containsKey(region)) {
+                stackInstancesGroupsByRegionOrder.put(region, stackInstancesGroupsByRegion.get(region));
+            }
+        }
+        stackInstancesGroupsByRegion.entrySet().stream()
+                .filter(entry -> !stackInstancesGroupsByRegionOrder.containsKey(entry.getKey()))
+                .forEach(entry -> stackInstancesGroupsByRegionOrder.put(entry.getKey(), entry.getValue()));
+
+        return stackInstancesGroupsByRegionOrder;
     }
 
     public static Set<String> setDiff(Set<String> A, Set<String> B) {
-        Set<String> resultSet = new HashSet<>(A);
+        Set<String> resultSet = new LinkedHashSet<>(A);
         resultSet.removeAll(B);
         return resultSet;
     }
 
     public static Set<String> setInter(Set<String> A, Set<String> B) {
-        Set<String> resultSet = new HashSet<>(A);
+        Set<String> resultSet = new LinkedHashSet<>(A);
         resultSet.retainAll(B);
         return resultSet;
     }
 
     public static Set<String> setUnion(Set<String> A, Set<String> B) {
-        Set<String> resultSet = new HashSet<>(A);
+        Set<String> resultSet = new LinkedHashSet<>(A);
         resultSet.addAll(B);
         return resultSet;
     }
