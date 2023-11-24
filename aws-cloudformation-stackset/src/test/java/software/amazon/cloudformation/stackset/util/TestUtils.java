@@ -495,6 +495,7 @@ public class TestUtils {
             .build();
 
     public final static ResourceModel SELF_MANAGED_MODEL = ResourceModel.builder()
+            .stackSetName(STACK_SET_NAME)
             .stackSetId(STACK_SET_ID)
             .permissionModel(SELF_MANAGED)
             .capabilities(CAPABILITIES)
