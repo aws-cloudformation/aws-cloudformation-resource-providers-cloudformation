@@ -5,11 +5,8 @@ import software.amazon.awssdk.services.cloudformation.model.CreateStackSetReques
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.NameAlreadyExistsException;
 import software.amazon.cloudformation.Action;
-import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
