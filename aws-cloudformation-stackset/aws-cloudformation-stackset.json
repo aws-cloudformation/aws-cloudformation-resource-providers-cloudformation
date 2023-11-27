@@ -346,6 +346,7 @@
   "writeOnlyProperties": [
     "/properties/TemplateURL",
     "/properties/OperationPreferences",
+    "/properties/StackInstancesGroup",
     "/properties/CallAs"
   ],
   "readOnlyProperties": [
@@ -353,6 +354,11 @@
   ],
   "primaryIdentifier": [
     "/properties/StackSetId"
+  ],
+  "additionalIdentifiers": [
+    [
+      "/properties/StackSetName"
+    ]
   ],
   "handlers": {
     "create": {

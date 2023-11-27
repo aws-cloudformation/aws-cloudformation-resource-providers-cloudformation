@@ -1,8 +1,11 @@
 package software.amazon.cloudformation.stackset;
 
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.CreateStackSetRequest;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetResponse;
+import software.amazon.awssdk.services.cloudformation.model.NameAlreadyExistsException;
 import software.amazon.cloudformation.Action;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -38,8 +41,21 @@ public class CreateHandler extends BaseHandlerStd {
                     logger.log(String.format("%s [%s] StackSet creation succeeded", ResourceModel.TYPE_NAME, model.getStackSetId()));
                     return response;
                 })
+                .handleError(this::handleCreateError)
                 .progress()
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, placeHolder.getCreateStackInstances(), logger))
                 .then(progress -> ProgressEvent.defaultSuccessHandler(model));
+    }
+
+    public ProgressEvent<ResourceModel, CallbackContext> handleCreateError(CreateStackSetRequest request,
+                                                                           Exception exception,
+                                                                           ProxyClient<CloudFormationClient> client,
+                                                                           ResourceModel model,
+                                                                           CallbackContext callbackContext) throws Exception {
+        if (exception instanceof NameAlreadyExistsException) {
+            CfnAlreadyExistsException mappedException = new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, model.getStackSetName(), exception);
+            return ProgressEvent.failed(model, callbackContext, mappedException.getErrorCode(), mappedException.getMessage());
+        }
+        throw exception;
     }
 }

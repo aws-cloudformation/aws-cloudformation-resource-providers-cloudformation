@@ -15,8 +15,10 @@ import software.amazon.awssdk.services.cloudformation.model.CreateStackSetReques
 import software.amazon.awssdk.services.cloudformation.model.DescribeStackSetOperationRequest;
 import software.amazon.awssdk.services.cloudformation.model.GetTemplateSummaryRequest;
 import software.amazon.awssdk.services.cloudformation.model.ListStackSetOperationResultsRequest;
+import software.amazon.awssdk.services.cloudformation.model.NameAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.amazon.cloudformation.proxy.HandlerErrorCode.AlreadyExists;
 import static software.amazon.cloudformation.proxy.HandlerErrorCode.InvalidRequest;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.DIFF;
 import static software.amazon.cloudformation.stackset.util.AltTestUtils.OU_1;
@@ -553,6 +556,40 @@ public class CreateHandlerTest extends AbstractMockTestBase<CloudFormationClient
                 () -> handler.handleRequest(proxy, request, null, loggerProxy));
 
         verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+    }
+
+    @Test
+    public void handleRequest_DuplicateStackSet_AlreadyExistsResponse() {
+
+        request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(SELF_MANAGED_MODEL)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .desiredResourceTags(DESIRED_RESOURCE_TAGS)
+                .clientRequestToken(REQUEST_TOKEN)
+                .build();
+
+        when(client.getTemplateSummary(any(GetTemplateSummaryRequest.class)))
+                .thenReturn(VALID_TEMPLATE_SUMMARY_RESPONSE);
+        when(client.createStackSet(any(CreateStackSetRequest.class)))
+                .thenThrow(NameAlreadyExistsException.builder()
+                        .message("AlreadyExistsMessage")
+                        .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response
+                = handler.handleRequest(proxy, request, null, loggerProxy);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext()).isNotNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(SELF_MANAGED_MODEL);
+        assertThat(response.getMessage()).isEqualTo(String.format(AlreadyExists.getMessage(), "AWS::CloudFormation::StackSet", SELF_MANAGED_MODEL.getStackSetName()));
+        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+
+        verify(client).getTemplateSummary(any(GetTemplateSummaryRequest.class));
+        verify(client).createStackSet(any(CreateStackSetRequest.class));
+        verify(client, never()).createStackInstances(any(CreateStackInstancesRequest.class));
+        verify(client, never()).describeStackSetOperation(any(DescribeStackSetOperationRequest.class));
     }
 
     @Test
