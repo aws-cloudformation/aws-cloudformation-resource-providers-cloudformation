@@ -15,7 +15,8 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "<a href="#maxconcurrentcount" title="MaxConcurrentCount">MaxConcurrentCount</a>" : <i>Integer</i>,
     "<a href="#maxconcurrentpercentage" title="MaxConcurrentPercentage">MaxConcurrentPercentage</a>" : <i>Integer</i>,
     "<a href="#regionorder" title="RegionOrder">RegionOrder</a>" : <i>[ String, ... ]</i>,
-    "<a href="#regionconcurrencytype" title="RegionConcurrencyType">RegionConcurrencyType</a>" : <i>String</i>
+    "<a href="#regionconcurrencytype" title="RegionConcurrencyType">RegionConcurrencyType</a>" : <i>String</i>,
+    "<a href="#concurrencymode" title="ConcurrencyMode">ConcurrencyMode</a>" : <i>String</i>
 }
 </pre>
 
@@ -29,6 +30,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 <a href="#regionorder" title="RegionOrder">RegionOrder</a>: <i>
       - String</i>
 <a href="#regionconcurrencytype" title="RegionConcurrencyType">RegionConcurrencyType</a>: <i>String</i>
+<a href="#concurrencymode" title="ConcurrencyMode">ConcurrencyMode</a>: <i>String</i>
 </pre>
 
 ## Properties
@@ -82,5 +84,17 @@ _Required_: No
 _Type_: String
 
 _Allowed Values_: <code>SEQUENTIAL</code> | <code>PARALLEL</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### ConcurrencyMode
+
+Specifies how the concurrency level behaves during the operation execution.
+
+_Required_: No
+
+_Type_: String
+
+_Allowed Values_: <code>STRICT_FAILURE_TOLERANCE</code> | <code>SOFT_FAILURE_TOLERANCE</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)

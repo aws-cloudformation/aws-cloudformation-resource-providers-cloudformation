@@ -2,6 +2,7 @@ package software.amazon.cloudformation.stackset.translator;
 
 import java.util.HashSet;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.cloudformation.model.ConcurrencyMode;
 import software.amazon.awssdk.services.cloudformation.model.DeploymentTargets;
 import software.amazon.awssdk.services.cloudformation.model.RegionConcurrencyType;
 import software.amazon.awssdk.services.cloudformation.model.StackSetOperationPreferences;
@@ -73,6 +74,7 @@ public class PropertyTranslatorTest {
         assertThat(stackSetOperationPreferences.maxConcurrentPercentage()).isEqualTo(100);
         assertThat(stackSetOperationPreferences.regionOrder()).isEqualTo(Arrays.asList(TestUtils.US_WEST_1, TestUtils.US_EAST_1));
         assertThat(stackSetOperationPreferences.regionConcurrencyType()).isEqualTo(RegionConcurrencyType.PARALLEL);
+        assertThat(stackSetOperationPreferences.concurrencyMode()).isEqualTo(ConcurrencyMode.STRICT_FAILURE_TOLERANCE);
     }
 
     @Test

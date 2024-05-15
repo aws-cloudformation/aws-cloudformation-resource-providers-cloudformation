@@ -1,6 +1,7 @@
 package software.amazon.cloudformation.stackset.util;
 
 import com.google.common.collect.ImmutableMap;
+import software.amazon.awssdk.services.cloudformation.model.ConcurrencyMode;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackSetResponse;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
@@ -199,6 +200,7 @@ public class TestUtils {
             .maxConcurrentPercentage(100)
             .regionOrder(Arrays.asList(US_WEST_1, US_EAST_1))
             .regionConcurrencyType(RegionConcurrencyType.PARALLEL.toString())
+            .concurrencyMode(ConcurrencyMode.STRICT_FAILURE_TOLERANCE.toString())
             .build();
 
     public final static ManagedExecution MANAGED_EXECUTION_ENABLED_RESOURCE_MODEL = ManagedExecution.builder()
