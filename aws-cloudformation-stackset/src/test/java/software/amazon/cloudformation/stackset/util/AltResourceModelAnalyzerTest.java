@@ -168,7 +168,7 @@ public class AltResourceModelAnalyzerTest {
                         new HashSet<>(Arrays.asList(region_1, region_2, region_3)))
         )));
         List<String> regionOrder = Arrays.asList(region_3, region_2, region_1);
-        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null));
+        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null, null));
 
         Set<StackInstances> desiredDeleteInstances = new LinkedHashSet<>();
         Set<StackInstances> desiredCreateInstances = new LinkedHashSet<>(Arrays.asList(
@@ -199,7 +199,7 @@ public class AltResourceModelAnalyzerTest {
                         new HashSet<>(Arrays.asList(region_1, region_2, region_3)))
         )));
         List<String> regionOrder = Arrays.asList(region_3, region_2, region_1);
-        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null));
+        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null, null));
         currentModel.setManagedExecution(new ManagedExecution(true));
 
         Set<StackInstances> desiredDeleteInstances = new LinkedHashSet<>();
@@ -231,7 +231,7 @@ public class AltResourceModelAnalyzerTest {
                         new HashSet<>(Arrays.asList(region_1, region_2, region_3)))
         )));
         List<String> regionOrder = Arrays.asList(region_3);
-        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null));
+        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null, null));
 
         Set<StackInstances> desiredDeleteInstances = new LinkedHashSet<>();
         Set<StackInstances> desiredCreateInstances = new LinkedHashSet<>(Arrays.asList(
@@ -261,7 +261,7 @@ public class AltResourceModelAnalyzerTest {
                         new HashSet<>(Arrays.asList(region_1, region_2)))
         )));
         List<String> regionOrder = Arrays.asList(region_3);
-        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null));
+        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null, null));
 
         Set<StackInstances> desiredDeleteInstances = new LinkedHashSet<>();
         Set<StackInstances> desiredCreateInstances = new LinkedHashSet<>(Arrays.asList(
@@ -291,7 +291,7 @@ public class AltResourceModelAnalyzerTest {
                         new HashSet<>(Arrays.asList(region_1, region_2)))
         )));
         List<String> regionOrder = Arrays.asList(region_3, region_2, region_1);
-        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null));
+        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null, null));
 
         Set<StackInstances> desiredDeleteInstances = new LinkedHashSet<>();
         Set<StackInstances> desiredCreateInstances = new LinkedHashSet<>(Arrays.asList(
@@ -321,7 +321,7 @@ public class AltResourceModelAnalyzerTest {
                         new HashSet<>(Arrays.asList(region_1, region_2, region_3)))
         )));
         List<String> regionOrder = Arrays.asList(region_3, region_2, region_1);
-        previousModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null));
+        previousModel.setOperationPreferences(new OperationPreferences(null, null, null, null, regionOrder, null, null));
 
         Set<StackInstances> desiredDeleteInstances = new LinkedHashSet<>(Arrays.asList(
                 generateInstancesWithRegions(Arrays.asList(OU_2, OU_3), Arrays.asList(account_1, account_2), INTER, region_3),
@@ -376,7 +376,7 @@ public class AltResourceModelAnalyzerTest {
                         Arrays.asList(OU_2, OU_3), Arrays.asList(account_1, account_2), INTER,
                         new HashSet<>(Arrays.asList(region_1, region_2, region_3)))
         )));
-        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, null, null));
+        currentModel.setOperationPreferences(new OperationPreferences(null, null, null, null, null, null, null));
 
         Set<StackInstances> desiredDeleteInstances = new LinkedHashSet<>();
         Set<StackInstances> desiredCreateInstances = new LinkedHashSet<>(Arrays.asList(
@@ -401,7 +401,7 @@ public class AltResourceModelAnalyzerTest {
                         Arrays.asList(OU_2, OU_3), Arrays.asList(account_1, account_2), INTER,
                         new HashSet<>(Arrays.asList(region_1, region_2, region_3)))
         )));
-        previousModel.setOperationPreferences(new OperationPreferences(null, null, null, null, null, null));
+        previousModel.setOperationPreferences(new OperationPreferences(null, null, null, null, null, null, null));
 
         Set<StackInstances> desiredCreateInstances = new LinkedHashSet<>();
         Set<StackInstances> desiredDeleteInstances = new LinkedHashSet<>(Arrays.asList(
@@ -492,7 +492,7 @@ public class AltResourceModelAnalyzerTest {
                         new HashSet<>(Arrays.asList(region_1, region_2, region_4)))
         )));
         List<String> regionOrder = Arrays.asList(region_4, region_3, region_2, region_1);
-        OperationPreferences operationPreferences = new OperationPreferences(null, null, null, null, regionOrder, null);
+        OperationPreferences operationPreferences = new OperationPreferences(null, null, null, null, regionOrder, null, null);
         currentModel.setOperationPreferences(operationPreferences);
         previousModel.setOperationPreferences(operationPreferences);
 

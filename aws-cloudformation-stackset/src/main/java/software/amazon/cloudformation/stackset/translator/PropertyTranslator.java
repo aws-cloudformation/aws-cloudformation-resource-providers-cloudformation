@@ -118,6 +118,7 @@ public class PropertyTranslator {
                 .failureTolerancePercentage(operationPreferences.getFailureTolerancePercentage())
                 .regionOrder(operationPreferences.getRegionOrder())
                 .regionConcurrencyType(operationPreferences.getRegionConcurrencyType())
+                .concurrencyMode(operationPreferences.getConcurrencyMode())
                 .build();
     }
 
