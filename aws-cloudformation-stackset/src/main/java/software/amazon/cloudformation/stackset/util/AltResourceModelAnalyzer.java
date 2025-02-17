@@ -16,6 +16,8 @@ import software.amazon.cloudformation.stackset.Parameter;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
 
+import static software.amazon.cloudformation.stackset.util.Comparator.isAccountLevelTargetingEnabled;
+
 @Builder
 @Data
 public class AltResourceModelAnalyzer {
@@ -40,8 +42,8 @@ public class AltResourceModelAnalyzer {
         Set<StackInstances> currentStackInstancesGroup = currentModel == null ?
                 new HashSet<>() : currentModel.getStackInstancesGroup();
 
-        Validator.validateServiceMangedInstancesGroup(previousStackInstancesGroup);
-        Validator.validateServiceMangedInstancesGroup(currentStackInstancesGroup);
+        Validator.validateServiceMangedInstancesGroup(previousStackInstancesGroup, isAccountLevelTargetingEnabled(previousModel));
+        Validator.validateServiceMangedInstancesGroup(currentStackInstancesGroup, isAccountLevelTargetingEnabled(currentModel));
 
         Set<String> previousModelRegionOrder = new LinkedHashSet<>();
         Set<String> currentModelRegionOrder = new LinkedHashSet<>();

@@ -59,15 +59,6 @@ public class AltResourceModelAnalyzerTest {
         ResourceModel modelNoneFilter = generateModel(new HashSet<>(Arrays.asList(
                 generateInstances(OU_1, account_1, NONE))));
 
-        ResourceModel modelNullFilter = generateModel(new HashSet<>(Arrays.asList(
-                StackInstances.builder().deploymentTargets(
-                                DeploymentTargets.builder()
-                                        .organizationalUnitIds(new HashSet<>(Arrays.asList(OU_1)))
-                                        .accounts(new HashSet<>(Arrays.asList(account_1)))
-                                        .build())
-                        .build()
-        )));
-
         ResourceModel modelPartiallyInvalid = generateModel(new HashSet<>(Arrays.asList(
                 generateInstances(OU_1, account_1, INTER),
                 generateInstances(OU_1, account_1, NONE))));
@@ -94,12 +85,6 @@ public class AltResourceModelAnalyzerTest {
         ex = assertThrows(
                 CfnInvalidRequestException.class,
                 () -> AltResourceModelAnalyzer.builder().currentModel(modelNoneFilter).build().analyze(placeHolder)
-        );
-        assertThat(ex.getMessage()).contains("AccountFilterType should be specified when both OrganizationalUnitIds and Accounts are provided");
-
-        ex = assertThrows(
-                CfnInvalidRequestException.class,
-                () -> AltResourceModelAnalyzer.builder().currentModel(modelNullFilter).build().analyze(placeHolder)
         );
         assertThat(ex.getMessage()).contains("AccountFilterType should be specified when both OrganizationalUnitIds and Accounts are provided");
 

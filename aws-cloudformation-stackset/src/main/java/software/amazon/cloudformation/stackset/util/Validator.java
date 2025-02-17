@@ -76,15 +76,15 @@ public class Validator {
         }
     }
 
-    public static void validateServiceMangedInstancesGroup (final Collection<StackInstances> stackInstancesGroup) {
+    public static void validateServiceMangedInstancesGroup (final Collection<StackInstances> stackInstancesGroup, boolean isAlt) {
         if (CollectionUtils.isNullOrEmpty(stackInstancesGroup)) return;
 
         stackInstancesGroup.forEach(it ->
-                validateServiceManagedDeploymentTarget(it.getDeploymentTargets())
+                validateServiceManagedDeploymentTarget(it.getDeploymentTargets(), isAlt)
         );
     }
 
-    public static void validateServiceManagedDeploymentTarget (DeploymentTargets targets) {
+    public static void validateServiceManagedDeploymentTarget (DeploymentTargets targets, boolean isAlt) {
 
         if (targets == null) {
             throw new CfnInvalidRequestException("DeploymentTargets should be specified");
@@ -106,7 +106,7 @@ public class Validator {
         final Set<String> accounts = CollectionUtils.isNullOrEmpty(targets.getAccounts()) ?
                 new HashSet<>() : targets.getAccounts();
 
-        if (Objects.equals(filter, NONE) && !CollectionUtils.isNullOrEmpty(accounts)) {
+        if (isAlt && (Objects.equals(filter, NONE) && !CollectionUtils.isNullOrEmpty(accounts))) {
             throw new CfnInvalidRequestException("AccountFilterType should be specified when both OrganizationalUnitIds and Accounts are provided");
         }
 
