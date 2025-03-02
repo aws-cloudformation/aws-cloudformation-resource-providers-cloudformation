@@ -22,6 +22,7 @@ public class CreateHandler extends BaseHandlerStd {
             final Logger logger) {
 
         ResourceModel resourceModel = request.getDesiredResourceState();
+        logger.log(String.format("Creating the resource version for the type %s", resourceModel.getTypeName()));
         return ProgressEvent.progress(resourceModel, callbackContext)
                 .then(progress ->
                         proxy.initiate("AWS-CloudFormation-ResourceVersion::Create", proxyClient, resourceModel, callbackContext)
@@ -39,7 +40,7 @@ public class CreateHandler extends BaseHandlerStd {
                                                         model.getTypeName(), model.getArn()));
                                                 throw new CfnInternalFailureException();
                                             }
-                                            logger.log(String.format("Fetching the TypeVersionArn [%s] from the DescribeTypeRegistrationResponse [%s]", describeTypeRegistrationResponse.typeVersionArn(), describeTypeRegistrationResponse));
+                                            logger.log(String.format("Fetching the TypeVersionArn [%s] from the DescribeTypeRegistrationResponse [%s] with the registration token [%s]", describeTypeRegistrationResponse.typeVersionArn(), describeTypeRegistrationResponse, cc.getRegistrationToken()));
                                             model.setArn(describeTypeRegistrationResponse.typeVersionArn());
                                             return ProgressEvent.progress(model, cc);
                                         }
@@ -53,7 +54,7 @@ public class CreateHandler extends BaseHandlerStd {
                                                                     AmazonWebServicesClientProxy proxy,
                                                                     ProxyClient<CloudFormationClient> proxyClient) {
 
-        this.logger.log("Stabilizing Registration: " + progress.getCallbackContext().getRegistrationToken());
+        this.logger.log(String.format("Stabilizing Registration for the Arn [%s] with registration token [%s]",progress.getResourceModel().getArn(), progress.getCallbackContext().getRegistrationToken()));
         String registrationToken = progress.getCallbackContext().getRegistrationToken();
         return proxy.initiate("stabilize", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                 .translateToServiceRequest(m ->
