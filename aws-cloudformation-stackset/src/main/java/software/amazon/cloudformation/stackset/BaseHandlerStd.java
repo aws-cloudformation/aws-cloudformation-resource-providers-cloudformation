@@ -2,6 +2,7 @@ package software.amazon.cloudformation.stackset;
 
 import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.awscore.AwsRequest;
+import software.amazon.awssdk.core.exception.RetryableException;
 import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
 import software.amazon.awssdk.services.cloudformation.model.CreateStackInstancesResponse;
 import software.amazon.awssdk.services.cloudformation.model.DeleteStackInstancesResponse;
@@ -297,7 +298,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                         }
                         // If OperationInProgressException is thrown by the service, then we retry
                         if (e instanceof OperationInProgressException) {
-                            return ProgressEvent.progress(model_, context);
+                            throw RetryableException.builder().build();
                         }
                         throw e;
                     })
