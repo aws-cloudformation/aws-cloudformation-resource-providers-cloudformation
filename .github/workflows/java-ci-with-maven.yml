@@ -30,7 +30,7 @@ jobs:
     - name: Set up cloudformation-cli-java-plugin
       run: pip install cloudformation-cli-java-plugin
     - name: install and run pre-commit
-      uses: pre-commit/action@v2.0.0
+      uses: pre-commit/action@v3.0.1
       with:
         extra_args: --all-files
     - name: Run maven verify for all resources

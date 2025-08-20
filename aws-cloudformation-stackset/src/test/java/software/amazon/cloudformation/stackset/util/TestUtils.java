@@ -33,6 +33,7 @@ import software.amazon.cloudformation.stackset.OperationPreferences;
 import software.amazon.cloudformation.stackset.ResourceModel;
 import software.amazon.cloudformation.stackset.StackInstances;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -157,8 +158,7 @@ public class TestUtils {
             "key1", "val1", "key2", "val2", "key3", "val3");
     public final static Map<String, String> PREVIOUS_RESOURCE_TAGS = ImmutableMap.of(
             "key-1", "val1", "key-2", "val2", "key-3", "val3");
-    public final static Map<String, String> NEW_RESOURCE_TAGS = ImmutableMap.of(
-            "key1", "val1", "key2updated", "val2updated", "key3", "val3");
+    public final static Map<String, String> NEW_RESOURCE_TAGS = ImmutableMap.of("key2updated", "val2updated");
 
     public final static Set<String> REGIONS_1 = new HashSet<>(Arrays.asList(US_WEST_1, US_EAST_1));
     public final static Set<String> UPDATED_REGIONS_1 = new HashSet<>(Arrays.asList(US_WEST_1, US_EAST_2));
@@ -242,6 +242,11 @@ public class TestUtils {
             Tag.builder().key("key1").value("val1").build(),
             Tag.builder().key("key2").value("val2").build(),
             Tag.builder().key("key3").value("val3").build()));
+    public final static Set<Tag> OUT_OF_BAND_TAGS = new HashSet<>(Arrays.asList(
+            Tag.builder().key("outOfBandTags").value("outOfBandTagValue").build()));
+    public final static List<Tag> EXPECTED_TAGS = new ArrayList<>(Arrays.asList(
+            Tag.builder().key("outOfBandTags").value("outOfBandTagValue").build(),
+            Tag.builder().key("key2updated").value("val2updated").build()));
 
     public final static AutoDeployment AUTO_DEPLOYMENT_ENABLED = AutoDeployment.builder()
             .enabled(true)
@@ -428,6 +433,11 @@ public class TestUtils {
             .build();
 
     public final static StackSet SELF_MANAGED_STACK_SET_ME_DISABLED = SELF_MANAGED_STACK_SET.toBuilder()
+            .managedExecution(MANAGED_EXECUTION_DISABLED_SDK)
+            .build();
+
+    public final static StackSet SELF_MANAGED_STACK_SET_WITH_OUT_OF_BAND_TAGS = SELF_MANAGED_STACK_SET.toBuilder()
+            .tags(OUT_OF_BAND_TAGS)
             .managedExecution(MANAGED_EXECUTION_DISABLED_SDK)
             .build();
 
@@ -732,6 +742,11 @@ public class TestUtils {
     public final static DescribeStackSetResponse DESCRIBE_SELF_MANAGED_STACK_SET_ME_DISABLED_RESPONSE =
             DescribeStackSetResponse.builder()
                     .stackSet(SELF_MANAGED_STACK_SET_ME_DISABLED)
+                    .build();
+
+    public final static DescribeStackSetResponse DESCRIBE_SELF_MANAGED_STACK_SET_OUT_OF_BAND_TAGS_RESPONSE =
+            DescribeStackSetResponse.builder()
+                    .stackSet(SELF_MANAGED_STACK_SET_WITH_OUT_OF_BAND_TAGS)
                     .build();
 
     public final static DescribeStackSetResponse DESCRIBE_SERVICE_MANAGED_STACK_SET_RESPONSE =

@@ -40,7 +40,7 @@ public class UpdateHandler extends BaseHandlerStd {
                 // ManagedExecution update should be separated due to its limitations
                 .then(progress -> updateManagedExecution(proxy, proxyClient, progress, previousModel, stackSet))
                 .then(progress -> deleteStackInstances(proxy, proxyClient, progress, placeHolder.getDeleteStackInstances(), logger))
-                .then(progress -> updateStackSet(proxy, proxyClient, request, progress, previousModel))
+                .then(progress -> updateStackSet(proxy, proxyClient, request, progress, previousModel, stackSet))
                 .then(progress -> createStackInstances(proxy, proxyClient, progress, placeHolder.getCreateStackInstances(), logger))
                 .then(progress -> updateStackInstances(proxy, proxyClient, progress, placeHolder.getUpdateStackInstances(), logger))
                 .then(progress -> ProgressEvent.defaultSuccessHandler(model));
@@ -62,7 +62,8 @@ public class UpdateHandler extends BaseHandlerStd {
             final ProxyClient<CloudFormationClient> client,
             final ResourceHandlerRequest<ResourceModel> handlerRequest,
             final ProgressEvent<ResourceModel, CallbackContext> progress,
-            final ResourceModel previousModel) {
+            final ResourceModel previousModel,
+            final StackSet currentStackSet) {
 
         final ResourceModel desiredModel = progress.getResourceModel();
         final CallbackContext callbackContext = progress.getCallbackContext();
@@ -70,7 +71,7 @@ public class UpdateHandler extends BaseHandlerStd {
             return ProgressEvent.progress(desiredModel, callbackContext);
         }
         return proxy.initiate("AWS-CloudFormation-StackSet::UpdateStackSet", client, desiredModel, callbackContext)
-                .translateToServiceRequest(modelRequest -> updateStackSetRequest(modelRequest, handlerRequest.getDesiredResourceTags()))
+                .translateToServiceRequest(modelRequest -> updateStackSetRequest(modelRequest, handlerRequest.getPreviousResourceTags(), handlerRequest.getDesiredResourceTags(), currentStackSet.tags()))
                 .backoffDelay(MULTIPLE_OF)
                 .makeServiceCall((modelRequest, proxyInvocation) -> {
                     logger.log(String.format("%s [%s] UpdateStackSet request: [%s]",
